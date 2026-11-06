@@ -4,77 +4,74 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Frame</title>
-<meta name="description" content="A motion editor for working React components, built around what happens when a transition is interrupted.">
-<link rel="stylesheet" href="/src/page.css">
+<meta name="description" content="Tweak the motion in the actual component">
+<link rel="preload" href="/fonts/GeistSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/Geist-Regular.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
-<svg id="ridge" aria-hidden="true"><path fill="none"></path></svg>
-<div class="page">
-  <header>
-    <p class="eyebrow">Open source motion tool for React</p>
-    <h1>Change your mind halfway</h1>
-    <p class="lede">Press a button, then change your mind before the animation ends. Frame lets you decide what a real React component does at that moment, then exports that behaviour as a small runtime.</p>
-    <div class="pills">
-      <button class="pill dark" id="hero-play" type="button">Play the replay</button>
-      <a class="pill ghost" href="studio/index.html">Open the studio</a>
-      <a class="pill ghost" href="https://github.com/qbeka/frame-studio">Source</a>
-    </div>
-    <div class="tiles">
-      <div class="tile"><b>0.000015 px</b><span>Worst gap between studio and export</span></div>
-      <div class="tile"><b>9 of 9</b><span>Seeded faults caught</span></div>
-      <div class="tile"><b>6.2 KB</b><span>Gzipped JavaScript added to an app</span></div>
-      <div class="tile"><b>1.5 ms</b><span>Median edit at 30 targets</span></div>
-    </div>
-    <div class="aside"><i class="dash"></i><span>Measured on one Mac in headless browsers. The studio and export check compares two builds of the same code, so the physics has its own separate check. The hairline behind this page is the surface height from the replay below.</span></div>
+<div class="shell">
+  <header class="topbar">
+    <a class="quiet back" href="https://www.qendrimbeka.com/">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 4L6 8L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </a>
+    <nav aria-label="More about Frame">
+      <a class="quiet" href="#details">Details</a>
+      <a class="quiet" href="https://github.com/qbeka/frame-studio">GitHub</a>
+    </nav>
   </header>
 
   <main>
-    <section id="replay" aria-labelledby="replay-title">
-      <h2 id="replay-title">The replay</h2>
-      <p class="text">Someone opens this expense panel, then presses Cancel before it finishes. This is the real component on the real runtime, so changing the rule changes what happens.</p>
-      <div id="replay-root"></div>
-      <noscript><p class="note">The replay needs JavaScript. The evidence below does not.</p></noscript>
+    <header class="title">
+      <h1>Frame</h1>
+      <a class="control outline" href="studio/index.html">Open studio</a>
+      <p>Tweak the motion in the actual component</p>
+    </header>
+
+    <section class="stage" id="stage" aria-label="Expense panel and its motion curve">
+      <noscript><p class="prose">The demo needs JavaScript. The details below still work.</p></noscript>
     </section>
 
-    <section id="evidence" aria-labelledby="evidence-title">
-      <h2 id="evidence-title">The evidence</h2>
-      <p class="text">Every target was met. In a Vite build of this one interaction, Frame added 6.2 KB of gzipped JavaScript and Motion 14.9.1 added 45.1 KB. Motion does far more, and main thread time overlapped, so there is no speed claim here.</p>
-      <div class="rows" role="table" aria-label="Measured results">
-        <div class="row head" role="row"><span role="columnheader">Check</span><span class="n" role="columnheader">Target</span><span class="n" role="columnheader">Result</span></div>
-        <div class="row" role="row"><span role="cell">Studio and export, geometry</span><span class="n" role="cell">0.5 px</span><span class="n" role="cell">0.000015 px</span></div>
-        <div class="row" role="row"><span role="cell">Studio and export, opacity</span><span class="n" role="cell">0.01</span><span class="n" role="cell">0</span></div>
-        <div class="row" role="row"><span role="cell">Replay and export, geometry</span><span class="n" role="cell">0.5 px</span><span class="n" role="cell">0.000015 px</span></div>
-        <div class="row" role="row"><span role="cell">Real geometry against independent physics</span><span class="n" role="cell">0.11 px</span><span class="n" role="cell">0.094 px</span></div>
-        <div class="row" role="row"><span role="cell">Edit to DOM at 30 targets, p95</span><span class="n" role="cell">16.7 ms</span><span class="n" role="cell">2.2 ms</span></div>
-        <div class="row" role="row"><span role="cell">Seeded faults caught</span><span class="n" role="cell">Every fault</span><span class="n" role="cell">9 of 9</span></div>
-      </div>
-    </section>
+    <section class="reading" id="details" aria-labelledby="details-title">
+      <h2 id="details-title">Details</h2>
+      <p class="prose">Frame is a motion editor for working React components, built around one question: what should happen when someone changes their mind halfway? You use your real component, interrupt it, and decide what it does at that moment. Export gives you a small runtime that behaves the same way in your app, with no dependency except React.</p>
+      <p class="prose">The <a href="studio/index.html">studio</a> is the full tool, with every state, target and command. The <a href="studio/try/index.html">exported build</a> is a separate app made from those files with the default motion. The preview under Export on this page runs the generated files inside this page, so it always follows what you just changed.</p>
 
-    <section aria-labelledby="checks-title">
-      <h2 id="checks-title">How it was checked</h2>
-      <ul class="dashes">
-        <li>120 scripted runs in Chromium, WebKit and Firefox at device scales 1 and 2, with 13,462 comparisons per engine.</li>
-        <li>Spring values against a 50 digit reference, and real browser geometry against an independent numerical solution.</li>
-        <li>Faults were seeded into the export and the replay. The first full run caught 8 of 9, so it was discarded, the workload was fixed and everything was measured again.</li>
-        <li>46 of 46 seeded logic mutants were caught by the tests.</li>
-        <li>118 unit tests and 71 browser tests pass on a fresh clone of the public repository.</li>
-      </ul>
-    </section>
+      <h3>Results</h3>
+      <dl class="results">
+        <div><dt>Studio and export</dt><dd><b>At most 0.000015 px and 0 opacity</b>120 scripted runs in Chromium, WebKit and Firefox, against a 0.5 px target. Both sides run the same code, so this tests the build, the CSS and the replay path, not the physics.</dd></div>
+        <div><dt>Replay and export</dt><dd><b>At most 0.000015 px and 0 opacity</b>The replay you inspect against the export, 10,932 comparisons per engine, against the same target. It leaves out the resize script.</dd></div>
+        <div><dt>Physics</dt><dd><b>Worst 0.094 px</b>Real browser geometry against an independent RK4 solution, against a 0.11 px target. Most of that is the 0.1 px settle snap.</dd></div>
+        <div><dt>Could the checks fail</dt><dd><b>9 of 9 seeded faults caught</b>0 of 2 clean builds were flagged. The first full run caught 8 of 9, so it was discarded and everything was measured again.</dd></div>
+        <div><dt>Cost to an app</dt><dd><b>6.2 KB of JavaScript, 0.14 KB of CSS</b>Gzipped, over the same UI with no animation, in a Vite build of this one interaction. Motion 14.9.1 added 45.1 KB there, and Motion does far more.</dd></div>
+        <div><dt>Editing at 30 targets</dt><dd><b>Median 1.5 ms, p95 2.2 ms</b>Edit to DOM in a production build, against a 16.7 ms target.</dd></div>
+        <div><dt>Speed at runtime</dt><dd><b>No clear win</b>Main thread per open and reverse cycle: Frame 13.9 ms (10.9 to 18.8), Motion 14.9.1 16.6 ms (14.6 to 20.5). The ranges overlap.</dd></div>
+      </dl>
 
-    <section aria-labelledby="limits-title">
-      <h2 id="limits-title">What this cannot tell you</h2>
-      <ul class="dashes">
-        <li>No person has run the usability task, and no human has reviewed the code.</li>
-        <li>No physical phone was tested, and no one using a screen reader has tried it.</li>
-        <li>These are lab timings from one machine with other work running, not field data.</li>
+      <h3>Limits</h3>
+      <ul class="limits">
+        <li>No person has run the usability task, so there is no usability result.</li>
+        <li>All timings come from one Mac in headless browsers, with other work running. They are lab timings, not field data.</li>
+        <li>No physical phone was tested. Touch was emulated.</li>
+        <li>No one using a screen reader has tried it, and no human has reviewed the code.</li>
         <li>Only registered components work. Elements outside the registered root do not animate.</li>
         <li>Scrubbing back across a viewport change reflows text to the current width.</li>
       </ul>
-    </section>
-  </main>
 
-  <footer>Measured at commit 909eca6. <a href="https://github.com/qbeka/frame-studio/blob/main/docs/REPORT.md">Full report</a> and <a href="https://github.com/qbeka/frame-studio">source</a>. MIT licensed.</footer>
+      <h3>Method</h3>
+      <p class="prose">The <a href="https://github.com/qbeka/frame-studio/blob/main/docs/REPORT.md">report</a> has the tables, raw data and failures. Every number comes from a recorded run at commit 909eca6.</p>
+    </section>
+
+    <div class="page-end">
+      <a class="quiet back" href="https://www.qendrimbeka.com/">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 4L6 8L10 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back
+      </a>
+      <a class="quiet" href="https://github.com/qbeka/frame-studio">GitHub</a>
+    </div>
+  </main>
 </div>
+<div class="sr-only" id="status" role="status"></div>
 <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
