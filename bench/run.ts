@@ -9,7 +9,7 @@ import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, sta
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { chromium, type Browser, type Page } from '@playwright/test';
+import { chromium, firefox, webkit, type Browser, type Page } from '@playwright/test';
 import { compare, runScript, sampleTimes, type Reading } from '../tests/support/sync.ts';
 import { SCRIPTS } from '../tests/support/scripts.ts';
 import { rk4Path } from '../tests/support/rk4.ts';
@@ -98,25 +98,27 @@ async function fidelity() {
   await serve(join(consumer, 'dist'), CONSUMER_PORT);
   const rows: unknown[] = [];
   const raw: Record<string, unknown> = {};
+  const versions: Record<string, string> = {};
   for (let r = 0; r < RUNS; r += 1) {
-    const browser = await chromium.launch();
-    for (const dpr of [1, 2]) {
-      for (const script of SCRIPTS) {
-        const seed = 100 + r;
-        const times = sampleTimes(script.endMs, 16.667, seed);
-        const a = await playScript(browser, studioUrl, '.stage-live', script, times, dpr);
-        const b = await playScript(browser, consumerUrl, '#root', script, times, dpr);
-        const result = compare(a, b);
-        rows.push({ run: r, dpr, script: script.name, seed, samples: times.length, ...result });
-        raw[`run${r}-dpr${dpr}-${script.name}`] = { times, studio: a, export: b };
+    for (const [engine, type] of Object.entries({ chromium, webkit, firefox })) {
+      const browser = await type.launch();
+      versions[engine] = browser.version();
+      for (const dpr of [1, 2]) {
+        for (const script of SCRIPTS) {
+          const seed = 100 + r;
+          const times = sampleTimes(script.endMs, 16.667, seed);
+          const a = await playScript(browser, studioUrl, '.stage-live', script, times, dpr);
+          const b = await playScript(browser, consumerUrl, '#root', script, times, dpr);
+          const result = compare(a, b);
+          rows.push({ run: r, engine, dpr, script: script.name, seed, samples: times.length, ...result });
+          raw[`run${r}-${engine}-dpr${dpr}-${script.name}`] = { times, studio: a, export: b };
+        }
       }
+      await browser.close();
     }
-    const version = browser.version();
-    await browser.close();
-    (raw as any).browserVersion = version;
   }
   stop();
-  const meta = manifest({ experiment: 'fidelity', runs: RUNS, viewport: VIEWPORT, deviceScales: [1, 2], browser: (raw as any).browserVersion, warmup: 'none, each script starts from a fresh page', exclusions: 'none', seed: '100 + run index' });
+  const meta = manifest({ experiment: 'fidelity', runs: RUNS, viewport: VIEWPORT, deviceScales: [1, 2], browsers: versions, warmup: 'none, each script starts from a fresh page', exclusions: 'none', seed: '100 + run index' });
   saveRun(outName('fidelity'), meta, { rows, ...(smoke ? {} : raw) });
   return rows as { geometryPx: number; opacity: number; clipPx: number; compared: number; missing: string[] }[];
 }

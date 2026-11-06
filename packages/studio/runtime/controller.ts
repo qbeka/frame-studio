@@ -77,6 +77,9 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
   /** Live time is the clock plus this, so a take can resume from where it was paused. */
   let offsetMs = 0;
   let startMs = 0;
+  /** The element under the current click. See `start`. */
+  let pressed: Element | null = null;
+  let detach: (() => void) | null = null;
 
   const now = () => frozenAt ?? clock.now() + offsetMs;
 
@@ -155,16 +158,16 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       if (timeline.marks.length !== before) options.onEvent?.({ atMs, type: 'measure', rects }, startMs);
       render();
     }
-    pending.push({ atMs, decision, reduced, active: document.activeElement });
+    const focused = document.activeElement;
+    pending.push({ atMs, decision, reduced, active: focused && focused !== document.body ? focused : pressed });
     state = decision.transition.to;
     notify();
   }
 
   function restoreFocus(item: Pending) {
     const active = item.active;
-    if (!active || active === document.body) return;
-    const stillAvailable = active.isConnected && !active.closest('[inert],[hidden]') && document.activeElement === active;
-    if (stillAvailable) return;
+    if (!active) return;
+    if (active.isConnected && !active.closest('[inert],[hidden]')) return;
     const id = spec.states[state]!.focusTarget;
     const element = id ? elements.get(id) : undefined;
     if (element) focusTarget(element);
@@ -249,19 +252,32 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     start() {
       if (started || !root) return;
       started = true;
+      const target = root;
       const remeasure = () => this.remeasure();
       observer = typeof ResizeObserver === 'function' ? new ResizeObserver(remeasure) : null;
-      observer?.observe(root);
+      observer?.observe(target);
+      // Safari does not focus a button when it is clicked, so focus can sit on the body while the
+      // control the person just used disappears. Remember what was pressed, for the length of
+      // this click only, so that focus moves on in every browser.
+      const onClick = (event: Event) => {
+        pressed = event.target as Element;
+        setTimeout(() => (pressed = null));
+      };
+      target.addEventListener('click', onClick, { capture: true });
       // Scrollers inside the root move targets relative to it. Page scrolling does not.
-      root.addEventListener('scroll', remeasure, { capture: true, passive: true });
-      this.stop = () => {
-        started = false;
-        stopLoop();
-        observer?.disconnect();
-        root?.removeEventListener('scroll', remeasure, { capture: true });
+      target.addEventListener('scroll', remeasure, { capture: true, passive: true });
+      detach = () => {
+        target.removeEventListener('click', onClick, { capture: true });
+        target.removeEventListener('scroll', remeasure, { capture: true });
       };
     },
-    stop() {},
+    stop() {
+      started = false;
+      stopLoop();
+      observer?.disconnect();
+      detach?.();
+      detach = null;
+    },
 
     /** Studio only: replaces the spec. The caller rebuilds the timeline with `load`. */
     setSpec(next: MotionSpec) {

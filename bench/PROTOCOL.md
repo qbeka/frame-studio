@@ -17,7 +17,7 @@ The numbers in the pass criteria are targets from the project brief. They are no
 
 ## Workloads
 
-**Fidelity.** The four scripts in `tests/support/scripts.ts`, run on the authored inspector, with seeded sample times at about 60 Hz and half a step of jitter. Run at device scale 1 and 2. The studio is the production build. The export is a production build in a clean temp folder. Both use the manual clock.
+**Fidelity.** The four scripts in `tests/support/scripts.ts`, run on the authored inspector, with seeded sample times at about 60 Hz and half a step of jitter. Run at device scale 1 and 2 in Chromium, WebKit and Firefox. Each engine compares the studio to the export inside itself. The studio is the production build. The export is a production build in a clean temp folder. Both use the manual clock.
 
 **Authoring.** `bench/fixtures` gives the same component with 1, 10 and 30 declared targets, and separately a stress fixture with 200. Each run records one take of open, interrupt, settle, then discards 20 warmup edits and measures 60 property edits and 60 seeks.
 
@@ -43,5 +43,5 @@ Five independent runs per condition, each in a new browser process. Samples insi
 ## What this cannot show
 
 - Lab timings on one machine are not field INP.
-- Headless Chromium only. No Safari or Firefox fidelity run.
+- Headless engines from Playwright on one Mac. WebKit here is not Safari on an iPhone. Authoring and runtime timings are Chromium only.
 - No human usability data. See `docs/USABILITY.md`.
