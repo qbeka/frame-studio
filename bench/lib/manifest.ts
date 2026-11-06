@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { cpus, platform, release, totalmem } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const text = (command: string, args: string[]) => {
@@ -23,7 +23,7 @@ export function manifest(extra: Record<string, unknown>) {
     // The results folder is left out, because earlier experiments in a run write to it.
     dirty: (text('git', ['status', '--porcelain', '--', ':!results']) ?? '').length > 0,
     measuredAt: new Date().toISOString(),
-    command: process.argv.slice(1).join(' '),
+    command: process.argv.slice(1).map((arg) => (isAbsolute(arg) ? relative(process.cwd(), arg) : arg)).join(' '),
     node: process.version,
     devDependencies: pkg.devDependencies,
     inputs: {
