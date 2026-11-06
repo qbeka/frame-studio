@@ -125,7 +125,7 @@ describe('queue edge cases', () => {
   it('does not hang replaying a queued command with nowhere to go', () => {
     const spec = panelSpec();
     spec.transitions[0]!.interruptions = [{ command: 'poke', policy: 'queue', curve: null }];
-    const { steps } = replayTake(
+    const { steps, timeline } = replayTake(
       spec,
       0,
       closedRects,
@@ -136,6 +136,7 @@ describe('queue edge cases', () => {
       geometry,
     );
     expect(steps.map((s) => s.outcome)).toEqual(['start', 'queue', 'reject']);
+    expect(lastMark(timeline).queued).toBeNull();
   });
 
   it('keeps a queued command waiting when replay stops before it is due', () => {

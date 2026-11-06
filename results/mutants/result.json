@@ -1,7 +1,7 @@
 {
   "baselineTests": 118,
   "mutants": 46,
-  "caught": 43,
+  "caught": 46,
   "restoredSuitePasses": true,
   "rows": [
     {
@@ -191,12 +191,21 @@
     {
       "name": "resize always snaps",
       "file": "packages/studio/runtime/timeline.ts",
-      "status": "did not apply"
+      "status": "caught",
+      "killedBy": [
+        "layout changes retargets a running channel to the new endpoint, keeping position and speed",
+        "a layout change and a delay leaves a leg that is still waiting on its delay at its original start"
+      ],
+      "kills": 2
     },
     {
       "name": "resize snap policy ignored",
       "file": "packages/studio/runtime/timeline.ts",
-      "status": "did not apply"
+      "status": "caught",
+      "killedBy": [
+        "layout changes snap jumps to the new endpoint"
+      ],
+      "kills": 1
     },
     {
       "name": "exiting targets vanish at once",
@@ -231,9 +240,11 @@
     {
       "name": "replay leaves a refused command queued",
       "file": "packages/studio/runtime/timeline.ts",
-      "status": "SURVIVED",
-      "killedBy": [],
-      "kills": 0
+      "status": "caught",
+      "killedBy": [
+        "queue edge cases does not hang replaying a queued command with nowhere to go"
+      ],
+      "kills": 1
     },
     {
       "name": "replay forgets reduced motion on a queued command",
