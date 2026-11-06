@@ -1,0 +1,72 @@
+{
+  "criterion": "register, author three states, interrupt, save, reopen, export, run in a clean consumer",
+  "log": [
+    {
+      "step": "clean app created with the tarball",
+      "at": "2026-11-06T06:46:39.482Z",
+      "detail": {
+        "packages": [
+          "@types/react",
+          "@types/react-dom",
+          "@vitejs/plugin-react",
+          "frame-studio",
+          "typescript",
+          "vite"
+        ]
+      }
+    },
+    {
+      "step": "component registered from the clean app is live in the studio",
+      "at": "2026-11-06T06:46:40.994Z"
+    },
+    {
+      "step": "authored three states and an interruption rule",
+      "at": "2026-11-06T06:46:41.480Z"
+    },
+    {
+      "step": "interrupted a transition and inspected the take",
+      "at": "2026-11-06T06:46:42.695Z"
+    },
+    {
+      "step": "saved the project file, cleared storage and reopened it",
+      "at": "2026-11-06T06:46:42.890Z",
+      "detail": {
+        "sha256": "6170fdeb848d03fcf8dd196f299653155a3ee9c2d876ebdc76b80f5feb286955"
+      }
+    },
+    {
+      "step": "exported from the UI, built in the clean app, and found no editor code in the bundle",
+      "at": "2026-11-06T06:46:44.893Z",
+      "detail": {
+        "files": [
+          "README.md",
+          "frame-export.json",
+          "frame.css",
+          "motion.config.ts",
+          "runtime",
+          "usage.example.tsx"
+        ]
+      }
+    },
+    {
+      "step": "used the export: unfolded, disputed, typed, withdrew and came back with the text and focus intact",
+      "at": "2026-11-06T06:46:47.111Z"
+    },
+    {
+      "step": "compared studio and export at synchronized samples",
+      "at": "2026-11-06T06:46:48.300Z",
+      "detail": {
+        "geometryPx": 0.00000762939453125,
+        "opacity": 0,
+        "clipPx": 0,
+        "compared": 255,
+        "worstAt": {
+          "atMs": 103.381,
+          "target": "lines",
+          "field": "y"
+        },
+        "missing": []
+      }
+    }
+  ]
+}

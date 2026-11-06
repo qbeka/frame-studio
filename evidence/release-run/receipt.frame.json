@@ -1,0 +1,441 @@
+{
+  "format": "frame.project",
+  "version": 1,
+  "name": "acme.receipt",
+  "spec": {
+    "format": "frame.motion",
+    "version": 1,
+    "component": {
+      "id": "acme.receipt",
+      "version": "1.0.0"
+    },
+    "initialState": "folded",
+    "commands": [
+      "unfold",
+      "fold",
+      "dispute",
+      "withdraw"
+    ],
+    "targets": {
+      "paper": {
+        "bounds": "surface",
+        "text": false,
+        "clipRadiusPx": 0
+      },
+      "sheet": {
+        "bounds": "clip",
+        "text": true,
+        "clipRadiusPx": 4
+      },
+      "head": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "lines": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "dispute": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "stamp": {
+        "bounds": "scale",
+        "text": false,
+        "clipRadiusPx": 0
+      }
+    },
+    "states": {
+      "folded": {
+        "label": "Folded",
+        "focusTarget": "head",
+        "targets": {
+          "paper": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "sheet": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "head": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "lines": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": -10,
+            "scale": 1
+          },
+          "dispute": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "stamp": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          }
+        }
+      },
+      "itemized": {
+        "label": "Itemized",
+        "focusTarget": "lines",
+        "targets": {
+          "paper": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "sheet": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "head": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "lines": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "dispute": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "stamp": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 0.4
+          }
+        }
+      },
+      "disputed": {
+        "label": "Disputed",
+        "focusTarget": "dispute",
+        "targets": {
+          "paper": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "sheet": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "head": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "lines": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "dispute": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "stamp": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          }
+        }
+      }
+    },
+    "transitions": [
+      {
+        "id": "unfold",
+        "from": "folded",
+        "to": "itemized",
+        "command": "unfold",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 520,
+            "damping": 30,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          },
+          {
+            "command": "fold",
+            "policy": "retarget",
+            "curve": {
+              "type": "spring",
+              "stiffness": 700,
+              "damping": 48,
+              "mass": 1
+            }
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "fold",
+        "from": "itemized",
+        "to": "folded",
+        "command": "fold",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "dispute",
+        "from": "itemized",
+        "to": "disputed",
+        "command": "dispute",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "withdraw",
+        "from": "disputed",
+        "to": "itemized",
+        "command": "withdraw",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 700,
+            "damping": 48,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "fold-dispute",
+        "from": "disputed",
+        "to": "folded",
+        "command": "fold",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      }
+    ],
+    "settle": {
+      "px": 0.1,
+      "pxPerSecond": 5,
+      "unit": 0.001,
+      "unitPerSecond": 0.05
+    },
+    "resize": "retarget"
+  },
+  "take": {
+    "startMs": 636.7000000476837,
+    "initialState": "folded",
+    "initialRects": {
+      "paper": {
+        "x": 0,
+        "y": 0,
+        "width": 340,
+        "height": 53
+      },
+      "head": {
+        "x": 14,
+        "y": 12,
+        "width": 312,
+        "height": 29
+      },
+      "sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 340,
+        "height": 53
+      }
+    },
+    "initialProps": {
+      "vendor": "Harbour Fuel",
+      "total": "62.15",
+      "reason": ""
+    },
+    "events": [
+      {
+        "atMs": 677.6000000238419,
+        "type": "command",
+        "command": "unfold",
+        "reduced": false,
+        "rects": {
+          "paper": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 151
+          },
+          "head": {
+            "x": 14,
+            "y": 12,
+            "width": 312,
+            "height": 29
+          },
+          "lines": {
+            "x": 14,
+            "y": 49,
+            "width": 312,
+            "height": 90
+          },
+          "sheet": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 151
+          }
+        }
+      },
+      {
+        "atMs": 844.9000000357628,
+        "type": "command",
+        "command": "fold",
+        "reduced": false,
+        "rects": {
+          "paper": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 53
+          },
+          "head": {
+            "x": 14,
+            "y": 12,
+            "width": 312,
+            "height": 29
+          },
+          "sheet": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 53
+          }
+        }
+      }
+    ]
+  }
+}

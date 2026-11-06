@@ -59,11 +59,11 @@ export function Studio({ registration, registrations, onPickRegistration, initia
   return (
     <div className="studio">
       <TopBar store={store} session={session} registrations={registrations} registration={registration} onPickRegistration={onPickRegistration} recoveredAt={recoveredAt} />
-      <aside className="pane pane-left" aria-label="States and transitions">
+      <aside className="ui pane pane-left" aria-label="States and transitions">
         <StatePanel spec={spec} current={session.controller.getState()} selection={selection} onSelect={setSelection} />
       </aside>
       <Canvas ref={probeRef} registration={registration} session={session} spec={spec} />
-      <aside className="pane pane-right" aria-label="Properties">
+      <aside className="ui pane pane-right" aria-label="Properties">
         <PropertyPanel spec={spec} selection={selection} store={store} session={session} />
       </aside>
       <Transport spec={spec} take={take} session={session} store={store} />

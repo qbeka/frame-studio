@@ -1,5 +1,6 @@
 /* The fixture's own look. The runtime needs none of this. */
 .fx-inspector {
+  box-sizing: border-box;
   width: 100%;
   max-width: 372px;
   font: 14px/1.45 ui-sans-serif, system-ui, sans-serif;

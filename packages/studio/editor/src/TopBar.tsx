@@ -149,7 +149,7 @@ export function TopBar({
   }
 
   return (
-    <header className="topbar">
+    <header className="ui topbar">
       <span className="brand">Frame</span>
       {registrations.length > 1 ? (
         <select aria-label="Component" value={registration.id} onChange={(e) => onPickRegistration(registrations.findIndex((r) => r.id === e.target.value))}>

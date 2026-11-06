@@ -151,7 +151,7 @@ export function Transport({ spec, take, session, store }: { spec: MotionSpec; ta
   const label = `${atMs} milliseconds, state ${spec.states[stateNow]?.label ?? stateNow}`;
 
   return (
-    <section className="transport" aria-label="Transport">
+    <section className="ui transport" aria-label="Transport">
       <div className="transport-row">
         <button
           type="button"
@@ -164,18 +164,12 @@ export function Transport({ spec, take, session, store }: { spec: MotionSpec; ta
         <span className="time mono" aria-live="off">{hasTake ? `${atMs} ms` : 'No take'}</span>
         <span className="mode">{live ? 'Live' : session.mode === 'playing' ? 'Playing back' : 'Inspecting'}</span>
         <div className="grow" />
-        <label className="inline">
-          <span className="sr">Ribbon target</span>
-          <select value={target} onChange={(e) => setTarget(e.target.value)}>
+        <select aria-label="Ribbon target" value={target} onChange={(e) => setTarget(e.target.value)}>
             {targetIds.map((id) => <option key={id}>{id}</option>)}
           </select>
-        </label>
-        <label className="inline">
-          <span className="sr">Ribbon channel</span>
-          <select value={channel} onChange={(e) => setChannel(e.target.value as ChannelName)}>
+        <select aria-label="Ribbon channel" value={channel} onChange={(e) => setChannel(e.target.value as ChannelName)}>
             {CHANNELS.map((c) => <option key={c}>{c}</option>)}
           </select>
-        </label>
         {hasTake ? <Readout session={session} target={target} channel={channel} /> : null}
       </div>
 
@@ -208,20 +202,14 @@ export function Transport({ spec, take, session, store }: { spec: MotionSpec; ta
         <div className="transport-row transport-inspect">
           <p className="hint">The component is paused here. Choose how to go back to it.</p>
           <button type="button" className="button" onClick={session.continueFromHere}>Continue from here</button>
-          <label className="inline">
-            <span className="sr">Reset to state</span>
-            <select value={resetState} onChange={(e) => setResetState(e.target.value)}>
+          <select aria-label="Reset to state" value={resetState} onChange={(e) => setResetState(e.target.value)}>
               {Object.entries(spec.states).map(([id, s]) => <option key={id} value={id}>{s.label}</option>)}
             </select>
-          </label>
           <button type="button" className="button" onClick={() => session.resetTo(resetState)}>Reset to this state</button>
           <div className="grow" />
-          <label className="inline">
-            <span className="sr">Command to inject</span>
-            <select value={injectCommand} onChange={(e) => setInjectCommand(e.target.value)}>
+          <select aria-label="Command to inject" value={injectCommand} onChange={(e) => setInjectCommand(e.target.value)}>
               {spec.commands.map((c) => <option key={c}>{c}</option>)}
             </select>
-          </label>
           <button type="button" className="button" onClick={inject}>Interrupt here</button>
           {activeIndex !== null ? (
             <button type="button" className="link" onClick={removeMarker}>Remove marker</button>

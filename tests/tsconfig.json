@@ -9,7 +9,8 @@
   },
   "include": [
     "unit",
-    "e2e"
+    "e2e",
+    "support"
   ],
   "references": [
     {

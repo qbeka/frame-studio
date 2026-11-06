@@ -4,10 +4,12 @@
   isolation: isolate;
 }
 
+/* Measured boxes are border boxes, so drawn sizes must be applied as border boxes too. */
 [data-frame-surface] {
   position: absolute;
   inset: 0;
   z-index: -1;
+  box-sizing: border-box;
   contain: strict;
   pointer-events: none;
 }
@@ -19,6 +21,7 @@
 [data-frame-exiting] {
   position: absolute !important;
   margin: 0 !important;
+  box-sizing: border-box !important;
   pointer-events: none;
 }
 

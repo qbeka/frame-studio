@@ -36,15 +36,21 @@
   --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-* { box-sizing: border-box; }
+/*
+ * Everything below is scoped to the studio's own interface. The canvas must get browser default
+ * CSS, exactly as your app does, or the preview would disagree with the export. This is not
+ * theoretical: an unscoped box-sizing reset here once hid a real sizing bug.
+ */
 html, body, #root { height: 100%; }
-body { margin: 0; background: var(--paper); color: var(--ink); font: 13px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
-h1, h2, h3, p, dl, dd { margin: 0; }
-h2, h3 { font-size: 13px; font-weight: 550; }
-button, input, select { font: inherit; color: inherit; }
-ul { list-style: none; margin: 0; padding: 0; }
-select { padding: 3px 6px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--white); min-width: 0; max-width: 100%; }
-:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
+body { margin: 0; background: var(--paper); }
+.studio { color: var(--ink); font: 13px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
+.ui, .ui * { box-sizing: border-box; }
+.ui :is(h1, h2, h3, p, dl, dd) { margin: 0; }
+.ui :is(h2, h3) { font-size: 13px; font-weight: 550; }
+.ui :is(button, input, select) { font: inherit; color: inherit; }
+.ui ul { list-style: none; margin: 0; padding: 0; }
+.ui select { padding: 3px 6px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--white); min-width: 0; max-width: 100%; }
+.ui :focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .studio {
@@ -67,10 +73,11 @@ select { padding: 3px 6px; border: 1px solid var(--line-strong); border-radius: 
 .pane-left { grid-area: left; border-right: 1px solid var(--line); }
 .pane-right { grid-area: right; border-left: 1px solid var(--line); }
 .canvas { grid-area: canvas; min-width: 0; min-height: 0; overflow: auto; }
-.stage { position: relative; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 44px 24px 64px; }
-.stage-live { width: 100%; max-width: 372px; }
+.stage { position: relative; box-sizing: border-box; min-height: 100%; display: flex; justify-content: center; align-items: flex-start; padding: 44px 24px 64px; }
+.stage-live, .stage-probe { font: initial; color: initial; line-height: initial; -webkit-font-smoothing: auto; }
+.stage-live { display: flex; justify-content: center; width: 100%; max-width: 372px; }
 .stage[data-inspecting] .stage-live { cursor: not-allowed; }
-.stage-probe { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(372px, calc(100% - 48px)); visibility: hidden; pointer-events: none; }
+.stage-probe { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; width: min(372px, calc(100% - 48px)); visibility: hidden; pointer-events: none; }
 
 .graph { display: block; width: 100%; max-width: 208px; margin: 0 auto 10px; overflow: visible; }
 .graph-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
@@ -152,7 +159,7 @@ select { padding: 3px 6px; border: 1px solid var(--line-strong); border-radius: 
 .file-list li { display: flex; justify-content: space-between; gap: 12px; }
 .problems { display: grid; gap: 6px; }
 .problems code { font: 12px var(--mono); overflow-wrap: anywhere; }
-.empty-app { max-width: 480px; margin: 20vh auto; display: grid; gap: 8px; padding: 0 16px; }
+.empty-app { font: 15px/1.5 var(--sans); max-width: 480px; margin: 20vh auto; display: grid; gap: 8px; padding: 0 16px; }
 
 @media (max-width: 767px) {
   html, body, #root { height: auto; }
