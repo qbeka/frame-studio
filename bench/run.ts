@@ -5,7 +5,7 @@
  *   pnpm bench -- --only fidelity,controls
  */
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -175,6 +175,50 @@ const FAULTS: { name: string; file: string; find: string; replace: string }[] = 
   { name: 'exit box sizing removed', file: '../frame.css', find: 'box-sizing: border-box !important;', replace: '' },
 ];
 
+/**
+ * The replay comparison needs its own control, because this fault is in replay only and cannot
+ * touch the live path. It builds the studio from a copy with commands replayed 8 ms late.
+ */
+async function replayControl(browser: Browser, rows: unknown[], consumer: string) {
+  const copy = join(scratch, 'replay-fault');
+  mkdirSync(copy);
+  for (const dir of ['packages', 'fixtures']) cpSync(dir, join(copy, dir), { recursive: true, verbatimSymlinks: true });
+  symlinkSync(join(repo, 'node_modules'), join(copy, 'node_modules'));
+  const file = join(copy, 'packages/studio/runtime/timeline.ts');
+  const source = readFileSync(file, 'utf8');
+  const find = "if (event.type === 'command') run(event.atMs, event.command,";
+  if (!source.includes(find)) throw new Error('The replay fault no longer applies.');
+  writeFileSync(file, source.replace(find, "if (event.type === 'command') run(event.atMs + 8, event.command,"));
+  const out = join(scratch, 'studio-replay-fault');
+  run('node', ['packages/studio/cli/frame.mjs', 'build-demo', 'fixtures/inspector/frame.registrations.tsx', '--out', out], copy);
+
+  const compareReplay = async (name: string, port: number) => {
+    let geometryPx = 0;
+    let opacity = 0;
+    let clipPx = 0;
+    let missing = 0;
+    for (const script of SCRIPTS.filter((s) => s.name !== 'resize')) {
+      const times = sampleTimes(script.endMs, 16.667, 301);
+      const { page, context } = await open(browser, `http://localhost:${port}/?clock=manual`, 1);
+      await runScript(page, '.stage-live', script.steps, times);
+      const replayed = await readReplay(page, '.stage-live', times);
+      await context.close();
+      const b = await playScript(browser, consumerUrl, '#root', script, times, 1);
+      const result = compare(replayed, b);
+      geometryPx = Math.max(geometryPx, result.geometryPx);
+      opacity = Math.max(opacity, result.opacity);
+      clipPx = Math.max(clipPx, result.clipPx);
+      missing += result.missing.length;
+    }
+    rows.push({ name, geometryPx, clipPx, opacity, missing, detected: geometryPx > 0.5 || clipPx > 0.5 || opacity > 0.01 || missing > 0 });
+  };
+
+  await serve(join(consumer, 'dist'), CONSUMER_PORT);
+  await compareReplay('unmodified replay', STUDIO_PORT);
+  await serve(out, STUDIO_PORT + 10);
+  await compareReplay('replay 8 ms late, in replay only', STUDIO_PORT + 10);
+}
+
 async function controls() {
   await serve(studioBuild('fixtures/inspector/frame.registrations.tsx', 'studio-controls'), STUDIO_PORT);
   const base = consumerBuild('consumer-controls');
@@ -212,6 +256,7 @@ async function controls() {
     run('pnpm', ['exec', 'vite', 'build'], dir);
     await check(fault.name, join(dir, 'dist'));
   }
+  await replayControl(browser, rows, base);
   await browser.close();
   stop();
   saveRun(outName('controls'), manifest({ experiment: 'controls', faults: FAULTS.map((f) => f.name), rule: 'detected when geometry exceeds 0.5 px, opacity exceeds 0.01, or a target is missing' }), { rows });
