@@ -1,0 +1,42 @@
+{
+  "name": "frame-studio",
+  "version": "0.1.0",
+  "description": "A local motion editor for working React components, built around interrupted transitions.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "frame": "./cli/frame.mjs"
+  },
+  "exports": {
+    "./registration": "./authoring/registration.ts",
+    "./authoring": "./authoring/index.ts",
+    "./pure": "./runtime/pure.ts",
+    "./runtime": "./runtime/index.ts",
+    "./runtime/frame.css": "./runtime/frame.css"
+  },
+  "files": [
+    "runtime",
+    "authoring",
+    "editor",
+    "cli",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "node cli/frame.mjs dev ../../fixtures/inspector/frame.registrations.tsx",
+    "build": "node cli/frame.mjs build-demo ../../fixtures/inspector/frame.registrations.tsx --out ../../dist/demo"
+  },
+  "peerDependencies": {
+    "react": ">=18.3.0 <20",
+    "react-dom": ">=18.3.0 <20"
+  },
+  "dependencies": {
+    "vite": "8.3.6",
+    "@vitejs/plugin-react": "6.2.1"
+  },
+  "devDependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "geist": "1.9.1"
+  }
+}

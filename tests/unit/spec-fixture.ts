@@ -1,4 +1,4 @@
-import type { MotionSpec, Rects, SpringCurve, StateTargetValue } from '@frame-studio/runtime/pure';
+import type { MotionSpec, Rects, SpringCurve, StateTargetValue } from 'frame-studio/pure';
 
 export const spring: SpringCurve = { type: 'spring', stiffness: 380, damping: 24, mass: 1 };
 const shown: StateTargetValue = { present: true, opacity: 1, xPx: 0, yPx: 0, scale: 1 };

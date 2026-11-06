@@ -1,0 +1,9 @@
+{
+  "name": "@frame-studio/fixture-inspector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./Inspector.tsx", "./registration": "./frame.registrations.tsx", "./inspector.css": "./inspector.css" },
+  "peerDependencies": { "react": ">=18.3.0 <20" },
+  "dependencies": { "frame-studio": "workspace:*" }
+}

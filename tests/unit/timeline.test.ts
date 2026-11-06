@@ -14,7 +14,7 @@ import {
   type MotionSpec,
   type TakeEvent,
   type Timeline,
-} from '@frame-studio/runtime/pure';
+} from 'frame-studio/pure';
 import { closedRects, geometry, openRects, panelSpec, spring } from './spec-fixture';
 
 function start(spec = panelSpec()) {

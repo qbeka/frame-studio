@@ -1,1 +1,1 @@
-{ "files": [], "references": [{ "path": "packages/runtime" }] }
+{ "files": [], "references": [{ "path": "packages/studio" }, { "path": "fixtures/inspector" }, { "path": "tests" }] }

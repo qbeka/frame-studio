@@ -9,7 +9,8 @@ import {
   springSettleSeconds,
   tweenAt,
   type SpringCurve,
-} from '@frame-studio/runtime/pure';
+  type TweenCurve,
+} from 'frame-studio/pure';
 
 const reference = JSON.parse(readFileSync(new URL('../../reference/spring-reference.json', import.meta.url), 'utf8'));
 const curve = (name: string): SpringCurve => ({ type: 'spring', ...reference.springs[name] });
@@ -94,7 +95,7 @@ describe('spring facts', () => {
 
 describe('tween', () => {
   it('holds its endpoints and matches a known cubic-bezier value', () => {
-    const c = { type: 'tween', durationMs: 200, easing: [0.25, 0.1, 0.25, 1] } as const;
+    const c: TweenCurve = { type: 'tween', durationMs: 200, easing: [0.25, 0.1, 0.25, 1] };
     expect(tweenAt(c, 0, 100, 0).position).toBeCloseTo(0, 9);
     expect(tweenAt(c, 0, 100, 200).position).toBe(100);
     // CSS `ease` at half the time is about 80.24 percent of the distance.
@@ -102,14 +103,14 @@ describe('tween', () => {
   });
 
   it('reports a velocity that agrees with a finite difference', () => {
-    const c = { type: 'tween', durationMs: 300, easing: [0.2, 0, 0, 1] } as const;
+    const c: TweenCurve = { type: 'tween', durationMs: 300, easing: [0.2, 0, 0, 1] };
     const h = 0.001;
     const numeric = ((tweenAt(c, 0, 80, 120 + h).position - tweenAt(c, 0, 80, 120 - h).position) / (2 * h)) * 1000;
     expect(tweenAt(c, 0, 80, 120).velocity).toBeCloseTo(numeric, 3);
   });
 
   it('does not let the linear easing drift', () => {
-    const c = { type: 'tween', durationMs: 100, easing: [0, 0, 1, 1] } as const;
+    const c: TweenCurve = { type: 'tween', durationMs: 100, easing: [0, 0, 1, 1] };
     expect(tweenAt(c, 10, 20, 37).position).toBeCloseTo(13.7, 8);
   });
 });

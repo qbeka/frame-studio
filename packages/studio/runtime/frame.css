@@ -1,0 +1,28 @@
+/* Required by the runtime. Every rule is scoped to data-frame attributes. */
+[data-frame-root] {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-frame-surface] {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  contain: strict;
+  pointer-events: none;
+}
+
+[data-frame-target][hidden]:not([data-frame-exiting]) {
+  display: none !important;
+}
+
+[data-frame-exiting] {
+  position: absolute !important;
+  margin: 0 !important;
+  pointer-events: none;
+}
+
+/* A `hidden` exiting element must draw. :where keeps this weaker than any author class. */
+:where([data-frame-exiting][hidden]) {
+  display: block;
+}

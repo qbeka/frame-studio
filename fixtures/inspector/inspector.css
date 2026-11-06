@@ -1,0 +1,154 @@
+/* The fixture's own look. The runtime needs none of this. */
+.fx-inspector {
+  width: 100%;
+  max-width: 372px;
+  font: 14px/1.45 ui-sans-serif, system-ui, sans-serif;
+  color: #111511;
+}
+
+.fx-surface {
+  background: #fff;
+  border: 1px solid #1115112e;
+  border-radius: 14px;
+}
+
+.fx-content {
+  padding: 14px 16px;
+}
+
+.fx-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fx-title {
+  min-width: 0;
+  display: grid;
+}
+
+.fx-merchant {
+  overflow-wrap: anywhere;
+  font-weight: 550;
+}
+
+.fx-meta,
+.fx-status,
+.fx-lines dt {
+  color: #5a5e5a;
+  font-size: 13px;
+}
+
+.fx-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-open {
+  margin-top: 12px;
+}
+
+.fx-form {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.fx-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fx-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13px;
+  color: #444944;
+}
+
+.fx-field input,
+.fx-field select,
+.fx-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #1115112e;
+  border-radius: 8px;
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 14px;
+  color: #111511;
+  background: #fff;
+  resize: none;
+}
+
+.fx-field [aria-invalid='true'] {
+  border-color: #a4332a;
+}
+
+.fx-error {
+  margin: 0;
+  color: #a4332a;
+  font-size: 13px;
+}
+
+.fx-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fx-button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #1115112e;
+  border-radius: 999px;
+  background: #fff;
+  color: #111511;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fx-primary {
+  background: #121412;
+  border-color: #121412;
+  color: #fff;
+}
+
+.fx-quiet {
+  background: transparent;
+}
+
+.fx-button:focus-visible,
+.fx-field :focus-visible {
+  outline: 2px solid #1d3a2a;
+  outline-offset: 2px;
+}
+
+.fx-receipt {
+  margin-top: 14px;
+  outline: none;
+}
+
+.fx-status {
+  margin: 0;
+}
+
+.fx-lines {
+  margin: 10px 0 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.fx-lines div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fx-lines dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}

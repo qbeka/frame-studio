@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": ".tsout",
+    "rootDir": "../..",
+    "types": []
+  },
+  "include": [
+    "*.tsx",
+    "*.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/studio"
+    }
+  ]
+}
