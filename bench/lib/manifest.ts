@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { cpus, platform, release, totalmem } from 'node:os';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 const text = (command: string, args: string[]) => {
   try {
@@ -41,7 +42,12 @@ export function saveRun(name: string, meta: unknown, raw: Record<string, unknown
   const dir = join('results', name);
   mkdirSync(join(dir, 'raw'), { recursive: true });
   writeFileSync(join(dir, 'manifest.json'), `${JSON.stringify(meta, null, 2)}\n`);
-  for (const [file, value] of Object.entries(raw)) writeFileSync(join(dir, 'raw', `${file}.json`), `${JSON.stringify(value)}\n`);
+  // Summaries stay readable. Full sample sets are large, so they are gzipped.
+  for (const [file, value] of Object.entries(raw)) {
+    const text = `${JSON.stringify(value)}\n`;
+    if (file === 'rows') writeFileSync(join(dir, 'raw', 'rows.json'), text);
+    else writeFileSync(join(dir, 'raw', `${file}.json.gz`), gzipSync(text, { level: 9 }));
+  }
 }
 
 export function median(values: number[]) {

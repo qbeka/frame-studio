@@ -39,6 +39,12 @@ A hand-written Motion for React version of the same inspector, in `bench/apps/mo
 - **Size:** gzip of built JavaScript and CSS, level 9.
 - **Main thread:** Chrome's `ScriptDuration`, `LayoutDuration`, `RecalcStyleDuration` and `TaskDuration` over the whole workload, per cycle.
 
+## Changes made after a control failed
+
+The first full run had 9 of 10 controls detected. Removing the exit box sizing went unnoticed, because the inspector's exiting targets had no padding or border, so that fault could not change anything they drew. That made the fidelity workload blind to a known class of bug. The fixture now gives its exiting form and receipt padding and a border, and all experiments were rerun from one commit. The earlier numbers are discarded.
+
+Earlier fixes to the harness, also before any result was used: seeks now start from the first moment, because the check that a seek really moved found forward steps doing nothing at the end of the range.
+
 ## Runs
 
 Five independent runs per condition, each in a new browser process. Samples inside one run are not independent, so tables report the median of run level values and the range across runs. There are no exclusions. A failed run is recorded as a failure.

@@ -51,6 +51,8 @@
 
 .fx-form {
   margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #11151117;
   display: grid;
   gap: 12px;
 }
@@ -129,6 +131,8 @@
 
 .fx-receipt {
   margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #11151117;
   outline: none;
 }
 

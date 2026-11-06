@@ -350,7 +350,7 @@
     "resize": "retarget"
   },
   "take": {
-    "startMs": 521.9000000357628,
+    "startMs": 561.0999999642372,
     "initialState": "folded",
     "initialRects": {
       "paper": {
@@ -379,7 +379,7 @@
     },
     "events": [
       {
-        "atMs": 549.9000000357628,
+        "atMs": 589.0999999642372,
         "type": "command",
         "command": "unfold",
         "reduced": false,
@@ -411,7 +411,7 @@
         }
       },
       {
-        "atMs": 700.9000000357628,
+        "atMs": 740.3999999761581,
         "type": "command",
         "command": "fold",
         "reduced": false,
