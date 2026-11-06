@@ -5,6 +5,7 @@ import { defineConfig } from '@playwright/test';
 const STUDIO_PORT = 5172;
 const CONSUMER_PORT = 5182;
 const NEXT_PORT = 5183;
+const SITE_PORT = 5184;
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -19,6 +20,11 @@ export default defineConfig({
     {
       command: 'pnpm dev',
       port: STUDIO_PORT,
+      reuseExistingServer: true,
+    },
+    {
+      command: 'pnpm --filter @frame-studio/site dev',
+      port: SITE_PORT,
       reuseExistingServer: true,
     },
     {
