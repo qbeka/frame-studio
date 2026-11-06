@@ -2,7 +2,7 @@
 
 Frame lets you author what happens when a transition is interrupted, on a real React component, and export a small working version. This report says what was measured, what failed, and what the numbers leave out.
 
-All measured results come from commit `fdea218`, on 2026-11-06, on one Apple M5 Pro Mac on AC power. Other work was running on the machine. Chromium 158, WebKit 27.2 and Firefox 159 came from Playwright 1.65 and ran headless. The workload and pass criteria are in [`bench/PROTOCOL.md`](../bench/PROTOCOL.md), which was frozen before the first run and amended once, for the reason given under [Failures](#failures).
+All measured results come from commit `909eca6`, on 2026-11-06, on one Apple M5 Pro Mac on AC power. Other work was running on the machine. Chromium 158, WebKit 27.2 and Firefox 159 came from Playwright 1.65 and ran headless. The workload and pass criteria are in [`bench/PROTOCOL.md`](../bench/PROTOCOL.md), which was frozen before the first run and amended once, for the reason given under [Failures](#failures).
 
 ## Results
 
@@ -129,7 +129,8 @@ The first full measurement caught 8 of 9 faults. By the rules in the protocol th
 - **Queued commands** are covered by unit tests against the real controller with a stub DOM, not by the browser fidelity scripts.
 - **No field data.** Lab timings are not field INP. Automated accessibility checks pass, and that does not establish full accessibility. Keyboard, touch width, 200 percent zoom, reduced motion, long labels and dense data were tested. No one using a screen reader has tried it.
 - **No usability data.** No person has completed the task. See [`USABILITY.md`](USABILITY.md).
-- **Manifest flag.** Most result manifests show `dirty: true`. The cause was earlier experiments in the same run writing to `results/`. The fidelity manifest, written first, shows the tree was clean at `fdea218`, and the flag now ignores that folder.
+- **Manifest flag.** Most result manifests show `dirty: true`. The cause was earlier experiments in the same run writing to `results/`. The fidelity manifest, written first, shows the tree was clean at `909eca6`, and the flag now ignores that folder.
+- **Commit hashes.** A working file that no test or benchmark reads was removed from git history after these runs. That changed the commit hashes and no measured file. The hash here and in the manifests is the new one.
 
 ## Review
 
