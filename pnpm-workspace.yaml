@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+  - fixtures/*
+minimumReleaseAgeExclude:
+  - '@playwright/test@1.65.0'
+  - playwright-core@1.65.0
+  - playwright@1.65.0

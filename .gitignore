@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+.vite/
+*.tsbuildinfo
+test-results/
+playwright-report/
+.DS_Store
+*.log
+.artifacts/
