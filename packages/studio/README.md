@@ -3,7 +3,7 @@
 A local motion editor for working React components, built around interrupted transitions.
 
 ```bash
-pnpm add -D frame-studio
+pnpm add -D "github:qbeka/frame-studio#path:packages/studio"
 ```
 
 ```bash

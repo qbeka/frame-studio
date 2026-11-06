@@ -6,7 +6,7 @@ A local motion editor for working React components, built around one question: w
 
 Use your real component. Interrupt it. Frame records that as a take, and you can scrub it, drag the interruption to a new moment, and change what happens there. Export a small runtime that behaves the same way in your app.
 
-**[Watch 17 seconds of it working](docs/media/signature.mp4)**, or the [73 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration. There is no public demo yet. Run it locally with the steps below.
+**[Watch 17 seconds of it working](docs/media/signature.mp4)**, or the [73 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration.
 
 | | |
 |---|---|
@@ -22,6 +22,14 @@ Measured on one Apple M5 Pro Mac in headless browsers, with other work running. 
 ## Run it
 
 You need Node 22 and pnpm.
+
+```bash
+git clone https://github.com/qbeka/frame-studio.git
+```
+
+```bash
+cd frame-studio
+```
 
 ```bash
 pnpm install
@@ -49,6 +57,12 @@ export function Receipt({ frame, props, setProps }) {
     </article>
   );
 }
+```
+
+Add Frame to your project. It is installed from GitHub, as it is not on npm.
+
+```bash
+pnpm add -D "github:qbeka/frame-studio#path:packages/studio"
 ```
 
 Declare its states, targets and commands in a registration. [This one](examples/receipt-app/src/frame.registrations.tsx) is 44 lines, and [the guide](docs/REGISTRATION.md) explains each part. Frame does not read React internals, and it cannot import a component that has not been registered.
@@ -106,6 +120,12 @@ To run the suites in another engine:
 
 ```bash
 FRAME_BROWSER=webkit pnpm test:e2e tests/e2e/consumer.spec.ts tests/e2e/fidelity.spec.ts
+```
+
+To run all of it from a fresh clone:
+
+```bash
+scripts/verify-clean.sh --bench
 ```
 
 To seed faults into the logic and read why each one was caught:
