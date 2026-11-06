@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frame</title>
+<meta name="description" content="A motion editor for working React components, built around what happens when a transition is interrupted.">
+<link rel="stylesheet" href="/src/page.css">
+</head>
+<body>
+<svg id="ridge" aria-hidden="true"><path fill="none"></path></svg>
+<div class="page">
+  <header>
+    <p class="eyebrow">Open source motion tool for React</p>
+    <h1>Change your mind halfway</h1>
+    <p class="lede">Press a button, then change your mind before the animation ends. Frame lets you decide what a real React component does at that moment, then exports that behaviour as a small runtime.</p>
+    <div class="pills">
+      <button class="pill dark" id="hero-play" type="button">Play the replay</button>
+      <a class="pill ghost" href="studio/index.html">Open the studio</a>
+      <a class="pill ghost" href="https://github.com/qbeka/frame-studio">Source</a>
+    </div>
+    <div class="tiles">
+      <div class="tile"><b>0.000015 px</b><span>Worst gap between studio and export</span></div>
+      <div class="tile"><b>9 of 9</b><span>Seeded faults caught</span></div>
+      <div class="tile"><b>6.2 KB</b><span>Gzipped JavaScript added to an app</span></div>
+      <div class="tile"><b>1.5 ms</b><span>Median edit at 30 targets</span></div>
+    </div>
+    <div class="aside"><i class="dash"></i><span>Measured on one Mac in headless browsers. The studio and export check compares two builds of the same code, so the physics has its own separate check. The hairline behind this page is the surface height from the replay below.</span></div>
+  </header>
+
+  <main>
+    <section id="replay" aria-labelledby="replay-title">
+      <h2 id="replay-title">The replay</h2>
+      <p class="text">Someone opens this expense panel, then presses Cancel before it finishes. This is the real component on the real runtime, so changing the rule changes what happens.</p>
+      <div id="replay-root"></div>
+      <noscript><p class="note">The replay needs JavaScript. The evidence below does not.</p></noscript>
+    </section>
+
+    <section id="evidence" aria-labelledby="evidence-title">
+      <h2 id="evidence-title">The evidence</h2>
+      <p class="text">Every target was met. In a Vite build of this one interaction, Frame added 6.2 KB of gzipped JavaScript and Motion 14.9.1 added 45.1 KB. Motion does far more, and main thread time overlapped, so there is no speed claim here.</p>
+      <div class="rows" role="table" aria-label="Measured results">
+        <div class="row head" role="row"><span role="columnheader">Check</span><span class="n" role="columnheader">Target</span><span class="n" role="columnheader">Result</span></div>
+        <div class="row" role="row"><span role="cell">Studio and export, geometry</span><span class="n" role="cell">0.5 px</span><span class="n" role="cell">0.000015 px</span></div>
+        <div class="row" role="row"><span role="cell">Studio and export, opacity</span><span class="n" role="cell">0.01</span><span class="n" role="cell">0</span></div>
+        <div class="row" role="row"><span role="cell">Replay and export, geometry</span><span class="n" role="cell">0.5 px</span><span class="n" role="cell">0.000015 px</span></div>
+        <div class="row" role="row"><span role="cell">Real geometry against independent physics</span><span class="n" role="cell">0.11 px</span><span class="n" role="cell">0.094 px</span></div>
+        <div class="row" role="row"><span role="cell">Edit to DOM at 30 targets, p95</span><span class="n" role="cell">16.7 ms</span><span class="n" role="cell">2.2 ms</span></div>
+        <div class="row" role="row"><span role="cell">Seeded faults caught</span><span class="n" role="cell">Every fault</span><span class="n" role="cell">9 of 9</span></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="checks-title">
+      <h2 id="checks-title">How it was checked</h2>
+      <ul class="dashes">
+        <li>120 scripted runs in Chromium, WebKit and Firefox at device scales 1 and 2, with 13,462 comparisons per engine.</li>
+        <li>Spring values against a 50 digit reference, and real browser geometry against an independent numerical solution.</li>
+        <li>Faults were seeded into the export and the replay. The first full run caught 8 of 9, so it was discarded, the workload was fixed and everything was measured again.</li>
+        <li>46 of 46 seeded logic mutants were caught by the tests.</li>
+        <li>118 unit tests and 64 browser tests pass on a fresh clone of the public repository.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="limits-title">
+      <h2 id="limits-title">What this cannot tell you</h2>
+      <ul class="dashes">
+        <li>No person has run the usability task, and no human has reviewed the code.</li>
+        <li>No physical phone was tested, and no one using a screen reader has tried it.</li>
+        <li>These are lab timings from one machine with other work running, not field data.</li>
+        <li>Only registered components work. Elements outside the registered root do not animate.</li>
+        <li>Scrubbing back across a viewport change reflows text to the current width.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>Measured at commit fdea218. <a href="https://github.com/qbeka/frame-studio/blob/main/docs/REPORT.md">Full report</a> and <a href="https://github.com/qbeka/frame-studio">source</a>. MIT licensed.</footer>
+</div>
+<script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

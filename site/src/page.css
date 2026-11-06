@@ -1,0 +1,118 @@
+/* Tokens match qendrimbeka.com and its other project pages. */
+@font-face {
+  font-family: "Geist Serif";
+  src: url("../../packages/studio/editor/fonts/GeistSerif-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+:root {
+  color-scheme: light;
+  --ink: #111511; --body: #444944; --muted: #5a5e5a; --quiet: #8d918e;
+  --forest: #1d3a2a;
+  --line: #11151117; --line-strong: #1115112e;
+  --tile: #6040200e;
+}
+* { box-sizing: border-box; }
+b, strong { font-weight: 400; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: #fff; color: var(--ink);
+  font: 16px/24px "Geist Serif", Georgia, serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: #1d3a2a26; }
+:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; border-radius: 6px; }
+a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--line-strong); }
+
+#ridge { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#ridge path { stroke: var(--line-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+.page { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 72px 24px 80px; }
+.eyebrow { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+h1 { font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3rem); line-height: 1.04; letter-spacing: -0.032em; font-weight: 400; margin: 0; }
+.lede { max-width: 34rem; margin: 12px 0 0; font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem); line-height: 1.5; color: var(--body); }
+h2 { font-size: 1.5rem; line-height: 1.15; letter-spacing: -0.028em; font-weight: 400; margin: 0 0 8px; }
+main > section { margin-top: 72px; scroll-margin-top: 24px; }
+p.text { font-size: 15.5px; line-height: 1.65; color: var(--body); margin: 0 0 12px; }
+.note { font-size: 13px; line-height: 20px; color: var(--muted); }
+
+.pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.pill { display: inline-flex; height: 44px; align-items: center; justify-content: center; padding: 0 20px; border-radius: 999px;
+  font: inherit; font-size: 15px; letter-spacing: -0.012em; cursor: pointer; text-decoration: none; white-space: nowrap; transition: background-color .15s; }
+.pill.dark { background: #121412; color: #fff; border: 1px solid #ffffff26; box-shadow: 0 1px 2px #0000002e; }
+.pill.dark:hover { background: #2a2d2a; }
+.pill.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line-strong); }
+.pill.ghost:hover { background: #f7f6f4; }
+.pill.small { height: 32px; padding: 0 12px; font-size: 13px; }
+.scenes .pill[aria-pressed="true"] { background: #121412; color: #fff; border-color: #121412; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 40px 0 0; }
+.tile { background: var(--tile); border-radius: 18px; padding: 14px 16px; }
+.tile b { display: block; font-size: 1.375rem; line-height: 1; letter-spacing: -0.028em; font-variant-numeric: tabular-nums; }
+.tile span { display: block; margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--muted); }
+
+.aside { display: flex; gap: 12px; margin-top: 24px; font-size: 14px; line-height: 21px; color: var(--body); }
+.dash { flex: none; width: 12px; height: 1px; margin-top: 10px; background: var(--quiet); }
+
+.scenes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.rule-note { margin: 10px 0 0; min-height: 20px; }
+.card { background: #ffffffd9; border: 1px solid var(--line); border-radius: 28px; padding: 24px; margin-top: 12px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+.stage { position: relative; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; padding: 24px; background: var(--tile); border-radius: 18px; }
+.stage-live { display: flex; justify-content: center; width: 100%; max-width: 372px; }
+/* Sized from its offsets, so it measures the same width as the panel above it. */
+.stage-probe { position: absolute; top: 24px; left: 24px; right: 24px; max-width: 372px; margin: 0 auto; visibility: hidden; pointer-events: none; }
+/* The panel keeps its own layout. Only the typeface follows the page. */
+.stage .fx-inspector, .stage button, .stage input, .stage select, .stage textarea { font-family: inherit; font-weight: 400; }
+.stage .fx-merchant { font-weight: 400; }
+
+svg.chart { display: block; width: 100%; margin-top: 16px; touch-action: pan-y; cursor: crosshair; overflow: visible; }
+.take-line { fill: none; stroke: var(--forest); stroke-width: 1.5; }
+.ghost-line { fill: none; stroke: var(--quiet); stroke-width: 1; stroke-dasharray: 2 4; }
+.playhead { stroke: var(--ink); stroke-width: 1; }
+.marker { cursor: ew-resize; touch-action: none; outline: none; }
+.marker line { stroke: var(--forest); stroke-width: 1; stroke-dasharray: 3 3; }
+.marker circle { fill: var(--forest); stroke: #fff; stroke-width: 2; }
+.marker:focus-visible circle { stroke: var(--forest); stroke-width: 2; fill: #fff; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-size: 13px; line-height: 20px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend .drag-hint { margin-left: auto; }
+.swatch { width: 18px; height: 0; border-top: 2px solid var(--forest); }
+.swatch.dotted { border-top: 2px dotted var(--quiet); }
+
+.player { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+input[type=range] { flex: 1; min-width: 80px; height: 24px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 1px; background: var(--line-strong); }
+input[type=range]::-moz-range-track { height: 1px; background: var(--line-strong); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; margin-top: -6px; border-radius: 50%; background: #121412; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line-strong); }
+input[type=range]::-moz-range-thumb { width: 9px; height: 9px; border-radius: 50%; background: #121412; border: 2px solid #fff; }
+.clock { min-width: 58px; text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.who { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.person { background: var(--tile); border-radius: 18px; padding: 12px 14px; min-width: 0; }
+.person .name { display: block; font-size: 13px; color: var(--muted); }
+.person b { display: block; margin-top: 6px; font-size: 1.125rem; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.rows { border-top: 1px solid var(--line); margin-top: 8px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) 96px 96px; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; line-height: 22px; color: var(--body); font-variant-numeric: tabular-nums; }
+.row .n { text-align: right; }
+.row.head { color: var(--muted); font-size: 13px; }
+ul.dashes { list-style: none; margin: 12px 0 0; padding: 0; }
+ul.dashes li { display: flex; gap: 12px; font-size: 15px; line-height: 1.55; color: var(--body); margin-top: 6px; }
+ul.dashes li::before { content: ""; flex: none; width: 12px; height: 1px; margin-top: .75em; background: var(--quiet); }
+footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; line-height: 20px; color: var(--quiet); overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .page { padding: 48px 16px 64px; }
+  .tiles, .who { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { padding: 16px; border-radius: 18px; }
+  .stage { padding: 16px; }
+  .stage-probe { top: 16px; left: 16px; right: 16px; }
+  .player { flex-wrap: wrap; }
+  .player input[type=range] { order: 3; flex-basis: 100%; }
+  .clock { margin-left: auto; }
+  .legend .drag-hint { margin-left: 0; }
+  .row { grid-template-columns: minmax(0, 1fr) 68px 84px; gap: 8px; font-size: 13.5px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

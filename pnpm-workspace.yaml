@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - fixtures/*
+  - site
   - bench/fixtures
 minimumReleaseAgeExclude:
   - '@playwright/test@1.65.0'

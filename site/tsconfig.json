@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": ".tsout",
+    "rootDir": "..",
+    "types": [],
+    "resolveJsonModule": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "../packages/studio" }, { "path": "../fixtures/inspector" }]
+}
