@@ -39,7 +39,7 @@ function Readout({ session, target, channel }: { session: Session; target: strin
   );
 }
 
-export function Transport({ spec, take, session, store }: { spec: MotionSpec; take: Take | null; session: Session; store: ProjectStore }) {
+export function Transport({ spec, take, session, store, canLoadExample }: { spec: MotionSpec; take: Take | null; session: Session; store: ProjectStore; canLoadExample: boolean }) {
   const t = usePlayhead(session);
   const targetIds = Object.keys(spec.targets);
   const [target, setTarget] = useState(targetIds[0]!);
@@ -195,6 +195,9 @@ export function Transport({ spec, take, session, store }: { spec: MotionSpec; ta
         <div className="ribbon-empty">
           <p className="lede">Use the component. Press its first control, then interrupt it before it settles.</p>
           <p className="hint">Frame records what you do as named commands, with the measured layout at each one.</p>
+          {canLoadExample ? (
+            <button type="button" className="link" onClick={session.loadExample}>Or play an example of an interrupted open</button>
+          ) : null}
         </div>
       )}
 

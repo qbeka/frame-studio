@@ -242,19 +242,23 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
   }, [inspectAt, playhead, setMode]);
 
   /** Plays the take back at real speed. The take is not changed and input stays off. */
-  const play = useCallback(() => {
-    const { take: current, spec: currentSpec } = latest.current;
+  const play = useCallback((given?: Take) => {
+    const { spec: currentSpec } = latest.current;
+    const current = given ?? latest.current.take;
     if (!current) return;
     const timeline = inspectAt(current, currentSpec, playhead.get());
     const range = takeRange(current, timeline);
-    let t = playhead.get() >= range.end - 1 ? range.start : playhead.get();
+    const from = given ? range.start : playhead.get();
+    let t = from >= range.end - 1 ? range.start : from;
     let last = performance.now();
     let id = 0;
     const step = () => {
       const time = performance.now();
       t = Math.min(range.end, t + (time - last));
       last = time;
-      seek(t);
+      setPropsState(propsAt(current, t));
+      controller.seek(t);
+      playhead.set(t);
       if (t >= range.end) {
         stopPlaying.current = null;
         setMode('inspect');
@@ -268,7 +272,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     };
     setMode('playing');
     id = requestAnimationFrame(step);
-  }, [inspectAt, playhead, seek, setMode]);
+  }, [controller, inspectAt, playhead, setMode]);
 
   /** Back to a known endpoint, with a new take. */
   const resetTo = useCallback(
@@ -299,6 +303,22 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     setMode('live');
   }, [controller, inspectAt, playhead, setMode]);
 
+  /** Builds a take from named commands and plays it, with the layout measured by the probe. */
+  const loadExample = useCallback(() => {
+    const timeline = controller.getTimeline();
+    const example = registration.exampleTake;
+    if (!timeline || !example) return;
+    const { spec: currentSpec, setTake: store } = latest.current;
+    const startMs = controller.now();
+    const take: Take = {
+      ...baseTake({ startMs, rects: timeline.marks[0]!.rects }),
+      events: example.map((e) => ({ atMs: startMs + 60 + e.atMs, type: 'command', command: e.command })),
+    };
+    store(take);
+    inspectAt(take, currentSpec, startMs);
+    play(take);
+  }, [baseTake, controller, inspectAt, registration]);
+
   // With no take yet, an edit applies to the resting component straight away.
   useEffect(() => {
     if (latest.current.take || !controller.getTimeline()) return;
@@ -324,6 +344,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     play,
     resetTo,
     continueFromHere,
+    loadExample,
     timeline: () => replayed ?? controller.getTimeline(),
   };
 }

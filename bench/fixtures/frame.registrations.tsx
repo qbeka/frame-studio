@@ -7,6 +7,8 @@ function Rows({ frame, count }: { frame: FrameHandle; count: number }) {
     <section {...frame.root()} style={{ width: 360, font: '14px system-ui' }}>
       <div {...frame.target('surface')} style={{ background: '#fff', border: '1px solid #1115112e', borderRadius: 12 }} />
       <button type="button" onClick={() => frame.send('toggle')} style={{ margin: 8 }}>Toggle</button>
+      {/* The surface must really move at every size, or an edit would measure nothing. */}
+      <div style={{ height: frame.state === 'open' ? 80 : 0 }} />
       {Array.from({ length: count - 1 }, (_, i) => (
         <div key={i} {...frame.target(`row${i}`)} style={{ padding: '2px 12px' }}>Row {i + 1} of declared content</div>
       ))}

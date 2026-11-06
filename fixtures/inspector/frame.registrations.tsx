@@ -48,6 +48,10 @@ export const inspectorRegistration = defineRegistration<InspectorProps>({
     saving: { type: 'boolean', label: 'Saving', default: false },
   },
   defaultSpec: authored.spec as unknown as MotionSpec,
+  exampleTake: [
+    { atMs: 0, command: 'open' },
+    { atMs: 150, command: 'cancel' },
+  ],
   reset: cancelSave,
   render: (context) => <Inspector {...context} />,
 });

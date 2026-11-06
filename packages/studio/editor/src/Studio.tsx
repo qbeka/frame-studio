@@ -66,7 +66,7 @@ export function Studio({ registration, registrations, onPickRegistration, initia
       <aside className="ui pane pane-right" aria-label="Properties">
         <PropertyPanel spec={spec} selection={selection} store={store} session={session} />
       </aside>
-      <Transport spec={spec} take={take} session={session} store={store} />
+      <Transport spec={spec} take={take} session={session} store={store} canLoadExample={Boolean(registration.exampleTake)} />
     </div>
   );
 }

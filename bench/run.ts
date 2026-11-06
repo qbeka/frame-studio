@@ -220,13 +220,16 @@ async function measureEdits(page: Page, count: number, warmup: number) {
         const t0 = performance.now();
         setValue.call(input, String(300 + (i % 2) * 400 + i));
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        // React commits a discrete event's update in a microtask. Polling proves it landed.
-        await Promise.resolve();
-        await Promise.resolve();
+        // The clock stops only once the ribbon has really changed, so this cannot undercount
+        // by finishing before React commits. A spin of microtasks, then real tasks if needed.
+        for (let polls = 0; path.getAttribute('d') === before; polls += 1) {
+          if (polls < 200) await Promise.resolve();
+          else if (polls < 400) await new Promise((r) => setTimeout(r, 0));
+          else throw new Error('An edit did not change the ribbon.');
+        }
         const t1 = performance.now();
         await frame();
         const t2 = performance.now();
-        if (path.getAttribute('d') === before && i > 0) throw new Error('An edit did not change the ribbon.');
         if (i >= warmup) {
           out.editDom.push(t1 - t0);
           out.editFrame.push(t2 - t0);
@@ -235,10 +238,14 @@ async function measureEdits(page: Page, count: number, warmup: number) {
       slider.focus();
       for (let i = 0; i < warmup + count; i += 1) {
         await frame();
+        const before = slider.getAttribute('aria-valuenow');
         const t0 = performance.now();
         slider.dispatchEvent(new KeyboardEvent('keydown', { key: i % 20 < 10 ? 'ArrowRight' : 'ArrowLeft', bubbles: true }));
-        await Promise.resolve();
-        await Promise.resolve();
+        for (let polls = 0; slider.getAttribute('aria-valuenow') === before; polls += 1) {
+          if (polls < 200) await Promise.resolve();
+          else if (polls < 400) await new Promise((r) => setTimeout(r, 0));
+          else throw new Error('A seek did not move the playhead.');
+        }
         const t1 = performance.now();
         await frame();
         const t2 = performance.now();
@@ -264,14 +271,14 @@ async function authoring() {
       const browser = await chromium.launch();
       const page = await (await browser.newContext({ viewport: VIEWPORT })).newPage();
       await page.goto(`http://localhost:${STUDIO_PORT}/`);
-      await page.getByLabel('Component').selectOption({ index });
+      await page.locator('select[aria-label=Component]').selectOption({ index });
       const toggle = page.locator('.stage-live').getByRole('button', { name: 'Toggle' });
       await toggle.click();
       await page.waitForTimeout(120);
       await toggle.click();
       await page.waitForTimeout(1000);
       await page.getByRole('button', { name: 'Pause' }).click();
-      await page.waitForSelector('.ribbon-path');
+      await page.waitForSelector('.ribbon-path', { state: 'attached' });
       const samples = await measureEdits(page, smoke ? 15 : 60, smoke ? 5 : 20);
 
       await page.getByRole('button', { name: 'Export' }).click();
@@ -313,13 +320,15 @@ function folderGzip(dir: string, extension: string) {
   return bytes;
 }
 
+const APPS = ['none', 'frame', 'motion', 'motion-lazy'];
+
 function prepareApps() {
   const apps = join(scratch, 'apps');
   cpSync('bench/apps', apps, { recursive: true, filter: (s) => !/node_modules|dist$/.test(s) });
-  for (const name of ['none', 'frame', 'motion']) cpSync('fixtures/inspector/inspector.css', join(apps, name, 'src/inspector.css'));
+  for (const name of APPS) cpSync('fixtures/inspector/inspector.css', join(apps, name, 'src/inspector.css'));
   run('node', ['packages/studio/cli/frame.mjs', 'export', 'fixtures/inspector/inspector.frame.json', '--out', join(apps, 'frame/src/motion')]);
   run('pnpm', ['install', '--ignore-workspace', '--frozen-lockfile', '--prefer-offline'], apps);
-  for (const name of ['none', 'frame', 'motion']) run('pnpm', ['exec', 'vite', 'build', name, '--config', join(apps, name, 'vite.config.js')], apps);
+  for (const name of APPS) run('pnpm', ['exec', 'vite', 'build', name, '--config', join(apps, name, 'vite.config.js')], apps);
   return apps;
 }
 
@@ -327,7 +336,7 @@ async function size() {
   const apps = prepareApps();
   const measure = (name: string) => ({ jsGzip: folderGzip(join(apps, name, 'dist'), '.js'), cssGzip: folderGzip(join(apps, name, 'dist'), '.css') });
   const none = measure('none');
-  const rows = ['none', 'frame', 'motion'].map((name) => {
+  const rows = APPS.map((name) => {
     const m = measure(name);
     return { app: name, ...m, jsOverNone: m.jsGzip - none.jsGzip, cssOverNone: m.cssGzip - none.cssGzip };
   });
@@ -341,7 +350,7 @@ async function runtimeCost() {
   const rows: any[] = [];
   const cycles = smoke ? 4 : 20;
   for (let r = 0; r < RUNS; r += 1) {
-    for (const [i, name] of ['frame', 'motion'].entries()) {
+    for (const [i, name] of ['frame', 'motion', 'motion-lazy'].entries()) {
       const port = 5310 + i;
       await serve(join(apps, name, 'dist'), port);
       const browser = await chromium.launch();
@@ -351,6 +360,30 @@ async function runtimeCost() {
       const cdp = await page.context().newCDPSession(page);
       await cdp.send('Performance.enable');
       const read = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]));
+      // Same task check: the panel must really turn around mid flight in every app, or the
+      // comparison would be meaningless. Height is sampled on frames during one reversal.
+      const reversal = await page.evaluate(async () => {
+        const button = (text: string) => [...document.querySelectorAll('button')].find((b) => b.textContent === text)!;
+        const box = () => (document.querySelector('[data-frame-target=surface]') ?? document.querySelector('.fx-inspector'))!.getBoundingClientRect().height;
+        const rest = box();
+        button('Edit expense').click();
+        const start = performance.now();
+        const seen: number[] = [];
+        let cancelled = false;
+        await new Promise<void>((resolve) => {
+          const loop = () => {
+            seen.push(box());
+            if (!cancelled && performance.now() - start > 120) {
+              cancelled = true;
+              button('Cancel').click();
+            }
+            if (performance.now() - start < 800) requestAnimationFrame(loop);
+            else resolve();
+          };
+          requestAnimationFrame(loop);
+        });
+        return { rest, peak: Math.max(...seen), end: seen[seen.length - 1]! };
+      });
       const before = await read();
       await page.evaluate(async (count) => {
         const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -364,7 +397,7 @@ async function runtimeCost() {
       }, cycles);
       const after = await read();
       const per = (key: string) => (((after[key] as number) - (before[key] as number)) * 1000) / cycles;
-      rows.push({ run: r, app: name, cycles, scriptMs: per('ScriptDuration'), layoutMs: per('LayoutDuration'), styleMs: per('RecalcStyleDuration'), taskMs: per('TaskDuration') });
+      rows.push({ run: r, app: name, cycles, reversal, turnedAround: reversal.peak > reversal.rest + 1 && Math.abs(reversal.end - reversal.rest) < 1, scriptMs: per('ScriptDuration'), layoutMs: per('LayoutDuration'), styleMs: per('RecalcStyleDuration'), taskMs: per('TaskDuration') });
       await browser.close();
       stop();
     }

@@ -55,6 +55,8 @@ export interface Registration<Props extends Record<string, PropValue> = Record<s
   props: { [K in keyof Props]: PropDefinition };
   /** A saved spec to start from. Without one, Frame writes a starter spec. */
   defaultSpec?: MotionSpec;
+  /** A short take the studio can load, so a first visitor sees an interruption at once. */
+  exampleTake?: { atMs: number; command: string }[];
   /** Returns the fixture to a known state. Cancel timers and clear outside stores here. */
   reset: () => void;
   /** Draws the component. Called with the same context in every state. */

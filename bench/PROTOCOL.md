@@ -25,13 +25,13 @@ The numbers in the pass criteria are targets from the project brief. They are no
 
 ## Baseline
 
-A hand-written Motion for React version of the same inspector, in `bench/apps/motion`, with the same spring parameters, the same reversal and the same fading content. Size is compared to `bench/apps/none`, the same UI with no animation. This compares one interaction and supports no general claim.
+A hand-written Motion for React version of the same inspector, in `bench/apps/motion`, with the same spring parameters, the same reversal and the same fading content. `bench/apps/motion-lazy` is the same code using `LazyMotion`, Motion's documented way to reduce bundle size, because comparing only against the full import would flatter Frame. Size is compared to `bench/apps/none`, the same UI with no animation. Every runtime row records whether the panel really turned around mid flight. This compares one interaction and supports no general claim.
 
 ## Metrics
 
 - **Geometry disagreement:** the largest absolute difference in x, y, width or height, across targets and samples.
 - **Opacity disagreement:** the largest absolute difference in computed opacity.
-- **Edit to DOM:** from dispatching the input event until the update has been committed to the DOM.
+- **Edit to DOM:** from dispatching the input event until the ribbon path has changed, confirmed by reading it.
 - **Edit to frame:** from the same moment until the next animation frame has run. This is a proxy. A frame callback does not prove a displayed frame.
 - **Size:** gzip of built JavaScript and CSS, level 9.
 - **Main thread:** Chrome's `ScriptDuration`, `LayoutDuration`, `RecalcStyleDuration` and `TaskDuration` over the whole workload, per cycle.

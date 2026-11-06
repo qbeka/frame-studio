@@ -53,6 +53,7 @@ const frame = useFrame(motion);
         </ul>
       </details>
       <div className="dialog-actions">
+        {import.meta.env.VITE_FRAME_TRY ? <a className="link dialog-try" href="./try/">Try this interaction as a built export</a> : null}
         {done ? <span className="status" role="status">Downloaded {name}.zip</span> : null}
         <button type="button" className="button" onClick={onClose}>Close</button>
         <button
