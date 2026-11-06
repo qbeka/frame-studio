@@ -1,0 +1,36 @@
+{
+  "commit": "fdea21852aa72d8fd33134992f7f46659462d154",
+  "dirty": true,
+  "measuredAt": "2026-11-06T07:51:38.491Z",
+  "command": "/Users/qendrimbeka/Coding_Projects/frame-studio/bench/run.ts",
+  "node": "v22.16.0",
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
+    "@playwright/test": "1.65.0",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "frame-studio": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  },
+  "inputs": {
+    "pnpm-lock.yaml": "2b2cf9d3ac8e6dd72bb3f1362d2d4561e111b1fbe27b9b16ab170cf1494b470f",
+    "bench/PROTOCOL.md": "30d9e7136a4060ef1299a0b064819d4a579d462bf3b72efa89f9dbb4d2e72387",
+    "fixtures/inspector/inspector.frame.json": "261bd179959e6b3472b0c1f1cd686e956095ecc06fd0d37892853787ff7b82e4",
+    "tests/support/scripts.ts": "227f34475b6a204ee4aeecb4670d0c00f6df7a5aeaee52e151efd152930eae79"
+  },
+  "os": "darwin 25.6.0",
+  "hardware": {
+    "cpu": "Apple M5 Pro",
+    "cores": 18,
+    "memoryGb": 48
+  },
+  "power": "Now drawing from 'AC Power'",
+  "experiment": "reference",
+  "runs": 5,
+  "method": "RK4 at a 0.05 ms step, against the surface height in the exported consumer",
+  "exclusions": "none"
+}
