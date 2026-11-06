@@ -145,7 +145,7 @@ async function walkthrough(page: Page) {
   await say('The rule is what is exported, not this one path', 5000);
   await moveTo(page, page.getByRole('heading', { name: 'When interrupted' }));
   await say('Rules can retarget, queue or ignore, with their own curve', 5000);
-  await press(page, page.getByRole('button', { name: 'Firm' }).first());
+  await press(page, page.getByRole('button', { name: 'Firm', exact: true }).first());
   await say('Text is never scaled. Surfaces and clips carry the size change.', 5000);
   await press(page, page.getByRole('button', { name: 'Export' }));
   await say('The export is readable TypeScript with no dependency on Frame', 5000);

@@ -72,7 +72,7 @@ Production build, Chromium, 5 runs of 60 samples after 20 warmup samples. Each c
 
 The p95 ranged from 1.9 to 2.3 ms for edits at 30 targets across runs. The clock stops only after reading back a changed ribbon path, or a moved slider value for seeks, so it cannot stop before the update lands.
 
-The time to the next frame callback was at most 18.7 ms at p95 for these sizes. Frame callback timing is a proxy, and it does not prove a displayed frame. Export took a median of 36 ms in the browser, from click to download, with all sizes between 32 and 46 ms. The command line took 167 ms in one run, most of it starting Vite.
+The time to the next frame callback was at most 18.8 ms at p95 for these sizes. Frame callback timing is a proxy, and it does not prove a displayed frame. Export took a median of 36 ms in the browser, from click to download, with all sizes between 32 and 46 ms. The command line took 167 ms in one run, most of it starting Vite.
 
 ### Consumer cost
 
@@ -125,7 +125,6 @@ The first full measurement caught 8 of 9 faults. By the rules in the protocol th
 - **One machine, headless engines.** WebKit here is not Safari on an iPhone, and no physical phone was tested. Touch was emulated.
 - **Scrubbing across a layout change.** The `resize` script is not in the replay comparison. While you replay a moment before a viewport change, the page is still at the new width, so flow content cannot match. Springs and recorded bounds replay correctly, but the text inside reflows to today's width.
 - **Elements outside the root do not animate.** They take the endpoint layout on the first frame, and a shrinking surface can overlap them for a moment.
-- **Fast retargets drop the exiting fade of a target that never finished entering.** This is the defined behavior, not a bug, and it is worth checking in your own interaction.
 - **A second command in one event handler** is applied against the last known layout, then corrected before paint. It is unit tested, but it is not in the fidelity scripts.
 - **Queued commands** are covered by unit tests against the real controller with a stub DOM, not by the browser fidelity scripts.
 - **No field data.** Lab timings are not field INP. Automated accessibility checks pass, and that does not establish full accessibility. Keyboard, touch width, 200 percent zoom, reduced motion, long labels and dense data were tested. No one using a screen reader has tried it.
@@ -142,4 +141,4 @@ I reviewed each milestone myself, so that is self-review. A separate Claude agen
 pnpm bench
 ```
 
-Raw samples and a manifest for each experiment are in [`results/`](../results). `pnpm bench:smoke` checks the harness in about two minutes. Its numbers are not results.
+Raw samples and a manifest for each experiment are in [`results/`](../results). `pnpm bench:smoke` checks the harness. Its numbers are not results.

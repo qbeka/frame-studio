@@ -6,7 +6,7 @@ A local motion editor for working React components, built around one question: w
 
 Use your real component. Interrupt it. Frame records that as a take, and you can scrub it, drag the interruption to a new moment, and change what happens there. Export a small runtime that behaves the same way in your app.
 
-**[Watch 18 seconds of it working](docs/media/signature.mp4)**, or the [80 second technical walkthrough](docs/media/walkthrough.mp4). There is no public demo yet. Run it locally with the steps below.
+**[Watch 17 seconds of it working](docs/media/signature.mp4)**, or the [74 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration. There is no public demo yet. Run it locally with the steps below.
 
 | | |
 |---|---|
@@ -124,7 +124,7 @@ pnpm bench:smoke
 pnpm bench
 ```
 
-The smoke run checks the harness, and its numbers are not results. The full run takes about 15 minutes and follows [the protocol](bench/PROTOCOL.md). Raw samples and manifests are in [`results/`](results). The [report](docs/REPORT.md) has every table, what failed, and what changed because of it.
+The smoke run checks the harness, and its numbers are not results. The full run follows [the protocol](bench/PROTOCOL.md). Raw samples and manifests are in [`results/`](results). The [report](docs/REPORT.md) has every table, what failed, and what changed because of it.
 
 ## How it works
 
