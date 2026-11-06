@@ -161,7 +161,8 @@ export function compare(a: Reading[], b: Reading[]): Disagreement {
         }
       }
       opacity = Math.max(opacity, Math.abs(p.opacity - q.opacity));
-      if ((p.clip === null) !== (q.clip === null)) clipPx = Math.max(clipPx, Infinity);
+      // Clipped on one side only. A large finite value, so it survives being written as JSON.
+      if ((p.clip === null) !== (q.clip === null)) clipPx = Math.max(clipPx, 9999);
       else if (p.clip && q.clip) p.clip.forEach((v, j) => (clipPx = Math.max(clipPx, Math.abs(v - (q.clip![j] ?? 0)))));
     }
   });

@@ -303,6 +303,9 @@ async function measureEdits(page: Page, count: number, warmup: number) {
         }
       }
       slider.focus();
+      // Start from the first moment, or forward steps at the end of the range would do nothing.
+      slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+      await frame();
       for (let i = 0; i < warmup + count; i += 1) {
         await frame();
         const before = slider.getAttribute('aria-valuenow');
