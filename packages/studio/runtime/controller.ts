@@ -148,7 +148,11 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     // At rest the last measured boxes may be stale, for example after a resize, so take the
     // true starting layout while it is still on screen. Mid flight the channels already know.
     if (root && !isAnimating(timeline, atMs)) {
-      applyRemeasure(timeline, atMs, measure(), spec.resize);
+      const rects = measure();
+      const before = timeline.marks.length;
+      applyRemeasure(timeline, atMs, rects, spec.resize);
+      // Recorded, or a replay would start from the layout before this change.
+      if (timeline.marks.length !== before) options.onEvent?.({ atMs, type: 'measure', rects }, startMs);
       render();
     }
     pending.push({ atMs, decision, reduced, active: document.activeElement });

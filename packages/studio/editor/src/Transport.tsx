@@ -165,13 +165,13 @@ export function Transport({ spec, take, session, store }: { spec: MotionSpec; ta
         <span className="mode">{live ? 'Live' : session.mode === 'playing' ? 'Playing back' : 'Inspecting'}</span>
         <div className="grow" />
         <label className="inline">
-          <span className="sr">Target</span>
+          <span className="sr">Ribbon target</span>
           <select value={target} onChange={(e) => setTarget(e.target.value)}>
             {targetIds.map((id) => <option key={id}>{id}</option>)}
           </select>
         </label>
         <label className="inline">
-          <span className="sr">Channel</span>
+          <span className="sr">Ribbon channel</span>
           <select value={channel} onChange={(e) => setChannel(e.target.value as ChannelName)}>
             {CHANNELS.map((c) => <option key={c}>{c}</option>)}
           </select>
