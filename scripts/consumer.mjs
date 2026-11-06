@@ -35,7 +35,7 @@ run('node', [join(repo, 'packages/studio/cli/frame.mjs'), 'export', project, '--
 const component = readFileSync(join(repo, 'fixtures/inspector/Inspector.tsx'), 'utf8').replace("'frame-studio/runtime'", "'./motion/runtime'");
 writeFileSync(join(src, 'Inspector.tsx'), kind === 'next' ? `'use client';\n\n${component}` : component);
 cpSync(join(repo, 'fixtures/inspector/inspector.css'), join(src, 'inspector.css'));
-cpSync(join(repo, 'tests/support/manualClock.ts'), join(src, 'manualClock.ts'));
+cpSync(join(repo, 'packages/studio/editor/src/manualClock.ts'), join(src, 'manualClock.ts'));
 
 run('pnpm', ['install', '--ignore-workspace', '--frozen-lockfile', '--prefer-offline'], out);
 run('pnpm', ['run', 'build'], out);

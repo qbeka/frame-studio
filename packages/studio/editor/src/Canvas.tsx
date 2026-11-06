@@ -62,7 +62,7 @@ export const Canvas = forwardRef<ProbeHandle, { registration: AnyRegistration; s
     return (
       <main className="canvas" aria-label="Live component">
         <div className="stage" ref={stage} data-inspecting={inspecting || undefined}>
-          <div key={session.resetKey} className="stage-live" {...(inspecting ? { inert: true } : {})}>
+          <div key={session.generation.key} className="stage-live" {...(inspecting ? { inert: true } : {})}>
             {registration.render({ frame: session.frame, props: session.props, setProps: session.setProps })}
           </div>
           {probe && frame ? (

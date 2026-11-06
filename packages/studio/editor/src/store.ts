@@ -13,6 +13,8 @@ interface History {
   future: Project[];
   group: string | null;
   saved: string;
+  /** Moves when the project changes from outside the session: undo, redo, open. */
+  revision: number;
 }
 
 type Action =
@@ -41,12 +43,12 @@ function reducer(history: History, action: Action): History {
     case 'undo': {
       const previous = history.past[history.past.length - 1];
       if (!previous) return history;
-      return { ...history, past: history.past.slice(0, -1), present: previous, future: [history.present, ...history.future], group: null };
+      return { ...history, past: history.past.slice(0, -1), present: previous, future: [history.present, ...history.future], group: null, revision: history.revision + 1 };
     }
     case 'redo': {
       const [next, ...future] = history.future;
       if (!next) return history;
-      return { ...history, past: [...history.past, history.present], present: next, future, group: null };
+      return { ...history, past: [...history.past, history.present], present: next, future, group: null, revision: history.revision + 1 };
     }
     case 'replace':
       return {
@@ -55,6 +57,7 @@ function reducer(history: History, action: Action): History {
         future: [],
         group: null,
         saved: action.saved ?? history.saved,
+        revision: history.revision + 1,
       };
     case 'saved':
       return { ...history, saved: action.saved };
@@ -108,6 +111,7 @@ export function useProjectStore(initial: Project, saved: string) {
     future: [],
     group: null,
     saved,
+    revision: 0,
   }));
   const project = history.present;
   const componentId = project.spec.component.id;
@@ -146,6 +150,7 @@ export function useProjectStore(initial: Project, saved: string) {
     project,
     serialized,
     dirty,
+    revision: history.revision,
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     editSpec,

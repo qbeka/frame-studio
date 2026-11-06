@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "geist": "1.9.1"
+    "react-dom": "19.3.1"
   }
 }

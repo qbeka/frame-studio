@@ -12,6 +12,8 @@ export const PROJECT_VERSION = 1;
 
 export interface Take {
   startMs: number;
+  /** State the take began in. It is not always the spec's initial state. */
+  initialState: string;
   initialRects: Rects;
   initialProps: Record<string, PropValue>;
   events: TakeEvent[];
@@ -43,11 +45,12 @@ function readTake(value: unknown, problems: Problem[]): Take | null {
   if (
     !isRecord(value) ||
     typeof value.startMs !== 'number' ||
+    typeof value.initialState !== 'string' ||
     !isRects(value.initialRects) ||
     !isRecord(value.initialProps) ||
     !Array.isArray(value.events)
   ) {
-    problems.push({ path: 'take', message: 'must be null, or a take with startMs, initialRects, initialProps and events.' });
+    problems.push({ path: 'take', message: 'must be null, or a take with startMs, initialState, initialRects, initialProps and events.' });
     return null;
   }
   const events: TakeEvent[] = [];
@@ -73,6 +76,7 @@ function readTake(value: unknown, problems: Problem[]): Take | null {
   });
   return {
     startMs: value.startMs,
+    initialState: value.initialState,
     initialRects: value.initialRects,
     initialProps: value.initialProps as Record<string, PropValue>,
     events,
@@ -92,6 +96,9 @@ export function parseProject(input: unknown): ParseResult<Project> {
   const problems: Problem[] = [];
   if (typeof input.name !== 'string' || input.name === '') problems.push({ path: 'name', message: 'must be a non-empty string.' });
   const take = readTake(input.take, problems);
+  if (take && !parsed.value.states[take.initialState]) {
+    problems.push({ path: 'take.initialState', message: `no state named "${take.initialState}"` });
+  }
   if (problems.length > 0) return { ok: false, problems };
   return {
     ok: true,
