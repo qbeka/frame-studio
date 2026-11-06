@@ -6,6 +6,9 @@ export const live = (page: Page) => page.locator('.stage-live');
 export const surface = (page: Page) => live(page).locator('[data-frame-target=surface]');
 export const surfaceHeight = (page: Page) => surface(page).evaluate((el) => el.getBoundingClientRect().height);
 
+/** The transition's own stiffness. The authored fixture also has a rule with its own curve. */
+export const stiffness = (page: Page) => page.getByLabel('Stiffness').first();
+
 /** Reads the position in the transport, in the units shown. */
 export async function readoutPosition(page: Page) {
   const text = await page.locator('.readout div').first().locator('dd').textContent();
@@ -26,7 +29,7 @@ export async function recordReversal(page: Page, cancelAfterMs = 120) {
   await page.waitForTimeout(cancelAfterMs);
   await live(page).getByRole('button', { name: 'Cancel' }).click();
   await page.waitForTimeout(1000);
-  await page.getByRole('button', { name: 'Pause' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(page.locator('.mode')).toHaveText('Inspecting');
 }
 

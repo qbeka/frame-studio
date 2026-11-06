@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { live, openFresh, readoutPosition, recordReversal, seekToFraction, STUDIO, surfaceHeight } from './helpers';
+import { live, openFresh, readoutPosition, recordReversal, seekToFraction, STUDIO, stiffness, surfaceHeight } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openFresh(page);
@@ -16,7 +16,7 @@ test('shows a useful empty state with no console errors', async ({ page }) => {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.reload();
   await expect(page.getByText('Frame records what you do as named commands')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Play' }).or(page.getByRole('button', { name: 'Pause' }))).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeDisabled();
   expect(errors).toEqual([]);
 });
 
@@ -53,7 +53,7 @@ test('scrubbing restores typed content and the validation error', async ({ page 
   await live(page).getByRole('button', { name: 'Save' }).click();
   await expect(live(page).getByRole('alert')).toBeVisible();
   await page.waitForTimeout(300);
-  await page.getByRole('button', { name: 'Pause' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(live(page).getByRole('alert')).toBeVisible();
   await page.locator('.ribbon-slider').focus();
   await page.keyboard.press('Home');
@@ -74,7 +74,7 @@ test('a transition after a validation error replays from the grown layout', asyn
   const grown = await surfaceHeight(page);
   await live(page).getByRole('button', { name: 'Cancel' }).click();
   await page.waitForTimeout(900);
-  await page.getByRole('button', { name: 'Pause' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   // The first frame of the cancel, replayed, must start from the height with the error showing.
   const marker = page.locator('.marker').nth(1);
   await marker.focus();
@@ -87,7 +87,7 @@ test('editing a spring reruns the same take and changes the component', async ({
   await seekToFraction(page, 0.2);
   const before = await surfaceHeight(page);
   const events = await page.locator('.marker').count();
-  await page.getByLabel('Stiffness').fill('1200');
+  await stiffness(page).fill('1200');
   await expect.poll(() => surfaceHeight(page)).not.toBe(before);
   await expect(page.locator('.marker')).toHaveCount(events);
 });
@@ -180,11 +180,11 @@ test('undo and redo restore the spec and the replay', async ({ page }) => {
   await recordReversal(page);
   await seekToFraction(page, 0.2);
   const before = await surfaceHeight(page);
-  await page.getByLabel('Stiffness').fill('1200');
+  await stiffness(page).fill('1200');
   await expect.poll(() => surfaceHeight(page)).not.toBe(before);
   const edited = await surfaceHeight(page);
   await page.getByRole('button', { name: 'Undo' }).click();
-  await expect(page.getByLabel('Stiffness')).toHaveValue('420');
+  await expect(stiffness(page)).toHaveValue('420');
   await expect.poll(() => surfaceHeight(page)).toBeCloseTo(before, 3);
   await page.getByRole('button', { name: 'Redo' }).click();
   await expect.poll(() => surfaceHeight(page)).toBeCloseTo(edited, 3);
@@ -192,22 +192,22 @@ test('undo and redo restore the spec and the replay', async ({ page }) => {
 
 test('a bad number is refused and leaves the project alone', async ({ page }) => {
   await recordReversal(page);
-  await page.getByLabel('Stiffness').fill('-4');
+  await stiffness(page).fill('-4');
   await expect(page.getByText('Use 1 to 10000.')).toBeVisible();
-  await page.getByLabel('Mass').click();
-  await expect(page.getByLabel('Stiffness')).toHaveValue('420');
+  await page.getByLabel('Mass').first().click();
+  await expect(stiffness(page)).toHaveValue('420');
 });
 
 test('recovers a draft after a reload, and can discard it', async ({ page }) => {
   await recordReversal(page);
-  await page.getByLabel('Stiffness').fill('777');
+  await stiffness(page).fill('777');
   await page.waitForTimeout(400);
   await page.reload();
   await expect(page.getByText('Recovered your draft')).toBeVisible();
-  await expect(page.getByLabel('Stiffness')).toHaveValue('777');
+  await expect(stiffness(page)).toHaveValue('777');
   await expect(page.locator('.marker')).toHaveCount(2);
   await page.getByRole('button', { name: 'Discard it' }).click();
-  await expect(page.getByLabel('Stiffness')).toHaveValue('420');
+  await expect(stiffness(page)).toHaveValue('420');
   await expect(page.getByText('Use the component.')).toBeVisible();
 });
 
@@ -219,7 +219,7 @@ test('a damaged draft cannot block the app', async ({ page }) => {
 
 test('saves a project file, then reopens it exactly', async ({ page }) => {
   await recordReversal(page);
-  await page.getByLabel('Stiffness').fill('640');
+  await stiffness(page).fill('640');
   await expect(page.getByTestId('save-status')).toHaveText('Unsaved changes');
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save project' }).click()]);
   const path = await download.path();
@@ -228,14 +228,14 @@ test('saves a project file, then reopens it exactly', async ({ page }) => {
   await openFresh(page);
   await page.getByTestId('open-file').setInputFiles({ name: 'p.frame.json', mimeType: 'application/json', buffer: readFileSync(path) });
   await expect(page.getByTestId('save-status')).toContainText('Opened p.frame.json');
-  await expect(page.getByLabel('Stiffness')).toHaveValue('640');
+  await expect(stiffness(page)).toHaveValue('640');
   await expect(page.locator('.marker')).toHaveCount(2);
   await expect(page.locator('.mode')).toHaveText('Inspecting');
 });
 
 test('a malformed file is refused with reasons and the project stays intact', async ({ page }) => {
   await recordReversal(page);
-  await page.getByLabel('Stiffness').fill('640');
+  await stiffness(page).fill('640');
   const open = (body: string) =>
     page.getByTestId('open-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from(body) });
 
@@ -251,7 +251,7 @@ test('a malformed file is refused with reasons and the project stays intact', as
   await expect(page.getByRole('alertdialog')).toContainText('must be a number of milliseconds');
   await expect(page.getByRole('alertdialog')).toContainText('unsupported property');
   await page.getByRole('button', { name: 'Close' }).click();
-  await expect(page.getByLabel('Stiffness')).toHaveValue('640');
+  await expect(stiffness(page)).toHaveValue('640');
   await expect(page.locator('.marker')).toHaveCount(2);
 });
 
@@ -320,6 +320,6 @@ test('works by touch width from open to inspected take', async ({ page }) => {
   await page.goto(STUDIO);
   await recordReversal(page);
   await expect(page.locator('.ribbon')).toBeVisible();
-  await expect(page.getByLabel('Stiffness')).toBeVisible();
+  await expect(stiffness(page)).toBeVisible();
   await expect(page.locator('.graph')).toBeHidden();
 });

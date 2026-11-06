@@ -32,6 +32,11 @@ SPRINGS = {
     "heavy": {"stiffness": 300, "damping": 30, "mass": 2.5},
     "near-critical-below": {"stiffness": 400, "damping": 39.9999999, "mass": 1},
     "near-critical-above": {"stiffness": 400, "damping": 40.0000001, "mass": 1},
+    # Half a percent either side of critical, well outside the band treated as exactly critical.
+    "half-percent-below": {"stiffness": 400, "damping": 39.8, "mass": 1},
+    "half-percent-above": {"stiffness": 400, "damping": 40.2, "mass": 1},
+    # So stiff that the velocity threshold decides settling, not the position one.
+    "stiff": {"stiffness": 10000, "damping": 60, "mass": 1},
 }
 
 STARTS = [

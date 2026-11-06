@@ -35,6 +35,21 @@
    "stiffness": 400,
    "damping": 40.0000001,
    "mass": 1
+  },
+  "half-percent-below": {
+   "stiffness": 400,
+   "damping": 39.8,
+   "mass": 1
+  },
+  "half-percent-above": {
+   "stiffness": 400,
+   "damping": 40.2,
+   "mass": 1
+  },
+  "stiff": {
+   "stiffness": 10000,
+   "damping": 60,
+   "mass": 1
   }
  },
  "points": [
@@ -2557,6 +2572,1086 @@
    "ms": 2500,
    "position": 12.5,
    "velocity": -2.8352675950374524e-17
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 0,
+   "position": 0.0,
+   "velocity": 0.0
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 1,
+   "position": 0.01973662970761137,
+   "velocity": 39.21184184712274
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 8.333,
+   "position": 1.244358049382237,
+   "velocity": 282.37334456396025
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 16.667,
+   "position": 4.467077864992524,
+   "velocity": 478.4023592836796
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 50,
+   "position": 26.485547844382577,
+   "velocity": 738.2181716179746
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 123.456,
+   "position": 70.84372734724388,
+   "velocity": 418.9844158820346
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 250,
+   "position": 96.09760443544765,
+   "velocity": 66.24942655447411
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 500,
+   "position": 99.95743775154754,
+   "velocity": 0.8035877806036542
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 1000,
+   "position": 99.99999802838309,
+   "velocity": 4.1525500898477996e-05
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 2500,
+   "position": 100.0,
+   "velocity": -4.7643273782227376e-18
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 0,
+   "position": 100.0,
+   "velocity": 0.0
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 1,
+   "position": 99.98026337029239,
+   "velocity": -39.21184184712274
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 8.333,
+   "position": 98.75564195061776,
+   "velocity": -282.37334456396025
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 16.667,
+   "position": 95.53292213500748,
+   "velocity": -478.4023592836796
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 50,
+   "position": 73.51445215561742,
+   "velocity": -738.2181716179746
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 123.456,
+   "position": 29.15627265275612,
+   "velocity": -418.9844158820346
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 250,
+   "position": 3.9023955645523514,
+   "velocity": -66.24942655447411
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 500,
+   "position": 0.04256224845246213,
+   "velocity": -0.8035877806036542
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 1000,
+   "position": 1.9716169049034786e-06,
+   "velocity": -4.1525500898477996e-05
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 2500,
+   "position": -2.3014886860803987e-19,
+   "velocity": 4.7643273782227376e-18
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 0,
+   "position": 40.0,
+   "velocity": -900.0
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 1,
+   "position": 39.15720681785496,
+   "velocity": -786.2844822642876
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 8.333,
+   "position": 36.13531584607537,
+   "velocity": -71.188758370613
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 16.667,
+   "position": 38.17010264610226,
+   "velocity": 525.4177320908269
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 50,
+   "position": 76.36118682736073,
+   "velocity": 1475.8806465192888
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 123.456,
+   "position": 172.26030533714197,
+   "velocity": 950.7629223116261
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 250,
+   "position": 230.70459677341964,
+   "velocity": 156.70365450750865
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 500,
+   "position": 239.8967947780315,
+   "velocity": 1.9437281826657216
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 1000,
+   "position": 239.9999951224424,
+   "velocity": 0.00010249253570741173
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 2500,
+   "position": 240.0,
+   "velocity": -1.1723770106171577e-17
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 0,
+   "position": 12.5,
+   "velocity": 3000.0
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 1,
+   "position": 15.440888138534206,
+   "velocity": 2882.3605531951102
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 8.333,
+   "position": 33.67800084229702,
+   "velocity": 2119.7848249951116
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 16.667,
+   "position": 48.38017694627597,
+   "velocity": 1437.9566215884408
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 50,
+   "position": 67.8663628713481,
+   "velocity": 1.8523223888685343
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 123.456,
+   "position": 43.923831191152594,
+   "velocity": -375.98030182518966
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 250,
+   "position": 17.46870699158556,
+   "velocity": -80.6826713285347
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 500,
+   "position": 12.560269083545274,
+   "velocity": -1.121842071528044
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 1000,
+   "position": 12.500003114412568,
+   "velocity": -6.480511303485245e-05
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 2500,
+   "position": 12.5,
+   "velocity": 7.317051165753674e-18
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 0,
+   "position": 0.0,
+   "velocity": 0.0
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 1,
+   "position": 0.01973401584447736,
+   "velocity": 39.20405253497304
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 8.333,
+   "position": 1.2430518982945953,
+   "velocity": 281.9292343448677
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 16.667,
+   "position": 4.458231323250619,
+   "velocity": 476.9869439572851
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 50,
+   "position": 26.362920940637927,
+   "velocity": 733.313082037612
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 123.456,
+   "position": 70.41892744283324,
+   "velocity": 417.157698531912
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 250,
+   "position": 95.81685915056305,
+   "velocity": 68.495475733597
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 500,
+   "position": 99.94230408123701,
+   "velocity": 1.0154361039049016
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 1000,
+   "position": 99.99999248957161,
+   "velocity": 0.00013546434567887682
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 2500,
+   "position": 100.0,
+   "velocity": 2.2404005819114927e-16
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 0,
+   "position": 100.0,
+   "velocity": 0.0
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 1,
+   "position": 99.98026598415552,
+   "velocity": -39.20405253497304
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 8.333,
+   "position": 98.7569481017054,
+   "velocity": -281.9292343448677
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 16.667,
+   "position": 95.54176867674938,
+   "velocity": -476.9869439572851
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 50,
+   "position": 73.63707905936208,
+   "velocity": -733.313082037612
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 123.456,
+   "position": 29.58107255716676,
+   "velocity": -417.157698531912
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 250,
+   "position": 4.183140849436948,
+   "velocity": -68.495475733597
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 500,
+   "position": 0.057695918762986326,
+   "velocity": -1.0154361039049016
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 1000,
+   "position": 7.5104283912120194e-06,
+   "velocity": -0.00013546434567887682
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 2500,
+   "position": 1.2379713172656793e-17,
+   "velocity": -2.2404005819114927e-16
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 0,
+   "position": 40.0,
+   "velocity": -900.0
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 1,
+   "position": 39.15737684965206,
+   "velocity": -785.9542232695705
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 8.333,
+   "position": 36.142696023829664,
+   "velocity": -69.94907176068027
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 16.667,
+   "position": 38.18425640746232,
+   "velocity": 525.5326606331902
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 50,
+   "position": 76.22629753542958,
+   "velocity": 1467.1741352439856
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 123.456,
+   "position": 171.45180666869845,
+   "velocity": 945.4048823714377
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 250,
+   "position": 230.09257009712016,
+   "velocity": 161.29684162329997
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 500,
+   "position": 239.86176085013616,
+   "velocity": 2.43007089492491
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 1000,
+   "position": 239.99998193119544,
+   "velocity": 0.0003258623365033895
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 2500,
+   "position": 240.0,
+   "velocity": 5.393069304622819e-16
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 0,
+   "position": 12.5,
+   "velocity": 3000.0
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 1,
+   "position": 15.440303940122979,
+   "velocity": 2881.207761131722
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 8.333,
+   "position": 33.64469257586508,
+   "velocity": 2112.6918015013857
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 16.667,
+   "position": 48.274020796796385,
+   "velocity": 1428.1374242712668
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 50,
+   "position": 67.4984811528209,
+   "velocity": -1.8265705625381747
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 123.456,
+   "position": 43.7868273898934,
+   "velocity": -370.298284358712
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 250,
+   "position": 17.637160680019775,
+   "velocity": -81.01963385368654
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 500,
+   "position": 12.576157707792868,
+   "velocity": -1.3306622903836889
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 1000,
+   "position": 12.500010159825926,
+   "velocity": -0.00018311215048545302
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 2500,
+   "position": 12.5,
+   "velocity": -3.0408938026661126e-16
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 0,
+   "position": 0.0,
+   "velocity": 0.0
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 1,
+   "position": 0.4897415382248335,
+   "velocity": 968.9743606991674
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 8.333,
+   "position": 27.97382172314568,
+   "velocity": 5827.6053322254475
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 16.667,
+   "position": 82.0896373791284,
+   "velocity": 6356.941490082367
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 50,
+   "position": 105.72760678634299,
+   "velocity": -2335.199871461032
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 123.456,
+   "position": 98.81518885949255,
+   "velocity": -183.32245381016395
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 250,
+   "position": 100.00105269695973,
+   "velocity": -5.561512888038463
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 500,
+   "position": 100.0000309193439,
+   "velocity": -0.0017387337820538489
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 1000,
+   "position": 99.99999999999346,
+   "velocity": 8.938184450897034e-10
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "ms": 2500,
+   "position": 100.0,
+   "velocity": -7.658509095271354e-30
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 0,
+   "position": 100.0,
+   "velocity": 0.0
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 1,
+   "position": 99.51025846177517,
+   "velocity": -968.9743606991674
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 8.333,
+   "position": 72.02617827685432,
+   "velocity": -5827.6053322254475
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 16.667,
+   "position": 17.910362620871595,
+   "velocity": -6356.941490082367
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 50,
+   "position": -5.7276067863429905,
+   "velocity": 2335.199871461032
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 123.456,
+   "position": 1.1848111405074448,
+   "velocity": 183.32245381016395
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 250,
+   "position": -0.001052696959734317,
+   "velocity": 5.561512888038463
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 500,
+   "position": -3.091934389492758e-05,
+   "velocity": 0.0017387337820538489
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 1000,
+   "position": 6.5368631040726725e-12,
+   "velocity": -8.938184450897034e-10
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "ms": 2500,
+   "position": 2.3473275436122554e-31,
+   "velocity": 7.658509095271354e-30
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 0,
+   "position": 40.0,
+   "velocity": -900.0
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 1,
+   "position": 40.10740615182041,
+   "velocity": 1094.6810107201134
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 8.333,
+   "position": 90.70279864728846,
+   "velocity": 11321.66574789938
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 16.667,
+   "position": 198.45802741718268,
+   "velocity": 12895.964557041338
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 50,
+   "position": 253.5568934570009,
+   "velocity": -4744.952074903873
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 123.456,
+   "position": 237.79536792741425,
+   "velocity": -387.20762039064374
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 250,
+   "position": 240.0071107555187,
+   "velocity": -11.413873199393393
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 500,
+   "position": 240.00006340354818,
+   "velocity": -0.0032930850932842573
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 1000,
+   "position": 239.99999999998613,
+   "velocity": 1.7770713182775968e-09
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "ms": 2500,
+   "position": 240.0,
+   "velocity": -1.7843172470938389e-29
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 0,
+   "position": 12.5,
+   "velocity": 3000.0
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 1,
+   "position": 15.406923082097503,
+   "velocity": 2810.8923689274047
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 8.333,
+   "position": 29.98281599667634,
+   "velocity": 1111.8163885050492
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 16.667,
+   "position": 31.5708244702471,
+   "velocity": -606.9385895886782
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 50,
+   "position": 5.4944003856169035,
+   "velocity": 248.50777327269606
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 123.456,
+   "position": 11.950032638569509,
+   "velocity": 68.54237590105286
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 250,
+   "position": 12.483315461335884,
+   "velocity": 0.9694914110548937
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 500,
+   "position": 12.499994783798654,
+   "velocity": -0.0006146082360781346
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 1000,
+   "position": 12.500000000002682,
+   "velocity": 3.5218573006033564e-11
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "ms": 2500,
+   "position": 12.5,
+   "velocity": 8.42051426798561e-30
   }
  ],
  "settle": [
@@ -2811,6 +3906,114 @@
    "px": 0.1,
    "pxPerSecond": 5,
    "lastOutsideMs": 478.5
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 454.25
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 454.25
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 501.5
+  },
+  {
+   "spring": "half-percent-below",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 472.5
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 468.5
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 468.5
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 518.25
+  },
+  {
+   "spring": "half-percent-above",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 484.25
+  },
+  {
+   "spring": "stiff",
+   "from": 0,
+   "velocityIn": 0,
+   "to": 100,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 251.5
+  },
+  {
+   "spring": "stiff",
+   "from": 100,
+   "velocityIn": 0,
+   "to": 0,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 251.5
+  },
+  {
+   "spring": "stiff",
+   "from": 40,
+   "velocityIn": -900,
+   "to": 240,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 257.75
+  },
+  {
+   "spring": "stiff",
+   "from": 12.5,
+   "velocityIn": 3000,
+   "to": 12.5,
+   "px": 0.1,
+   "pxPerSecond": 5,
+   "lastOutsideMs": 202.75
   }
  ],
  "sequences": [

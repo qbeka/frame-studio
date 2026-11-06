@@ -18,7 +18,7 @@ const settle = { px: 0.1, pxPerSecond: 5, unit: 0.001, unitPerSecond: 0.05 };
 
 describe('closed form against the matrix exponential reference', () => {
   it('matches every reference point in all three regimes and at the critical seam', () => {
-    expect(reference.points).toHaveLength(280);
+    expect(reference.points).toHaveLength(400);
     for (const p of reference.points) {
       const got = springAt(curve(p.spring), p.from, p.velocityIn, p.to, p.ms / 1000);
       const context = `${p.spring} from ${p.from} at ${p.ms}ms`;
@@ -28,7 +28,7 @@ describe('closed form against the matrix exponential reference', () => {
   });
 
   it('settle time is never before the last point the true path is outside the band', () => {
-    expect(reference.settle).toHaveLength(28);
+    expect(reference.settle).toHaveLength(40);
     for (const c of reference.settle) {
       const ms = 1000 * springSettleSeconds(curve(c.spring), c.from, c.velocityIn, c.to, c.px, c.pxPerSecond);
       expect(ms, `${c.spring} from ${c.from}`).toBeGreaterThanOrEqual(c.lastOutsideMs);

@@ -8,7 +8,7 @@ const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclud
   .filter((f) => /\.(md|ts|tsx|mjs|css|html|json|py)$/.test(f))
   .filter((f) => !/pnpm-lock|^results\/|^evidence\/|spring-reference\.json/.test(f));
 
-const banned = /[–—]/;
+const banned = new RegExp('[\u2013\u2014]');
 const failures = [];
 for (const file of files) {
   let text;

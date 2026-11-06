@@ -13,7 +13,8 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   outputDir: '.artifacts/playwright',
-  use: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 },
+  // FRAME_BROWSER runs the same suites in webkit or firefox.
+  use: { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, browserName: (process.env.FRAME_BROWSER ?? 'chromium') as 'chromium' },
   webServer: [
     {
       command: 'pnpm dev',

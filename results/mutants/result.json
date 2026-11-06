@@ -1,0 +1,320 @@
+{
+  "baselineTests": 94,
+  "mutants": 33,
+  "caught": 33,
+  "restoredSuitePasses": true,
+  "rows": [
+    {
+      "name": "underdamped decay 1 percent high",
+      "file": "packages/studio/runtime/spring.ts",
+      "status": "caught",
+      "killedBy": [
+        "closed form against the matrix exponential reference matches every reference point in all three regimes and at the critical seam",
+        "closed form against the matrix exponential reference keeps position and speed through: reversal halfway",
+        "closed form against the matrix exponential reference keeps position and speed through: reversal into a stiffer spring"
+      ],
+      "kills": 4
+    },
+    {
+      "name": "critical velocity sign flipped",
+      "file": "packages/studio/runtime/spring.ts",
+      "status": "caught",
+      "killedBy": [
+        "closed form against the matrix exponential reference matches every reference point in all three regimes and at the critical seam",
+        "closed form against the matrix exponential reference keeps position and speed through: repeated retargeting across regimes"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "overdamped root off by 0.1 percent",
+      "file": "packages/studio/runtime/spring.ts",
+      "status": "caught",
+      "killedBy": [
+        "closed form against the matrix exponential reference matches every reference point in all three regimes and at the critical seam",
+        "closed form against the matrix exponential reference settle time is never before the last point the true path is outside the band",
+        "closed form against the matrix exponential reference keeps position and speed through: repeated retargeting across regimes"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "critical band far too wide",
+      "file": "packages/studio/runtime/spring.ts",
+      "status": "caught",
+      "killedBy": [
+        "closed form against the matrix exponential reference matches every reference point in all three regimes and at the critical seam",
+        "closed form against the matrix exponential reference settle time is never before the last point the true path is outside the band"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "settle ignores velocity when underdamped",
+      "file": "packages/studio/runtime/spring.ts",
+      "status": "caught",
+      "killedBy": [
+        "closed form against the matrix exponential reference settle time is never before the last point the true path is outside the band"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "overshoot formula wrong",
+      "file": "packages/studio/runtime/spring.ts",
+      "status": "caught",
+      "killedBy": [
+        "spring facts computes the textbook overshoot and damping ratio"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "tween velocity in the wrong unit",
+      "file": "packages/studio/runtime/tween.ts",
+      "status": "caught",
+      "killedBy": [
+        "tween reports a velocity that agrees with a finite difference"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "bezier weight wrong",
+      "file": "packages/studio/runtime/tween.ts",
+      "status": "caught",
+      "killedBy": [
+        "tween holds its endpoints and matches a known cubic-bezier value",
+        "tween reports a velocity that agrees with a finite difference"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "retarget drops velocity",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "closed form against the matrix exponential reference keeps position and speed through: reversal halfway",
+        "closed form against the matrix exponential reference keeps position and speed through: reversal into a stiffer spring",
+        "closed form against the matrix exponential reference keeps position and speed through: repeated retargeting across regimes"
+      ],
+      "kills": 6
+    },
+    {
+      "name": "delayed retarget reads the wrong moment",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "interruption a delayed leg starts from where the old leg has reached by then, not where it was"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "delayed legs survive a new command",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "interruption an overruled delayed leg cannot run, even when the new leg starts later than it would have"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "settled channels do not land on target",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "settling lands exactly on target with zero velocity at the settle time"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a channel moves before its first leg",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "reading before a leg starts holds the starting value and does not extrapolate backwards"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "wildcard rule beats the exact rule",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "interruption an exact rule beats a wildcard rule, whatever the order"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "ignore rule has no effect",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "interruption ignores a command when the rule says so"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "queue rule has no effect",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "interruption a queued command runs at the exact settle time"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "interruption curve ignored",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "interruption applies the rule on the running transition, not the one being started"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "reduced motion fades the wrong channel",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "reduced motion reaches the same semantic state with travel skipped and opacity faded"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "entering target skips its start pose",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "presence an entering target starts from the pose of the state it came from"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "resize always snaps",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "layout changes retargets a running channel to the new endpoint, keeping position and speed"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "resize snap policy ignored",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "layout changes snap jumps to the new endpoint"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "exiting targets vanish at once",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "presence draws an exiting target until its own motion finishes",
+        "presence entering again keeps the history of the earlier exit, so it can still be scrubbed"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "prune removes the current leg",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "time model prunes without changing what is ahead"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "unchanged layout still retargets",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "layout changes does nothing when the layout has not moved"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "unknown properties accepted",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects an unsupported property on a pose",
+        "parseMotionSpec rejects an unsupported property on a timing",
+        "parseMotionSpec rejects an unknown top level field"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "range checks removed",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects a negative delay",
+        "parseMotionSpec rejects zero damping",
+        "parseMotionSpec rejects a bad bezier"
+      ],
+      "kills": 5
+    },
+    {
+      "name": "NaN and Infinity accepted",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects a NaN stiffness",
+        "parseMotionSpec rejects infinite damping"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "scale allowed on text",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects scale bounds on text"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "ambiguous transitions accepted",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects two moves on one command"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a never ending spring accepted",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects a spring that barely settles"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "newer formats accepted",
+      "file": "packages/studio/authoring/migrate.ts",
+      "status": "caught",
+      "killedBy": [
+        "format versions refuses a file from a newer version instead of guessing"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "out of order takes accepted",
+      "file": "packages/studio/authoring/project.ts",
+      "status": "caught",
+      "killedBy": [
+        "project files rejects events out of order"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "an incomplete export is written",
+      "file": "packages/studio/authoring/export.ts",
+      "status": "caught",
+      "killedBy": [
+        "export refuses to build with a runtime file missing"
+      ],
+      "kills": 1
+    }
+  ]
+}

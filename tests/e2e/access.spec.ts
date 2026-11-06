@@ -46,7 +46,7 @@ test('the whole authoring path works by keyboard alone', async ({ page }) => {
   await page.waitForTimeout(90);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(800);
-  await page.getByRole('button', { name: 'Pause' }).focus();
+  await page.getByRole('button', { name: 'Pause', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.mode')).toHaveText('Inspecting');
   await page.getByRole('slider', { name: 'Playhead' }).focus();

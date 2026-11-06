@@ -92,14 +92,26 @@ export interface Sample {
   targets: Record<string, TargetSample>;
 }
 
-function poseChannels(atMs: number, rect: Rect, pose: StateTargetValue): Record<ChannelName, Channel> {
+function poseValues(rect: Rect, pose: StateTargetValue): Record<ChannelName, number> {
   return {
-    x: restingChannel(atMs, rect.x + pose.xPx),
-    y: restingChannel(atMs, rect.y + pose.yPx),
-    width: restingChannel(atMs, rect.width),
-    height: restingChannel(atMs, rect.height),
-    opacity: restingChannel(atMs, pose.opacity),
-    scale: restingChannel(atMs, pose.scale),
+    x: rect.x + pose.xPx,
+    y: rect.y + pose.yPx,
+    width: rect.width,
+    height: rect.height,
+    opacity: pose.opacity,
+    scale: pose.scale,
+  };
+}
+
+function poseChannels(atMs: number, rect: Rect, pose: StateTargetValue): Record<ChannelName, Channel> {
+  const values = poseValues(rect, pose);
+  return {
+    x: restingChannel(atMs, values.x),
+    y: restingChannel(atMs, values.y),
+    width: restingChannel(atMs, values.width),
+    height: restingChannel(atMs, values.height),
+    opacity: restingChannel(atMs, values.opacity),
+    scale: restingChannel(atMs, values.scale),
   };
 }
 
@@ -259,20 +271,17 @@ export function applyDecision(
     const box = timeline.lastRects[id] ?? NOWHERE;
     if (!end.present && !drawnAt(timeline, id, atMs)) continue;
 
-    // A target arriving from nothing has no path yet. It starts at the pose the from state
-    // gives it, placed against the box it is about to land in.
+    // A target arriving from nothing starts at the pose the from state gives it, placed against
+    // the box it is about to land in. This jumps instead of replacing the channels, so that
+    // scrubbing back to an earlier exit of the same target still reads that exit.
     if (end.present && !drawnAt(timeline, id, atMs)) {
-      timeline.channels[id] = poseChannels(atMs, box, start);
+      const pose = poseValues(box, start);
+      for (const name of CHANNELS) {
+        retarget(timeline.channels[id]![name], atMs, atMs, pose[name], null, name, spec.settle);
+      }
     }
 
-    const goal: Record<ChannelName, number> = {
-      x: box.x + end.xPx,
-      y: box.y + end.yPx,
-      width: box.width,
-      height: box.height,
-      opacity: end.opacity,
-      scale: end.scale,
-    };
+    const goal = poseValues(box, end);
     for (const name of CHANNELS) {
       const sized = GROUP[name] === 'size';
       const { curve, delayMs } =

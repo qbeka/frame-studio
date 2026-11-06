@@ -277,7 +277,7 @@ async function authoring() {
       await page.waitForTimeout(120);
       await toggle.click();
       await page.waitForTimeout(1000);
-      await page.getByRole('button', { name: 'Pause' }).click();
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
       await page.waitForSelector('.ribbon-path', { state: 'attached' });
       const samples = await measureEdits(page, smoke ? 15 : 60, smoke ? 5 : 20);
 

@@ -9,8 +9,9 @@
  *   node scripts/mutants.mjs
  */
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
+const REPORT = '.artifacts/vitest.json';
 const R = 'packages/studio/runtime/';
 const A = 'packages/studio/authoring/';
 const MUTANTS = [
@@ -32,7 +33,7 @@ const MUTANTS = [
   [R + 'timeline.ts', "if (rule?.policy === 'queue') return { kind: 'queue', command, atMs: mark.settleMs };", '', 'queue rule has no effect'],
   [R + 'timeline.ts', 'if (rule?.curve) return { curve: rule.curve, delayMs: 0 };', '', 'interruption curve ignored'],
   [R + 'timeline.ts', "if (policy === 'fade' && name === 'opacity') {", "if (policy === 'fade' && name === 'x') {", 'reduced motion fades the wrong channel'],
-  [R + 'timeline.ts', 'timeline.channels[id] = poseChannels(atMs, box, start);', '', 'entering target skips its start pose'],
+  [R + 'timeline.ts', 'retarget(timeline.channels[id]![name], atMs, atMs, pose[name], null, name, spec.settle);', '', 'entering target skips its start pose'],
   [R + 'timeline.ts', "const curve = running && policy === 'retarget' ? channel[channel.length - 1]!.curve : null;", 'const curve = null;', 'resize always snaps'],
   [R + 'timeline.ts', "const curve = running && policy === 'retarget' ? channel[channel.length - 1]!.curve : null;", 'const curve = channel[channel.length - 1]!.curve;', 'resize snap policy ignored'],
   [R + 'timeline.ts', 'const exiting = !inFlow && t < (mark.targetSettleMs[id] ?? mark.atMs);', 'const exiting = false;', 'exiting targets vanish at once'],
@@ -50,8 +51,11 @@ const MUTANTS = [
 ];
 
 function suite() {
-  const out = spawnSync('npx', ['vitest', 'run', '--reporter=json'], { encoding: 'utf8', maxBuffer: 2 ** 28 });
-  const json = JSON.parse(out.stdout.slice(out.stdout.indexOf('{')));
+  mkdirSync('.artifacts', { recursive: true });
+  rmSync(REPORT, { force: true });
+  spawnSync('npx', ['vitest', 'run', '--reporter=json', `--outputFile=${REPORT}`], { encoding: 'utf8' });
+  if (!existsSync(REPORT)) return { total: 0, failed: [], crashed: true };
+  const json = JSON.parse(readFileSync(REPORT, 'utf8'));
   const failed = json.testResults.flatMap((f) => f.assertionResults.filter((a) => a.status === 'failed').map((a) => a.fullName));
   return { total: json.numTotalTests, failed, crashed: json.numFailedTestSuites > 0 && failed.length === 0 };
 }

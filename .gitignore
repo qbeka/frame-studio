@@ -10,3 +10,4 @@ playwright-report/
 .artifacts/
 .tsout/
 results/smoke/
+.vitest/

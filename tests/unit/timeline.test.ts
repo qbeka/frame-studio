@@ -9,8 +9,10 @@ import {
   lastMark,
   pruneTimeline,
   replayTake,
+  readChannel,
   sampleTimeline,
   springAt,
+  type Channel,
   type MotionSpec,
   type TakeEvent,
   type Timeline,
@@ -126,6 +128,40 @@ describe('interruption', () => {
     expect(height(t, 140).segment.startMs).toBe(140);
   });
 
+  it('a delayed leg starts from where the old leg has reached by then, not where it was', () => {
+    const spec = panelSpec();
+    spec.transitions[1]!.targets = { panel: { size: { curve: spring, delayMs: 40 } } };
+    const t = start(spec);
+    command(t, 0, 'open');
+    const free = height(t, 140);
+    command(t, 100, 'close');
+    const leg = height(t, 140);
+    expect(Math.abs(leg.segment.from - free.position)).toBeLessThan(1e-9);
+    expect(Math.abs(leg.segment.velocity - free.velocity)).toBeLessThan(1e-9);
+  });
+
+  it('an overruled delayed leg cannot run, even when the new leg starts later than it would have', () => {
+    const spec = panelSpec();
+    spec.transitions[0]!.targets = { panel: { size: { curve: spring, delayMs: 200 } } };
+    spec.transitions[1]!.targets = { panel: { size: { curve: spring, delayMs: 400 } } };
+    const t = start(spec);
+    command(t, 0, 'open');
+    command(t, 100, 'close');
+    // Open's leg would have started at 200. Close overruled it and waits until 500.
+    expect(height(t, 300).position).toBe(60);
+  });
+
+  it('an exact rule beats a wildcard rule, whatever the order', () => {
+    const spec = panelSpec();
+    spec.transitions[0]!.interruptions = [
+      { command: '*', policy: 'ignore', curve: null },
+      { command: 'close', policy: 'retarget', curve: null },
+    ];
+    const t = start(spec);
+    command(t, 0, 'open');
+    expect(command(t, 50, 'close').kind).toBe('start');
+  });
+
   it('survives many retargets with no time passing', () => {
     const t = start();
     command(t, 0, 'open');
@@ -165,6 +201,18 @@ describe('time model', () => {
   });
 });
 
+describe('settling', () => {
+  it('lands exactly on target with zero velocity at the settle time', () => {
+    const t = start();
+    command(t, 0, 'open');
+    const at = height(t, lastMark(t).settleMs);
+    expect(at.position).toBe(260);
+    expect(at.velocity).toBe(0);
+    const before = height(t, lastMark(t).settleMs - 1);
+    expect(before.position).not.toBe(260);
+  });
+});
+
 describe('presence', () => {
   it('draws an exiting target until its own motion finishes', () => {
     const t = start();
@@ -183,6 +231,17 @@ describe('presence', () => {
     const body = sampleTimeline(t, 0).targets.body!;
     expect(body.opacity).toBe(0);
     expect(body.y).toBe(72 + 8);
+  });
+
+  it('entering again keeps the history of the earlier exit, so it can still be scrubbed', () => {
+    const t = start();
+    command(t, 0, 'open');
+    command(t, 2000, 'close');
+    const midExit = sampleTimeline(t, 2040).targets.body!;
+    expect(midExit.exiting).toBe(true);
+    command(t, 5000, 'open');
+    expect(sampleTimeline(t, 2040).targets.body).toEqual(midExit);
+    expect(sampleTimeline(t, 5000).targets.body!.opacity).toBe(0);
   });
 
   it('a target reversed during its exit comes back from where it is', () => {
@@ -262,6 +321,13 @@ describe('reduced motion', () => {
     command(t, 0, 'open', true);
     expect(sampleTimeline(t, 0).animating).toBe(false);
     expect(sampleTimeline(t, 0).targets.body!.opacity).toBe(1);
+  });
+});
+
+describe('reading before a leg starts', () => {
+  it('holds the starting value and does not extrapolate backwards', () => {
+    const channel: Channel = [{ startMs: 100, from: 10, velocity: 500, to: 90, curve: spring, settleMs: 900 }];
+    expect(readChannel(channel, 50)).toMatchObject({ position: 10, velocity: 0, target: 90 });
   });
 });
 

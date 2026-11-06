@@ -84,7 +84,7 @@ test('from registration to a working export in a clean app', async ({ page, brow
   await page.waitForTimeout(110);
   await live.getByRole('button', { name: /Harbour Fuel/ }).click();
   await page.waitForTimeout(900);
-  await page.getByRole('button', { name: 'Pause' }).click();
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await expect(page.locator('.marker')).toHaveCount(2);
   await shot(page, '1-take-inspected.png');
   note('interrupted a transition and inspected the take');
