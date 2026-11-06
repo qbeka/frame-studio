@@ -206,12 +206,6 @@ importers:
         specifier: '>=18.3.0 <20'
         version: 19.3.1
 
-  examples/portfolio-card:
-    dependencies:
-      frame-studio:
-        specifier: workspace:*
-        version: link:../../packages/studio
-
   fixtures/inspector:
     dependencies:
       frame-studio:
