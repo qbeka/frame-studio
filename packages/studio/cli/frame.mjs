@@ -2,6 +2,7 @@
 /**
  * Frame's command line.
  *   frame dev <registrations.tsx> [--port 5172]
+ *   frame init <registrations.tsx> [--out component.frame.json]
  *   frame export <project.frame.json> [--out frame-export]
  *   frame validate <file.json>
  *   frame build-demo <registrations.tsx> --out dist/demo [--base /]
@@ -62,17 +63,17 @@ async function buildDemo(args) {
 }
 
 /** Loads the TypeScript authoring code. No HTTP port is opened. */
-async function loadAuthoring() {
+async function loadAuthoring(extraRoot) {
   const server = await createServer({
     configFile: false,
     root: packageRoot,
     logLevel: 'silent',
-    server: { middlewareMode: true, ws: false },
+    server: { middlewareMode: true, ws: false, fs: { allow: [packageRoot, process.cwd(), extraRoot ?? packageRoot] } },
     optimizeDeps: { noDiscovery: true },
     appType: 'custom',
   });
   const authoring = await server.ssrLoadModule('/authoring/index.ts');
-  return { authoring, close: () => server.close() };
+  return { authoring, server, close: () => server.close() };
 }
 
 function printProblems(problems) {
@@ -90,6 +91,25 @@ async function validate(args) {
     process.exit(1);
   }
   console.log(`${file} is valid.`);
+}
+
+/** Writes a starter project for the first registration in a file. */
+async function init(args) {
+  const file = resolve(args[0] ?? fail('Pass your registrations file.'));
+  const { authoring, server, close } = await loadAuthoring(dirname(file));
+  const { default: registrations } = await server.ssrLoadModule(file);
+  const registration = registrations[0] ?? fail('That file exports no registrations.');
+  const out = resolve(argument(args, 'out', `${registration.id.replace(/[^a-z0-9]+/gi, '-')}.frame.json`));
+  const project = {
+    format: authoring.PROJECT_FORMAT,
+    version: authoring.PROJECT_VERSION,
+    name: registration.id,
+    spec: authoring.createStarterSpec(registration),
+    take: null,
+  };
+  writeFileSync(out, authoring.serializeProject(project));
+  await close();
+  console.log(`Wrote ${out}`);
 }
 
 async function exportProject(args) {
@@ -124,6 +144,6 @@ function fail(message) {
 }
 
 const [command, ...args] = process.argv.slice(2);
-const commands = { dev, export: exportProject, validate, 'build-demo': buildDemo };
-if (!commands[command]) fail('Usage: frame dev|export|validate|build-demo');
+const commands = { dev, init, export: exportProject, validate, 'build-demo': buildDemo };
+if (!commands[command]) fail('Usage: frame dev|init|export|validate|build-demo');
 await commands[command](args);

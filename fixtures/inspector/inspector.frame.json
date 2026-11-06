@@ -1,0 +1,344 @@
+{
+  "format": "frame.project",
+  "version": 1,
+  "name": "frame.fixture.inspector",
+  "spec": {
+    "format": "frame.motion",
+    "version": 1,
+    "component": {
+      "id": "frame.fixture.inspector",
+      "version": "1.0.0"
+    },
+    "initialState": "compact",
+    "commands": [
+      "open",
+      "cancel",
+      "submit",
+      "back",
+      "done"
+    ],
+    "targets": {
+      "surface": {
+        "bounds": "surface",
+        "text": false,
+        "clipRadiusPx": 0
+      },
+      "content": {
+        "bounds": "clip",
+        "text": true,
+        "clipRadiusPx": 14
+      },
+      "summary": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "open": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "form": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "receipt": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      }
+    },
+    "states": {
+      "compact": {
+        "label": "Compact",
+        "focusTarget": "open",
+        "targets": {
+          "surface": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "content": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "summary": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "open": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "form": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "receipt": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          }
+        }
+      },
+      "editing": {
+        "label": "Editing",
+        "focusTarget": "form",
+        "targets": {
+          "surface": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "content": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "summary": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "open": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "form": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "receipt": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          }
+        }
+      },
+      "confirmation": {
+        "label": "Confirmation",
+        "focusTarget": "receipt",
+        "targets": {
+          "surface": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "content": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "summary": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "open": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "form": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          },
+          "receipt": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          }
+        }
+      }
+    },
+    "transitions": [
+      {
+        "id": "open",
+        "from": "compact",
+        "to": "editing",
+        "command": "open",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "cancel",
+        "from": "editing",
+        "to": "compact",
+        "command": "cancel",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "submit",
+        "from": "editing",
+        "to": "confirmation",
+        "command": "submit",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "back",
+        "from": "confirmation",
+        "to": "editing",
+        "command": "back",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "done",
+        "from": "confirmation",
+        "to": "compact",
+        "command": "done",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      }
+    ],
+    "settle": {
+      "px": 0.1,
+      "pxPerSecond": 5,
+      "unit": 0.001,
+      "unitPerSecond": 0.05
+    },
+    "resize": "retarget"
+  },
+  "take": null
+}

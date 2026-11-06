@@ -38,7 +38,9 @@ export function measureTargets(
   const measured: [string, HTMLElement][] = [];
   for (const [id, element] of elements) {
     if (!isInFlow(id)) continue;
+    // A target reversed during its exit is live again from here on, including for focus.
     element.removeAttribute('data-frame-exiting');
+    element.inert = false;
     clearDrawnStyles(element);
     measured.push([id, element]);
   }

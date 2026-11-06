@@ -1,6 +1,20 @@
 {
   "extends": "../tsconfig.base.json",
-  "compilerOptions": { "outDir": ".tsout", "rootDir": "..", "types": ["node"] },
-  "include": ["unit"],
-  "references": [{ "path": "../packages/studio" }]
+  "compilerOptions": {
+    "outDir": ".tsout",
+    "rootDir": "..",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "unit",
+    "e2e",
+    "support"
+  ],
+  "references": [
+    {
+      "path": "../packages/studio"
+    }
+  ]
 }

@@ -159,7 +159,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
   function restoreFocus(item: Pending) {
     const active = item.active;
     if (!active || active === document.body) return;
-    const stillAvailable = active.isConnected && !active.closest('[inert],[hidden]');
+    const stillAvailable = active.isConnected && !active.closest('[inert],[hidden]') && document.activeElement === active;
     if (stillAvailable) return;
     const id = spec.states[state]!.focusTarget;
     const element = id ? elements.get(id) : undefined;
@@ -204,7 +204,8 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       }
       if (pending.length > 0) {
         const rects = measure();
-        for (const item of pending.splice(0)) {
+        const items = pending.splice(0);
+        for (const item of items) {
           const missing = applyDecision(timeline, item.atMs, item.decision, rects, { reduced: item.reduced });
           if (missing.length > 0) options.onWarning?.({ code: 'missing-target', targets: missing });
           if (item.decision.kind === 'start') {
@@ -213,9 +214,10 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
               startMs,
             );
           }
-          restoreFocus(item);
         }
         render();
+        // After drawing, because drawing is what marks a leaving target inert.
+        for (const item of items) restoreFocus(item);
         ensureLoop();
         return;
       }

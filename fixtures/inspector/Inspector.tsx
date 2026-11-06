@@ -10,14 +10,16 @@ import type { FrameHandle } from 'frame-studio/runtime';
  */
 export const CATEGORIES = ['Food', 'Travel', 'Software', 'Rent'];
 
-export interface InspectorProps extends Record<string, string | number | boolean> {
+// A type alias, not an interface extending Record: an index signature would break plain
+// object spreads in the consumer's setState.
+export type InspectorProps = {
   merchant: string;
   amount: string;
   category: string;
   note: string;
   error: string;
   saving: boolean;
-}
+};
 
 export const initialInspectorProps: InspectorProps = {
   merchant: 'Corner Bakery',
