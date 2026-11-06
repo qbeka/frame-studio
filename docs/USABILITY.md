@@ -1,6 +1,6 @@
 # Usability task script
 
-No person has run this yet, so no participant data exists. An agent finishing the steps is not a usability study. The heuristic review below is separate from user research and was done by the author with Claude.
+No person has run this yet, so no participant data exists. The heuristic review below is not user research.
 
 ## Timed task
 

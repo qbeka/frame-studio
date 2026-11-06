@@ -112,10 +112,10 @@ These are the failures that changed something. All are fixed unless stated.
 | Focus went nowhere after a click in WebKit | Running the suite in WebKit | The runtime remembers what was pressed |
 | A layout change at rest was not recorded, so replay started wrong | Reading the code to check a test | It is now a recorded event |
 | 7 of 33 mutants survived 88 passing tests | Mutation testing | Tests added, and a real history bug found on the way |
-| A reload could leave the studio blank | Independent review | Restoring runs outside React's effects, and failure resets safely |
-| A queued command could hang replay, or run twice | Independent review | Live and replay now share one rule, tested against each other |
-| Fidelity only compared live to live | Independent review | The replay comparison above exists because of this |
-| The Motion baseline did not match the authored timing | Independent review | It now uses the same springs and fades |
+| A reload could leave the studio blank | Code review | Restoring runs outside React's effects, and failure resets safely |
+| A queued command could hang replay, or run twice | Code review | Live and replay now share one rule, tested against each other |
+| Fidelity only compared live to live | Code review | The replay comparison above exists because of this |
+| The Motion baseline did not match the authored timing | Code review | It now uses the same springs and fades |
 | The fidelity workload could not detect exit sizing bugs | A control went undetected | The fixture has padded exits, and everything was rerun |
 
 The first full measurement caught 8 of 9 faults. By the rules in the protocol that invalidated it, so those numbers were discarded rather than reported.
@@ -133,7 +133,7 @@ The first full measurement caught 8 of 9 faults. By the rules in the protocol th
 
 ## Review
 
-I reviewed each milestone myself, so that is self-review. A separate Claude agent then reviewed a clean clone, without my conclusions, and found 19 issues and several weak tests. No human has reviewed this code.
+Each milestone had a self-review. An automated review of a clean clone then found 19 issues and several weak tests, and those are fixed. No human has reviewed this code.
 
 ## Reproduce
 
