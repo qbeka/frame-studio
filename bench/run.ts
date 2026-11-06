@@ -23,7 +23,13 @@ const outName = (name: string) => (smoke ? `smoke/${name}` : name);
 const repo = process.cwd();
 const scratch = mkdtempSync(join(tmpdir(), 'frame-bench-'));
 const children: ChildProcess[] = [];
-const run = (command: string, args: string[], cwd = repo) => execFileSync(command, args, { cwd, stdio: 'pipe' });
+const run = (command: string, args: string[], cwd = repo) => {
+  try {
+    return execFileSync(command, args, { cwd, stdio: 'pipe' });
+  } catch (error) {
+    throw new Error(`${command} ${args.join(' ')} failed:\n${String((error as { stderr?: Buffer }).stderr).slice(-1500)}`);
+  }
+};
 const VIEWPORT = { width: 1440, height: 900 };
 
 function serve(dir: string, port: number) {
@@ -183,6 +189,7 @@ async function replayControl(browser: Browser, rows: unknown[], consumer: string
   const copy = join(scratch, 'replay-fault');
   mkdirSync(copy);
   for (const dir of ['packages', 'fixtures']) cpSync(dir, join(copy, dir), { recursive: true, verbatimSymlinks: true });
+  cpSync('tsconfig.base.json', join(copy, 'tsconfig.base.json'));
   symlinkSync(join(repo, 'node_modules'), join(copy, 'node_modules'));
   const file = join(copy, 'packages/studio/runtime/timeline.ts');
   const source = readFileSync(file, 'utf8');
