@@ -10,7 +10,7 @@
  * It is plain JavaScript with Vite as its only tool. Vite compiles the editor and your
  * registration file, and also loads the TypeScript authoring code for the commands that need it.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build, createServer } from 'vite';
@@ -85,7 +85,7 @@ function printProblems(problems) {
 async function validate(args) {
   const file = resolve(args[0] ?? fail('Pass a .frame.json project or a motion spec.'));
   const { authoring, close } = await loadAuthoring();
-  const result = authoring.parseAnyDocument(JSON.parse(readFileSync(file, 'utf8')));
+  const result = authoring.parseAnyDocument(readProjectFile(file));
   await close();
   if (!result.ok) {
     console.error(`${file} is not valid:`);
@@ -118,7 +118,7 @@ async function exportProject(args) {
   const file = resolve(args[0] ?? fail('Pass a .frame.json project.'));
   const out = resolve(argument(args, 'out', 'frame-export'));
   const { authoring, close } = await loadAuthoring();
-  const result = authoring.parseAnyDocument(JSON.parse(readFileSync(file, 'utf8')));
+  const result = authoring.parseAnyDocument(readProjectFile(file));
   if (!result.ok) {
     await close();
     console.error(`${file} is not valid:`);
@@ -145,7 +145,24 @@ function fail(message) {
   process.exit(1);
 }
 
+/** Reads a JSON document, and explains the usual mistakes without a stack trace. */
+function readProjectFile(file) {
+  if (!existsSync(file)) fail(`Could not find ${file}.`);
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch {
+    return fail(`${file} is not JSON. Pass a .frame.json project, not a registrations file.`);
+  }
+}
+
 const [command, ...args] = process.argv.slice(2);
 const commands = { dev, init, export: exportProject, validate, 'build-demo': buildDemo };
-if (!commands[command]) fail('Usage: frame dev|init|export|validate|build-demo');
+if (!commands[command]) {
+  fail(`Usage:
+  frame dev <registrations.tsx> [--port 5172]     Open the studio
+  frame init <registrations.tsx> [--out file]     Write a starter project
+  frame export <project.frame.json> [--out dir]   Write the runtime and config
+  frame validate <file.json>                      Check a project or spec
+  frame build-demo <registrations.tsx> --out dir  Build a static demo`);
+}
 await commands[command](args);
