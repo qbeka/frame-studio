@@ -12,7 +12,7 @@ import { chromium, type Page } from '@playwright/test';
 const PORT = 5320;
 const base = `http://localhost:${PORT}/`;
 const media = resolve('docs/media');
-const server = spawn('pnpm', ['exec', 'vite', 'preview', '--outDir', 'dist/site', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
+const server = spawn('pnpm', ['exec', 'vite', 'preview', '--outDir', 'dist/site/studio', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 for (let i = 0; i < 100; i += 1) {
   try {
