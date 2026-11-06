@@ -4,7 +4,7 @@ Frame's source is MIT licensed. See `LICENSE`. That covers only code in this rep
 
 | Third party | Used for | License | Notice |
 |---|---|---|---|
-| Geist, Geist Mono, Geist Serif by Vercel and basement.studio | Fonts in the editor interface | SIL Open Font License 1.1 | `packages/studio/editor/fonts/OFL-Geist.txt` |
+| Geist, Geist Mono, Geist Serif by Vercel and basement.studio | Fonts in the editor interface and the project page | SIL Open Font License 1.1 | `packages/studio/editor/fonts/OFL-Geist.txt`, `site/public/fonts/LICENSE-GEIST.txt` |
 | React | Peer dependency | MIT | Installed, not vendored |
 | Vite and `@vitejs/plugin-react` | Editor dev server and build | MIT | Installed, not vendored |
 | Motion 14.9.1 | Benchmark baseline only, never shipped | MIT | Installed in `bench/apps` |

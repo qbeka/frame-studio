@@ -6,7 +6,7 @@ A local motion editor for working React components, built around one question: w
 
 Use your real component. Interrupt it. Frame records that as a take, and you can scrub it, drag the interruption to a new moment, and change what happens there. Export a small runtime that behaves the same way in your app.
 
-**[Try the live replay](https://www.qendrimbeka.com/projects/frame/index.html)**, [watch 17 seconds of it working](docs/media/signature.mp4), or see the [73 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration.
+**[Try the live demo](https://www.qendrimbeka.com/projects/frame/index.html)**, [watch 17 seconds of it working](docs/media/signature.mp4), or see the [73 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration.
 
 | | |
 |---|---|
@@ -114,7 +114,7 @@ pnpm test
 pnpm test:e2e
 ```
 
-`pnpm check` runs the type checker and the writing rules. `pnpm test` runs 118 unit tests, including 50 digit reference values. `pnpm test:e2e` runs 71 browser tests against the studio, clean Vite and Next.js apps, and a full release run, which needs consumers built outside this folder and takes a few minutes.
+`pnpm check` runs the type checker and the writing rules. `pnpm test` runs 118 unit tests, including 50 digit reference values. `pnpm test:e2e` runs 90 browser tests against the project page, the studio, clean Vite and Next.js apps, and a full release run, which needs consumers built outside this folder and takes a few minutes.
 
 To run the suites in another engine:
 
@@ -162,7 +162,7 @@ packages/studio/
   editor/      The studio
   cli/         frame dev, init, validate, export
 fixtures/      The expense inspector
-site/          The project page, with the replay on the shipped runtime
+site/          The project page, with the live component on the shipped runtime
 examples/      Clean Vite and Next.js apps, and a tarball consumer
 reference/     Independent spring values
 bench/         Protocol, harness and baselines
