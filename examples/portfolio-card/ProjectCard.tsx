@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useFrame } from './motion/runtime';
 import { motion } from './motion/motion.config';
 import './motion/frame.css';
@@ -11,15 +11,12 @@ import './project-card.css';
 export function ProjectCard({ title, summary, details, href }: { title: string; summary: string; details: string; href: string }) {
   const frame = useFrame(motion);
   const open = frame.state === 'open';
-  const toggle = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        frame.send('close');
-        toggle.current?.focus();
-      }
+      // The runtime moves focus to the heading if it was on something that is leaving.
+      if (event.key === 'Escape') frame.send('close');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -29,7 +26,7 @@ export function ProjectCard({ title, summary, details, href }: { title: string; 
     <article {...frame.root()} className="pc">
       <div {...frame.target('surface')} className="pc-surface" aria-hidden="true" />
       <div {...frame.target('content')} className="pc-content">
-        <button ref={toggle} type="button" {...frame.target('head')} className="pc-head" aria-expanded={open}
+        <button type="button" {...frame.target('head')} className="pc-head" aria-expanded={open}
           onClick={() => frame.send(open ? 'close' : 'open')}>
           <span className="pc-title">{title}</span>
           <span className="pc-summary">{summary}</span>
