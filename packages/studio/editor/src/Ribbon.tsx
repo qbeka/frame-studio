@@ -42,6 +42,7 @@ export function Ribbon({
   onPickMarker,
   stepKeys,
   label,
+  ghostLabel,
 }: {
   timeline: Timeline;
   ghost: Timeline | null;
@@ -58,6 +59,7 @@ export function Ribbon({
   onPickMarker: (index: number) => void;
   stepKeys: (event: KeyboardEvent) => void;
   label: string;
+  ghostLabel: string | null;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
@@ -134,6 +136,7 @@ export function Ribbon({
         aria-valuetext={label}
         onKeyDown={stepKeys}
       />
+      {dotted && ghostLabel ? <p className="ribbon-legend">Dotted: {ghostLabel}</p> : null}
       {markers.map((marker) => (
         <button
           type="button"

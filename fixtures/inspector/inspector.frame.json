@@ -225,6 +225,21 @@
               },
               "delayMs": 40
             }
+          },
+          "open": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 90,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 0
+            }
           }
         },
         "interruptions": [
@@ -258,7 +273,23 @@
           },
           "delayMs": 0
         },
-        "targets": {},
+        "targets": {
+          "form": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 90,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 0
+            }
+          }
+        },
         "interruptions": [
           {
             "command": "*",
@@ -300,6 +331,21 @@
               },
               "delayMs": 40
             }
+          },
+          "form": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 90,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 0
+            }
           }
         },
         "interruptions": [
@@ -338,7 +384,23 @@
           },
           "delayMs": 0
         },
-        "targets": {},
+        "targets": {
+          "receipt": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 90,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 0
+            }
+          }
+        },
         "interruptions": [
           {
             "command": "*",
@@ -365,7 +427,23 @@
           },
           "delayMs": 0
         },
-        "targets": {},
+        "targets": {
+          "receipt": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 90,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 0
+            }
+          }
+        },
         "interruptions": [
           {
             "command": "*",

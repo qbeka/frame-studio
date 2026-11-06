@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter frame-studio run dev",
-    "build": "pnpm -r run build",
+    "build": "node scripts/build-site.mjs",
     "check": "tsc -b --pretty false && node scripts/check-copy.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",

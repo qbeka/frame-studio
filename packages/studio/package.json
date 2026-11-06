@@ -23,8 +23,7 @@
     "README.md"
   ],
   "scripts": {
-    "dev": "node cli/frame.mjs dev ../../fixtures/inspector/frame.registrations.tsx",
-    "build": "node cli/frame.mjs build-demo ../../fixtures/inspector/frame.registrations.tsx --out ../../dist/demo"
+    "dev": "node cli/frame.mjs dev ../../fixtures/inspector/frame.registrations.tsx"
   },
   "peerDependencies": {
     "react": ">=18.3.0 <20",

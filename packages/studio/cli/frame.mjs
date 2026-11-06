@@ -56,6 +56,8 @@ async function buildDemo(args) {
   const file = resolve(args[0] ?? fail('Pass your registrations file.'));
   await build({
     ...editorConfig(file),
+    // Set by scripts/build-site.mjs, which puts a built export at ./try/.
+    define: { 'import.meta.env.VITE_FRAME_TRY': JSON.stringify(args.includes('--with-try') ? '1' : '') },
     base: argument(args, 'base', './'),
     logLevel: 'warn',
     build: { outDir: resolve(argument(args, 'out', 'dist/demo')), emptyOutDir: true },

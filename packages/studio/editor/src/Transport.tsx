@@ -190,6 +190,7 @@ export function Transport({ spec, take, session, store, canLoadExample }: { spec
           onPickMarker={setActiveIndex}
           stepKeys={stepKeys}
           label={label}
+          ghostLabel={ghostMarker ? `without this ${ghostMarker.event.command}` : null}
         />
       ) : (
         <div className="ribbon-empty">

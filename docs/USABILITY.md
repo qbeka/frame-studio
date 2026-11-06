@@ -29,6 +29,6 @@ Report completion per step, median times with the number of participants, and ev
 | Error prevention | Out of range numbers never reach the project. A bad file changes nothing. |
 | Recovery | Undo covers edits, drafts cover a closed tab, and a bad import keeps the working project. |
 | Match to the task | Ribbon markers use your command names, not coordinates. |
-| Known weakness | Inspect mode freezes the component, and people may read that as broken. The hint line is the only explanation. |
-| Known weakness | The ghost path is not labeled on the ribbon. |
+| Reviewed and changed | Inspect mode froze the component with no note on it, so a note now sits above the component. |
+| Reviewed and changed | The ghost path was unlabeled, so the ribbon now names the command it leaves out. |
 | Known weakness | Undo also steps through recorded commands, which may surprise someone. |
