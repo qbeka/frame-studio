@@ -54,6 +54,8 @@ export const Canvas = forwardRef<ProbeHandle, { registration: AnyRegistration; s
     useImperativeHandle(ref, () => ({
       measure(state, props) {
         flushSync(() => setProbe({ state, props }));
+        // flushSync does nothing inside React's own work, and measuring then would be wrong.
+        if (!root.current) throw new Error('The geometry probe has not rendered.');
         return measureTargets(root.current!, elements.current, (id) => spec.states[state]?.targets[id]?.present === true);
       },
     }));

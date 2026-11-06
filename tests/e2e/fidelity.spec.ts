@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Browser } from '@playwright/test';
 import { rk4Path, type Leg } from '../support/rk4';
 import { SCRIPTS } from '../support/scripts';
-import { compare, runScript, sampleTimes, type Reading } from '../support/sync';
+import { compare, readReplay, runScript, sampleTimes, type Reading } from '../support/sync';
 
 const STUDIO = 'http://localhost:5172/?clock=manual';
 const CONSUMER = 'http://localhost:5182/?clock=manual';
@@ -27,6 +27,27 @@ for (const script of SCRIPTS) {
     const result = compare(a, b);
     expect(result.missing).toEqual([]);
     expect(result.compared).toBeGreaterThan(100);
+    expect(result.geometryPx).toBeLessThanOrEqual(0.5);
+    expect(result.opacity).toBeLessThanOrEqual(0.01);
+    expect(result.clipPx).toBeLessThanOrEqual(0.5);
+  });
+}
+
+for (const script of SCRIPTS.filter((s) => s.name !== 'resize')) {
+  test(`what you inspect matches the export: ${script.name}`, async ({ browser }) => {
+    const times = sampleTimes(script.endMs, 16.667, 13);
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.goto(STUDIO);
+    await page.waitForSelector('[data-frame-root]');
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForSelector('[data-frame-root]');
+    await runScript(page, '.stage-live', script.steps, times);
+    const replayed = await readReplay(page, '.stage-live', times);
+    await page.close();
+    const exported = await play(browser, CONSUMER, '#root', script.name, times);
+    const result = compare(replayed, exported);
+    expect(result.missing).toEqual([]);
     expect(result.geometryPx).toBeLessThanOrEqual(0.5);
     expect(result.opacity).toBeLessThanOrEqual(0.01);
     expect(result.clipPx).toBeLessThanOrEqual(0.5);

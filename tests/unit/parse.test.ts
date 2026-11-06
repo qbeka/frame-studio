@@ -46,6 +46,11 @@ describe('parseMotionSpec', () => {
     ['a scale pose on text', (s) => (s.states.compact.targets.summary.scale = 1.2), 'states.compact.targets.summary.scale', /must be 1/],
     ['a scale timing on text', (s) => (s.transitions[0].targets = { summary: { scale: { curve: s.transitions[0].timing.curve, delayMs: 0 } } }), 'transitions[0].targets.summary.scale', /never scaled/],
     ['opacity above one', (s) => (s.states.compact.targets.summary.opacity = 1.5), 'states.compact.targets.summary.opacity', /from 0 to 1/],
+    ['a state named like an object method', (s) => (s.initialState = 'constructor'), 'initialState', /must be a name/],
+    ['a transition to an object method', (s) => (s.transitions[0].to = 'toString'), 'transitions[0].to', /must be a name/],
+    ['a target named __proto__', (s) => Object.defineProperty(s.targets, '__proto__', { value: s.targets.form, enumerable: true }), 'targets', /must be a name/],
+    ['a name with a line break', (s) => (s.component.id = 'a\nimport x'), 'component.id', /must be a name/],
+    ['a command with a quote', (s) => (s.commands[0] = "o'pen"), 'commands[0]', /must be a name/],
     ['a bad resize policy', (s) => (s.resize = 'stretch'), 'resize', /retarget, snap/],
     ['a spring that barely settles', (s) => (s.transitions[0].timing.curve = { type: 'spring', stiffness: 1, damping: 0.1, mass: 50 }), 'transitions[0].timing.curve', /to settle/],
   ];
@@ -129,6 +134,9 @@ describe('project files', () => {
     ['an unknown event', { ...take, events: [{ atMs: 1, type: 'sneeze' }] }],
     ['a broken box', { ...take, events: [{ atMs: 1, type: 'measure', rects: { a: { x: 'left' } } }] }],
     ['an unknown starting state', { ...take, initialState: 'nope' }],
+    ['a starting state named like an object method', { ...take, initialState: 'constructor' }],
+    ['an infinite start time', { ...take, startMs: Number.POSITIVE_INFINITY }],
+    ['a negative box', { ...take, initialRects: { a: { x: 0, y: 0, width: -5, height: 1 } } }],
   ])('rejects %s', (_, badTake) => {
     expect(parseProject({ ...project, take: badTake }).ok).toBe(false);
   });

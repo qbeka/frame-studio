@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { chromium, firefox, webkit, type Browser, type Page } from '@playwright/test';
-import { compare, runScript, sampleTimes, type Reading } from '../tests/support/sync.ts';
+import { compare, readReplay, runScript, sampleTimes, type Reading } from '../tests/support/sync.ts';
 import { SCRIPTS } from '../tests/support/scripts.ts';
 import { rk4Path } from '../tests/support/rk4.ts';
 import { manifest, median, percentile, saveRun } from './lib/manifest.ts';
@@ -86,6 +86,15 @@ async function playScript(browser: Browser, url: string, scope: string, script: 
   return readings;
 }
 
+/** Plays a script in the studio, then reads it back from the replayed take. */
+async function playAndReplay(browser: Browser, script: (typeof SCRIPTS)[number], times: number[], dpr: number) {
+  const { page, context } = await open(browser, studioUrl, dpr);
+  const live = await runScript(page, '.stage-live', script.steps, times);
+  const replayed = script.name === 'resize' ? null : await readReplay(page, '.stage-live', times);
+  await context.close();
+  return { live, replayed };
+}
+
 const STUDIO_PORT = 5301;
 const CONSUMER_PORT = 5302;
 const studioUrl = `http://localhost:${STUDIO_PORT}/?clock=manual`;
@@ -107,11 +116,12 @@ async function fidelity() {
         for (const script of SCRIPTS) {
           const seed = 100 + r;
           const times = sampleTimes(script.endMs, 16.667, seed);
-          const a = await playScript(browser, studioUrl, '.stage-live', script, times, dpr);
+          const { live: a, replayed } = await playAndReplay(browser, script, times, dpr);
           const b = await playScript(browser, consumerUrl, '#root', script, times, dpr);
           const result = compare(a, b);
-          rows.push({ run: r, engine, dpr, script: script.name, seed, samples: times.length, ...result });
-          raw[`run${r}-${engine}-dpr${dpr}-${script.name}`] = { times, studio: a, export: b };
+          const replay = replayed ? compare(replayed, b) : null;
+          rows.push({ run: r, engine, dpr, script: script.name, seed, samples: times.length, ...result, replay });
+          raw[`run${r}-${engine}-dpr${dpr}-${script.name}`] = { times, studio: a, replayed, export: b };
         }
       }
       await browser.close();
@@ -157,10 +167,11 @@ async function reference() {
 const FAULTS: { name: string; file: string; find: string; replace: string }[] = [
   { name: 'velocity dropped on retarget', file: 'channel.ts', find: 'const { position, velocity } = readChannel(channel, startMs);', replace: 'const { position } = readChannel(channel, startMs); const velocity = 0;' },
   { name: 'damping 2 percent high', file: 'spring.ts', find: 'z: damping / (2 * Math.sqrt(stiffness * mass))', replace: 'z: (1.02 * damping) / (2 * Math.sqrt(stiffness * mass))' },
-  { name: 'commands 8 ms late', file: 'controller.ts', find: 'dispatch(command, now());', replace: 'dispatch(command, now() + 8);' },
+  { name: 'commands 8 ms late', file: 'controller.ts', find: '      dispatch(command, t);\n    },\n\n    start()', replace: '      dispatch(command, t + 8);\n    },\n\n    start()' },
   { name: 'opacity 2 percent low', file: 'dom.ts', find: "element.style.opacity = s.opacity >= 0.9995 ? '' : fixed(Math.max(0, Math.min(1, s.opacity)));\n    if (s.exiting)", replace: "element.style.opacity = s.opacity >= 0.9995 ? '' : fixed(Math.max(0, Math.min(1, s.opacity * 0.98)));\n    if (s.exiting)" },
-  { name: 'resize ignored', file: 'controller.ts', find: 'const remeasure = () => this.remeasure();', replace: 'const remeasure = () => {};' },
+  { name: 'resize ignored', file: 'controller.ts', find: 'observer?.observe(target);', replace: '' },
   { name: 'interruption curve ignored', file: 'timeline.ts', find: 'if (rule?.curve) return { curve: rule.curve, delayMs: 0 };', replace: '' },
+  { name: 'clip inset 3 px wrong', file: 'dom.ts', find: 'const top = s.y - box.y;', replace: 'const top = s.y - box.y + 3;' },
   { name: 'exit box sizing removed', file: '../frame.css', find: 'box-sizing: border-box !important;', replace: '' },
 ];
 
@@ -173,6 +184,7 @@ async function controls() {
     await serve(dir, CONSUMER_PORT);
     let geometryPx = 0;
     let opacity = 0;
+    let clipPx = 0;
     let missing = 0;
     for (const script of SCRIPTS) {
       const times = sampleTimes(script.endMs, 16.667, 300);
@@ -181,10 +193,11 @@ async function controls() {
       const result = compare(a, b);
       geometryPx = Math.max(geometryPx, result.geometryPx);
       opacity = Math.max(opacity, result.opacity);
+      clipPx = Math.max(clipPx, result.clipPx);
       missing += result.missing.length;
     }
-    const detected = geometryPx > 0.5 || opacity > 0.01 || missing > 0;
-    rows.push({ name, geometryPx, opacity, missing, detected });
+    const detected = geometryPx > 0.5 || clipPx > 0.5 || opacity > 0.01 || missing > 0;
+    rows.push({ name, geometryPx, clipPx, opacity, missing, detected });
     for (const child of children.splice(1)) process.kill(-child.pid!);
     await new Promise((r) => setTimeout(r, 200));
   };

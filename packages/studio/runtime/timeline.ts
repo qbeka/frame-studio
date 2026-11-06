@@ -42,6 +42,8 @@ export interface Mark {
   transitionId: string | null;
   /** Layout boxes of targets in flow at this moment. */
   rects: Rects;
+  /** Last known box of every target as of this mark, which is what an exit draws against. */
+  known: Rects;
   /** When all channels finish, as known at this mark. */
   settleMs: number;
   /** The same per target. An exiting target stays drawn until its own time. */
@@ -53,7 +55,7 @@ export interface Mark {
 export interface Timeline {
   spec: MotionSpec;
   channels: Record<string, Record<ChannelName, Channel>>;
-  /** Last known box of every target, kept after it leaves flow so it can exit from there. */
+  /** Last known box of every target. Marks snapshot this so history never changes. */
   lastRects: Rects;
   marks: Mark[];
 }
@@ -128,6 +130,7 @@ export function createTimeline(spec: MotionSpec, atMs: number, rects: Rects): Ti
     state: spec.initialState,
     transitionId: null,
     rects: { ...rects },
+    known: { ...rects },
     settleMs: atMs,
     targetSettleMs: {},
     queued: null,
@@ -232,7 +235,7 @@ function pushMark(
     targetSettleMs[id] = settle;
     settleMs = Math.max(settleMs, settle);
   }
-  timeline.marks.push({ atMs, state, transitionId, rects: { ...rects }, settleMs, targetSettleMs, queued });
+  timeline.marks.push({ atMs, state, transitionId, rects: { ...rects }, known: { ...timeline.lastRects }, settleMs, targetSettleMs, queued });
 }
 
 /**
@@ -328,8 +331,11 @@ export function applyRemeasure(
     };
     for (const name of ['x', 'y', 'width', 'height'] as const) {
       const channel = timeline.channels[id]![name];
-      const curve = running && policy === 'retarget' ? channel[channel.length - 1]!.curve : null;
-      retarget(channel, atMs, atMs, goal[name]!, curve, name, spec.settle);
+      const last = channel[channel.length - 1]!;
+      const curve = running && policy === 'retarget' ? last.curve : null;
+      // A leg still waiting on its delay keeps its start. A layout change is not a new command.
+      const startMs = curve !== null && last.startMs > atMs ? last.startMs : atMs;
+      retarget(channel, atMs, startMs, goal[name]!, curve, name, spec.settle);
     }
   }
   if (changed) pushMark(timeline, atMs, mark.state, mark.transitionId, rects, mark.queued);
@@ -346,6 +352,11 @@ export function pendingQueue(timeline: Timeline): { command: string; atMs: numbe
   return mark.queued === null ? null : { command: mark.queued, atMs: mark.settleMs };
 }
 
+/** Takes the queued command off the timeline, because it is about to run or be refused. */
+export function clearQueue(timeline: Timeline): void {
+  lastMark(timeline).queued = null;
+}
+
 export function sampleTimeline(timeline: Timeline, t: number): Sample {
   const { spec } = timeline;
   const mark = markAt(timeline, t);
@@ -359,7 +370,7 @@ export function sampleTimeline(timeline: Timeline, t: number): Sample {
       id,
       inFlow,
       exiting,
-      box: mark.rects[id] ?? (exiting ? (timeline.lastRects[id] ?? null) : null),
+      box: mark.rects[id] ?? (exiting ? (mark.known[id] ?? null) : null),
       x: readChannel(channels.x, t).position,
       y: readChannel(channels.y, t).position,
       width: readChannel(channels.width, t).position,
@@ -434,26 +445,35 @@ export function replayTake(
 ): { timeline: Timeline; steps: ReplayStep[] } {
   const timeline = createTimeline(spec, startMs, initialRects);
   const steps: ReplayStep[] = [];
+  let queuedReduced = options.reduced ?? false;
   const run = (atMs: number, command: string, reduced: boolean) => {
     const decision = decideCommand(timeline, atMs, command);
-    const state =
-      decision.kind === 'start' ? decision.transition.to : markAt(timeline, atMs).state;
+    const state = decision.kind === 'start' ? decision.transition.to : markAt(timeline, atMs).state;
     const rects = decision.kind === 'start' ? geometry(state, atMs) : {};
+    if (decision.kind === 'queue') queuedReduced = reduced;
     applyDecision(timeline, atMs, decision, rects, { reduced });
     steps.push({ atMs, command, outcome: decision.kind });
   };
-  const drainQueue = (until: number) => {
+  // A queued command leaves the queue before it runs, so one that is refused cannot loop.
+  const drainQueue = (isDue: (atMs: number) => boolean) => {
     let due = pendingQueue(timeline);
-    while (due && due.atMs <= until) {
-      run(due.atMs, due.command, options.reduced ?? false);
+    while (due && isDue(due.atMs)) {
+      clearQueue(timeline);
+      run(due.atMs, due.command, queuedReduced);
       due = pendingQueue(timeline);
     }
   };
   for (const event of events) {
-    drainQueue(event.atMs);
-    if (event.type === 'command') run(event.atMs, event.command, event.reduced ?? options.reduced ?? false);
-    if (event.type === 'measure') applyRemeasure(timeline, event.atMs, event.rects, spec.resize);
+    if (event.type === 'measure') {
+      // Live, a layout change found at the settle moment is taken first, so it must be here too.
+      drainQueue((atMs) => atMs < event.atMs);
+      applyRemeasure(timeline, event.atMs, event.rects, spec.resize);
+    } else {
+      drainQueue((atMs) => atMs <= event.atMs);
+      if (event.type === 'command') run(event.atMs, event.command, event.reduced ?? options.reduced ?? false);
+    }
   }
-  drainQueue(options.endMs ?? Number.POSITIVE_INFINITY);
+  const endMs = options.endMs ?? Number.POSITIVE_INFINITY;
+  drainQueue((atMs) => atMs <= endMs);
   return { timeline, steps };
 }

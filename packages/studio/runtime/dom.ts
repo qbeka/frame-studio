@@ -10,9 +10,31 @@ import type { Sample, TargetSample } from './timeline';
  * a documented limit.
  */
 
+/**
+ * Absolute drawing happens in the coordinates of the element's containing block, which is the root
+ * unless a positioned wrapper sits between them, and which may be scrolled. This is the top left
+ * of that space in root coordinates. Read once per animation, then cached until styles clear.
+ */
+const origins = new WeakMap<HTMLElement, { x: number; y: number }>();
+
+function originOf(element: HTMLElement, root: HTMLElement) {
+  let origin = origins.get(element);
+  if (origin) return origin;
+  const parent = (element.offsetParent as HTMLElement | null) ?? root;
+  const a = parent.getBoundingClientRect();
+  const b = root.getBoundingClientRect();
+  origin = {
+    x: a.left + parent.clientLeft - parent.scrollLeft - (b.left + root.clientLeft),
+    y: a.top + parent.clientTop - parent.scrollTop - (b.top + root.clientTop),
+  };
+  origins.set(element, origin);
+  return origin;
+}
+
 /** Removes everything the renderer wrote, so that a read sees true native layout. */
 function clearDrawnStyles(element: HTMLElement) {
   const { style } = element;
+  origins.delete(element);
   style.transform = '';
   style.transformOrigin = '';
   style.clipPath = '';
@@ -68,7 +90,7 @@ function drawClip(element: HTMLElement, s: TargetSample, box: Rect, radius: numb
   element.style.clipPath = flush ? '' : `inset(${px(top)} ${px(right)} ${px(bottom)} ${px(left)}${round})`;
 }
 
-function drawSurface(element: HTMLElement, s: TargetSample, box: Rect) {
+function drawSurface(element: HTMLElement, root: HTMLElement, s: TargetSample, box: Rect) {
   const { style } = element;
   const flush =
     Math.abs(s.x - box.x) + Math.abs(s.y - box.y) + Math.abs(s.width - box.width) + Math.abs(s.height - box.height) <
@@ -81,7 +103,8 @@ function drawSurface(element: HTMLElement, s: TargetSample, box: Rect) {
   style.right = style.bottom = 'auto';
   style.width = px(Math.max(0, s.width));
   style.height = px(Math.max(0, s.height));
-  style.transform = `translate(${px(s.x)}, ${px(s.y)})`;
+  const origin = originOf(element, root);
+  style.transform = `translate(${px(s.x - origin.x)}, ${px(s.y - origin.y)})`;
 }
 
 function drawTransform(element: HTMLElement, s: TargetSample, box: Rect, fitSize: boolean) {
@@ -98,18 +121,19 @@ function drawTransform(element: HTMLElement, s: TargetSample, box: Rect, fitSize
   element.style.transformOrigin = scaled && fitSize ? '0 0' : '';
 }
 
-function drawExiting(element: HTMLElement, s: TargetSample, box: Rect) {
+function drawExiting(element: HTMLElement, root: HTMLElement, s: TargetSample, box: Rect) {
   const { style } = element;
   element.setAttribute('data-frame-exiting', '');
   element.inert = true;
   style.left = style.top = '0px';
   style.width = px(box.width);
   style.height = px(box.height);
-  style.transform = `translate(${px(s.x)}, ${px(s.y)})${s.scale === 1 ? '' : ` scale(${fixed(s.scale)})`}`;
+  const origin = originOf(element, root);
+  style.transform = `translate(${px(s.x - origin.x)}, ${px(s.y - origin.y)})${s.scale === 1 ? '' : ` scale(${fixed(s.scale)})`}`;
 }
 
-/** Draws one sample. It reads no layout, so a frame costs writes only. */
-export function drawSample(spec: MotionSpec, elements: Map<string, HTMLElement>, sample: Sample) {
+/** Draws one sample. Apart from one origin read per animation, a frame costs writes only. */
+export function drawSample(spec: MotionSpec, root: HTMLElement, elements: Map<string, HTMLElement>, sample: Sample) {
   for (const [id, element] of elements) {
     const s = sample.targets[id];
     if (!s) continue;
@@ -123,7 +147,7 @@ export function drawSample(spec: MotionSpec, elements: Map<string, HTMLElement>,
     if (!box) continue;
     element.style.opacity = s.opacity >= 0.9995 ? '' : fixed(Math.max(0, Math.min(1, s.opacity)));
     if (s.exiting) {
-      drawExiting(element, s, box);
+      drawExiting(element, root, s, box);
       continue;
     }
     if (element.hasAttribute('data-frame-exiting')) {
@@ -133,13 +157,14 @@ export function drawSample(spec: MotionSpec, elements: Map<string, HTMLElement>,
       element.style.opacity = s.opacity >= 0.9995 ? '' : fixed(Math.max(0, Math.min(1, s.opacity)));
     }
     const target = spec.targets[id]!;
-    if (target.bounds === 'surface') drawSurface(element, s, box);
+    if (target.bounds === 'surface') drawSurface(element, root, s, box);
     else if (target.bounds === 'clip') drawClip(element, s, box, target.clipRadiusPx);
     else drawTransform(element, s, box, target.bounds === 'scale');
   }
 }
 
-const FOCUSABLE = 'button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])';
+const FOCUSABLE =
+  'button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])';
 
 /** Focuses the target or the first focusable element inside it. Never scrolls. */
 export function focusTarget(element: HTMLElement) {

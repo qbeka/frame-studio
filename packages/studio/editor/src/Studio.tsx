@@ -28,20 +28,29 @@ export function Studio({ registration, registrations, onPickRegistration, initia
   const { inspectAt, playhead, resetTo } = session;
 
   // Undo, redo, opening a file and recovering a draft all replace the project from outside the
-  // session, so the session catches up here. A take reopens exactly where it can be inspected.
+  // session, so the session catches up here. It runs in a task of its own, because a replay may
+  // need the probe, and the probe cannot render from inside an effect. A take that cannot be
+  // restored must not take the app down with it, so that failure resets to a working component.
   const shown = useRef<number | null>(null);
   useEffect(() => {
-    if (shown.current === store.revision) return;
+    if (shown.current === store.revision) return undefined;
     const first = shown.current === null;
     shown.current = store.revision;
-    if (take) {
-      const timeline = session.replay(take, spec).timeline;
-      const range = takeRange(take, timeline);
-      const t = first ? range.end : Math.max(range.start, Math.min(range.end, playhead.get()));
-      inspectAt(take, spec, t);
-    } else if (!first) {
-      resetTo(spec.initialState);
-    }
+    const timer = setTimeout(() => {
+      try {
+        if (take) {
+          const range = takeRange(take, session.replay(take, spec).timeline);
+          const t = first ? range.end : Math.max(range.start, Math.min(range.end, playhead.get()));
+          inspectAt(take, spec, t);
+        } else if (!first) {
+          resetTo(spec.initialState);
+        }
+      } catch (error) {
+        console.warn('Frame could not restore this take.', error);
+        resetTo(spec.initialState);
+      }
+    });
+    return () => clearTimeout(timer);
   });
 
   useEffect(() => {

@@ -67,8 +67,7 @@ export function Transport({ spec, take, session, store, canLoadExample }: { spec
   const ghost = useMemo(() => {
     // The first command is what starts the take, so the ghost needs one after it to remove.
     if (live || !take || !ghostMarker || markers.length < 2) return null;
-    const events = take.events.filter((_, i) => i !== ghostMarker.index);
-    return session.replay({ ...take, events }, spec).timeline;
+    return session.ghost(take, spec, ghostMarker.index);
   }, [take, ghostMarker?.index, spec, markers.length, live]);
 
   function moveMarker(index: number, atMs: number) {

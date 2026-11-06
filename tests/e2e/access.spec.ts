@@ -130,6 +130,20 @@ test('removing a target in flight does not throw', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('an exit stays in place under a positioned wrapper', async ({ page }) => {
+  await page.goto(CONSUMER);
+  await page.addStyleTag({ content: '.fx-content { position: relative; top: 0; margin-top: 30px; }' });
+  await page.getByRole('button', { name: 'Edit expense' }).click();
+  await page.waitForTimeout(800);
+  const form = page.locator('[data-frame-target=form]');
+  const before = (await form.boundingBox())!.y;
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(form).toHaveAttribute('data-frame-exiting', '');
+  const after = (await form.boundingBox())!.y;
+  // One frame into the exit, it must not have jumped by the wrapper's offset.
+  expect(Math.abs(after - before)).toBeLessThan(10);
+});
+
 test('page scrolling during a transition changes nothing', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 300 });
   await page.goto(CONSUMER);

@@ -98,7 +98,7 @@ describe('interruption', () => {
       [{ atMs: 0, type: 'command', command: 'open' }, { atMs: 50, type: 'command', command: 'close' }],
       geometry,
     );
-    const settleOfOpen = timeline.marks.find((m) => m.transitionId === 'open' && m.queued === 'close')!.settleMs;
+    const settleOfOpen = timeline.marks.find((m) => m.transitionId === 'open')!.settleMs;
     expect(steps.map((s) => s.outcome)).toEqual(['start', 'queue', 'start']);
     expect(steps[2]!.atMs).toBe(settleOfOpen);
     expect(sampleTimeline(timeline, settleOfOpen - 1).state).toBe('open');
@@ -244,6 +244,17 @@ describe('presence', () => {
     expect(sampleTimeline(t, 5000).targets.body!.opacity).toBe(0);
   });
 
+  it('draws an old exit from the box of that time, even after the layout changes', () => {
+    const t = start();
+    command(t, 0, 'open');
+    command(t, 2000, 'close');
+    const box = sampleTimeline(t, 2040).targets.body!.box;
+    applyRemeasure(t, 3000, closedRects, 'retarget');
+    const decision = decideCommand(t, 4000, 'open');
+    applyDecision(t, 4000, decision, { ...openRects, body: { x: 16, y: 72, width: 200, height: 100 } }, { reduced: false });
+    expect(sampleTimeline(t, 2040).targets.body!.box).toEqual(box);
+  });
+
   it('a target reversed during its exit comes back from where it is', () => {
     const t = start();
     command(t, 0, 'open');
@@ -289,6 +300,19 @@ describe('layout changes', () => {
     const count = t.marks.length;
     applyRemeasure(t, 100, openRects, 'retarget');
     expect(t.marks.length).toBe(count);
+  });
+});
+
+describe('a layout change and a delay', () => {
+  it('leaves a leg that is still waiting on its delay at its original start', () => {
+    const spec = panelSpec();
+    spec.transitions[0]!.targets = { panel: { size: { curve: spring, delayMs: 300 } } };
+    const t = start(spec);
+    command(t, 0, 'open');
+    applyRemeasure(t, 50, { ...openRects, panel: { x: 0, y: 0, width: 320, height: 300 } }, 'retarget');
+    expect(height(t, 200).position).toBe(60);
+    expect(height(t, 400).segment.startMs).toBe(300);
+    expect(height(t, 400).target).toBe(300);
   });
 });
 

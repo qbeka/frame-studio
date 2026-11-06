@@ -38,7 +38,34 @@ export function sampleTimes(endMs: number, stepMs: number, seed: number) {
   return times;
 }
 
+/** Puts the reader in the page, so live and replayed samples are read by the same code. */
+async function installReader(page: Page) {
+  await page.evaluate(() => {
+    (window as any).__frameRead = (scope: string, atMs: number) => {
+      const root = document.querySelector(scope)!.querySelector('[data-frame-root]') as HTMLElement;
+      const origin = root.getBoundingClientRect();
+      const targets: Record<string, unknown> = {};
+      for (const el of root.querySelectorAll<HTMLElement>('[data-frame-target]')) {
+        const style = getComputedStyle(el);
+        if (style.display === 'none') continue;
+        const box = el.getBoundingClientRect();
+        const clip = style.clipPath === 'none' ? null : (style.clipPath.match(/-?[\d.]+/g) ?? []).map(Number);
+        targets[el.dataset.frameTarget!] = {
+          x: box.left - origin.left,
+          y: box.top - origin.top,
+          width: box.width,
+          height: box.height,
+          opacity: Number(style.opacity),
+          clip,
+        };
+      }
+      return { atMs, targets };
+    };
+  });
+}
+
 export async function runScript(page: Page, scope: string, steps: Step[], times: number[]): Promise<Reading[]> {
+  await installReader(page);
   return page.evaluate(
     async ({ scope, steps, times }) => {
       const clock = (window as any).__frameClock;
@@ -46,26 +73,6 @@ export async function runScript(page: Page, scope: string, steps: Step[], times:
       const root = host.querySelector('[data-frame-root]') as HTMLElement;
       const settle = () => new Promise((r) => setTimeout(r, 0));
       const frame = () => new Promise((r) => requestAnimationFrame(() => r(null)));
-
-      function read(atMs: number) {
-        const origin = root.getBoundingClientRect();
-        const targets: Record<string, unknown> = {};
-        for (const el of root.querySelectorAll<HTMLElement>('[data-frame-target]')) {
-          const style = getComputedStyle(el);
-          if (style.display === 'none') continue;
-          const box = el.getBoundingClientRect();
-          const clip = style.clipPath === 'none' ? null : (style.clipPath.match(/-?[\d.]+/g) ?? []).map(Number);
-          targets[el.dataset.frameTarget!] = {
-            x: box.left - origin.left,
-            y: box.top - origin.top,
-            width: box.width,
-            height: box.height,
-            opacity: Number(style.opacity),
-            clip,
-          };
-        }
-        return { atMs, targets };
-      }
 
       const events = [...steps.map((s) => ({ ...s, step: true })), ...times.map((atMs) => ({ atMs, step: false }))].sort(
         (a, b) => a.atMs - b.atMs || Number(b.step) - Number(a.step),
@@ -85,12 +92,37 @@ export async function runScript(page: Page, scope: string, steps: Step[], times:
           await frame();
           await frame();
         } else if (!event.step) {
-          out.push(read(event.atMs));
+          out.push((window as any).__frameRead(scope, event.atMs));
         }
       }
       return out;
     },
     { scope, steps, times },
+  ) as Promise<Reading[]>;
+}
+
+/**
+ * Pauses the studio and reads the same times back from the replayed take. Comparing this to the
+ * export tests what you actually inspect, which is a different path from the live run.
+ */
+export async function readReplay(page: Page, scope: string, times: number[]): Promise<Reading[]> {
+  return page.evaluate(
+    async ({ scope, times }) => {
+      const session = (window as any).__frameSession;
+      const settle = () => new Promise((r) => setTimeout(r, 0));
+      session.pause();
+      await settle();
+      await settle();
+      const out: unknown[] = [];
+      for (const atMs of times) {
+        session.seek(atMs);
+        await settle();
+        await settle();
+        out.push((window as any).__frameRead(scope, atMs));
+      }
+      return out;
+    },
+    { scope, times },
   ) as Promise<Reading[]>;
 }
 

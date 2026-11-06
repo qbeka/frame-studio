@@ -3,12 +3,18 @@ import { createRoot } from 'react-dom/client';
 import { AnimatePresence, motion } from 'motion/react';
 import './inspector.css';
 
-// Hand-written with Motion. Same spring, same reversal, same content fades as the Frame version.
-const spring = { type: 'spring', stiffness: 420, damping: 34, mass: 1 };
-const fade = { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: 6 }, transition: spring };
+// Hand-written with Motion, with the timing of the authored spec: a soft spring to open, a firmer
+// one to close or reverse, a quick fade out for what leaves, and a delayed fade in for what enters.
+const quiet = { type: 'spring', stiffness: 420, damping: 34, mass: 1 };
+const firm = { type: 'spring', stiffness: 700, damping: 48, mass: 1 };
+const ease = [0.2, 0, 0, 1];
 
 function App() {
   const [state, setState] = useState('compact');
+  const spring = state === 'compact' ? firm : quiet;
+  const enter = { y: spring, opacity: { duration: 0.18, delay: 0.04, ease } };
+  const leave = { opacity: 0, y: 6, transition: { y: spring, opacity: { duration: 0.09, ease } } };
+  const fade = { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0, transition: enter }, exit: leave };
   return (
     <motion.section layout transition={spring} className="fx-inspector" style={{ background: '#fff', border: '1px solid #1115112e', borderRadius: 14, overflow: 'hidden' }}>
       <div className="fx-content">

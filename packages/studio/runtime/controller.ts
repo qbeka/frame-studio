@@ -3,10 +3,10 @@ import type { MotionSpec, Rects } from './spec';
 import {
   applyDecision,
   applyRemeasure,
+  clearQueue,
   createTimeline,
   decideCommand,
   isAnimating,
-  lastMark,
   pendingQueue,
   pruneTimeline,
   sampleTimeline,
@@ -55,6 +55,10 @@ interface Pending {
   reduced: boolean;
   /** Was focus inside something this transition may hide? */
   active: Element | null;
+  /** A queued command's run. The take already has it, so it is not recorded twice. */
+  fromQueue: boolean;
+  /** Already applied, against the last known layout. See `applyUncommitted`. */
+  applied: boolean;
 }
 
 export type FrameController = ReturnType<typeof createController>;
@@ -71,7 +75,8 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
   let version = 0;
   let cancelFrame: (() => void) | null = null;
   let observer: ResizeObserver | null = null;
-  let started = false;
+  /** React has mounted us. The listeners attach once there is also a root. */
+  let wanted = false;
   /** Scrubbing holds time still here. Null means live. */
   let frozenAt: number | null = null;
   /** Live time is the clock plus this, so a take can resume from where it was paused. */
@@ -80,6 +85,8 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
   /** The element under the current click. See `start`. */
   let pressed: Element | null = null;
   let detach: (() => void) | null = null;
+  /** Commands sent before the first commit, such as from a child's layout effect. */
+  const early: string[] = [];
 
   const now = () => frozenAt ?? clock.now() + offsetMs;
 
@@ -103,7 +110,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
 
   function render() {
     if (!timeline) return;
-    drawSample(spec, elements, sampleTimeline(timeline, now()));
+    if (root) drawSample(spec, root, elements, sampleTimeline(timeline, now()));
   }
 
   function stopLoop() {
@@ -117,31 +124,63 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     cancelFrame = clock.requestFrame(tick);
   }
 
+  /** Runs a queued command that has come due. It keeps its exact settle time. */
+  function drainDue(t: number) {
+    if (!timeline) return;
+    const due = pendingQueue(timeline);
+    if (!due || due.atMs > t) return;
+    clearQueue(timeline);
+    dispatch(due.command, due.atMs, true);
+  }
+
   function tick() {
     cancelFrame = null;
     if (!timeline) return;
     const t = now();
-    const due = pendingQueue(timeline);
-    // The queued command runs at its settle time, however late this frame is.
-    if (due && due.atMs <= t) {
-      lastMark(timeline).queued = null;
-      dispatch(due.command, due.atMs);
-      return;
-    }
+    drainDue(t);
+    // With a transition pending, the commit it triggered does the drawing.
+    if (pending.length > 0) return;
     render();
     if (!options.history) pruneTimeline(timeline, t);
     ensureLoop();
   }
 
-  function dispatch(command: string, atMs: number) {
+  function record(item: Pending, rects: Rects) {
+    if (item.fromQueue || item.decision.kind !== 'start') return;
+    const { command } = item.decision.transition;
+    options.onEvent?.({ atMs: item.atMs, type: 'command', command, reduced: item.reduced, rects }, startMs);
+  }
+
+  /**
+   * A second command in one event handler must be judged from the state the first one reached,
+   * but React has not committed that state, so its layout does not exist yet. The first command
+   * is applied against the last known boxes. Nothing has been painted, and the commit corrects
+   * the endpoints before anyone can see them.
+   */
+  function applyUncommitted() {
     if (!timeline) return;
+    for (const item of pending) {
+      if (item.applied || item.decision.kind !== 'start') continue;
+      const inFlow = spec.states[item.decision.transition.to]!.targets;
+      const rects: Rects = {};
+      for (const [id, rect] of Object.entries(timeline.lastRects)) if (inFlow[id]?.present) rects[id] = rect;
+      applyDecision(timeline, item.atMs, item.decision, rects, { reduced: item.reduced });
+      item.applied = true;
+      record(item, rects);
+    }
+  }
+
+  function dispatch(command: string, atMs: number, fromQueue = false) {
+    if (!timeline) return;
+    applyUncommitted();
     const decision = decideCommand(timeline, atMs, command);
-    if (decision.kind === 'reject') {
-      options.onWarning?.({ code: 'rejected-command', command, state });
+    const reduced = reducedNow();
+    // Refused and ignored commands stay in the take, because an edit could change their fate.
+    if (decision.kind === 'reject' || decision.kind === 'ignore') {
+      if (!fromQueue) options.onEvent?.({ atMs, type: 'command', command, reduced }, startMs);
+      if (decision.kind === 'reject') options.onWarning?.({ code: 'rejected-command', command, state });
       return;
     }
-    if (decision.kind === 'ignore') return;
-    const reduced = reducedNow();
     if (decision.kind === 'queue') {
       applyDecision(timeline, atMs, decision, {}, { reduced });
       options.onEvent?.({ atMs, type: 'command', command, reduced }, startMs);
@@ -150,7 +189,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     }
     // At rest the last measured boxes may be stale, for example after a resize, so take the
     // true starting layout while it is still on screen. Mid flight the channels already know.
-    if (root && !isAnimating(timeline, atMs)) {
+    if (root && pending.length === 0 && !isAnimating(timeline, atMs)) {
       const rects = measure();
       const before = timeline.marks.length;
       applyRemeasure(timeline, atMs, rects, spec.resize);
@@ -159,9 +198,45 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       render();
     }
     const focused = document.activeElement;
-    pending.push({ atMs, decision, reduced, active: focused && focused !== document.body ? focused : pressed });
+    const active = focused && focused !== document.body ? focused : pressed;
+    pending.push({ atMs, decision, reduced, active, fromQueue, applied: false });
     state = decision.transition.to;
     notify();
+  }
+
+  function remeasure() {
+    if (!root || !timeline || frozenAt !== null) return;
+    const t = now();
+    if (!isAnimating(timeline, t)) return;
+    const rects = measure();
+    const before = timeline.marks.length;
+    applyRemeasure(timeline, t, rects, spec.resize);
+    if (timeline.marks.length !== before) options.onEvent?.({ atMs: t, type: 'measure', rects }, startMs);
+    render();
+    ensureLoop();
+  }
+
+  function attach() {
+    if (!wanted || !root || detach) return;
+    const target = root;
+    observer = typeof ResizeObserver === 'function' ? new ResizeObserver(remeasure) : null;
+    observer?.observe(target);
+    // Safari does not focus a button when it is clicked, so focus can sit on the body while the
+    // control the person just used disappears. Remember what was pressed, for the length of this
+    // click only, so that focus moves on in every browser.
+    const onClick = (event: Event) => {
+      pressed = event.target as Element;
+      setTimeout(() => (pressed = null));
+    };
+    target.addEventListener('click', onClick, { capture: true });
+    // Scrollers inside the root move targets relative to it. Page scrolling does not.
+    target.addEventListener('scroll', remeasure, { capture: true, passive: true });
+    detach = () => {
+      observer?.disconnect();
+      target.removeEventListener('click', onClick, { capture: true });
+      target.removeEventListener('scroll', remeasure, { capture: true });
+      detach = null;
+    };
   }
 
   function restoreFocus(item: Pending) {
@@ -185,7 +260,10 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     now,
 
     setRoot(element: HTMLElement | null) {
+      if (element === root) return;
+      detach?.();
       root = element;
+      attach();
     },
     setTarget(id: string, element: HTMLElement | null) {
       if (element) elements.set(id, element);
@@ -203,6 +281,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
         const nested = findBadNesting(spec, elements);
         if (nested.length > 0) options.onWarning?.({ code: 'nested-target', targets: nested });
         render();
+        for (const command of early.splice(0)) dispatch(command, now());
         return;
       }
       if (frozenAt !== null) {
@@ -212,74 +291,59 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       if (pending.length > 0) {
         const rects = measure();
         const items = pending.splice(0);
+        // If the last command was applied early, its true layout is only known now.
+        const last = items[items.length - 1]!;
+        const lastWasEarly = last.applied;
         for (const item of items) {
+          if (item.applied) continue;
           const missing = applyDecision(timeline, item.atMs, item.decision, rects, { reduced: item.reduced });
+          item.applied = true;
           if (missing.length > 0) options.onWarning?.({ code: 'missing-target', targets: missing });
-          if (item.decision.kind === 'start') {
-            options.onEvent?.(
-              { atMs: item.atMs, type: 'command', command: item.decision.transition.command, reduced: item.reduced, rects },
-              startMs,
-            );
-          }
+          record(item, rects);
+        }
+        if (lastWasEarly) {
+          // At the current time, not the command's: reading an older mark would lose a queue.
+          const t = now();
+          applyRemeasure(timeline, t, rects, 'retarget');
+          options.onEvent?.({ atMs: t, type: 'measure', rects }, startMs);
         }
         render();
         // After drawing, because drawing is what marks a leaving target inert.
         for (const item of items) restoreFocus(item);
+        if (!options.history) pruneTimeline(timeline, now());
         ensureLoop();
         return;
       }
-      if (isAnimating(timeline, now())) this.remeasure();
+      remeasure();
     },
 
     /** Layout changed with no command. Cheap at rest, where it does nothing. */
-    remeasure() {
-      if (!root || !timeline || frozenAt !== null) return;
-      const t = now();
-      if (!isAnimating(timeline, t)) return;
-      const rects = measure();
-      const before = timeline.marks.length;
-      applyRemeasure(timeline, t, rects, spec.resize);
-      if (timeline.marks.length !== before) options.onEvent?.({ atMs: t, type: 'measure', rects }, startMs);
-      render();
-      ensureLoop();
-    },
+    remeasure,
 
     send(command: string) {
       if (frozenAt !== null) return;
-      dispatch(command, now());
+      if (!timeline) {
+        early.push(command);
+        return;
+      }
+      const t = now();
+      // A command can land after a queued one came due but before the next frame ran it.
+      drainDue(t);
+      dispatch(command, t);
     },
 
     start() {
-      if (started || !root) return;
-      started = true;
-      const target = root;
-      const remeasure = () => this.remeasure();
-      observer = typeof ResizeObserver === 'function' ? new ResizeObserver(remeasure) : null;
-      observer?.observe(target);
-      // Safari does not focus a button when it is clicked, so focus can sit on the body while the
-      // control the person just used disappears. Remember what was pressed, for the length of
-      // this click only, so that focus moves on in every browser.
-      const onClick = (event: Event) => {
-        pressed = event.target as Element;
-        setTimeout(() => (pressed = null));
-      };
-      target.addEventListener('click', onClick, { capture: true });
-      // Scrollers inside the root move targets relative to it. Page scrolling does not.
-      target.addEventListener('scroll', remeasure, { capture: true, passive: true });
-      detach = () => {
-        target.removeEventListener('click', onClick, { capture: true });
-        target.removeEventListener('scroll', remeasure, { capture: true });
-      };
+      wanted = true;
+      attach();
+      ensureLoop();
     },
     stop() {
-      started = false;
+      wanted = false;
       stopLoop();
-      observer?.disconnect();
       detach?.();
-      detach = null;
     },
 
-    /** Studio only: replaces the spec. The caller rebuilds the timeline with `load`. */
+    /** Studio only: replaces the spec. The caller rebuilds the timeline with `load` or `reset`. */
     setSpec(next: MotionSpec) {
       spec = next;
     },
@@ -319,6 +383,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     reset(nextState: string) {
       stopLoop();
       pending.length = 0;
+      early.length = 0;
       frozenAt = null;
       offsetMs = 0;
       timeline = null;

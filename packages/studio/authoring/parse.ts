@@ -38,6 +38,13 @@ export const LIMITS = {
 
 type Json = Record<string, unknown>;
 
+/**
+ * Names end up as object keys in the runtime and as text in generated files. Limiting their shape
+ * rules out `__proto__`, line breaks and quotes, and the second check rules out `constructor`
+ * and the like, which would otherwise look like they already exist on any object.
+ */
+const NAME = /^[A-Za-z][A-Za-z0-9._-]*$/;
+
 class Reader {
   problems: Problem[] = [];
 
@@ -73,6 +80,24 @@ class Reader {
     if (typeof value === 'string' && value.length > 0) return value;
     this.add(path, `must be a non-empty string, got ${describe(value)}`);
     return '';
+  }
+
+  version(value: unknown, path: string): string {
+    if (typeof value === 'string' && /^[0-9A-Za-z][0-9A-Za-z.+-]*$/.test(value)) return value;
+    this.add(path, `must be a version such as 1.0.0, got ${describe(value)}`);
+    return '';
+  }
+
+  name(value: unknown, path: string): string {
+    if (typeof value === 'string' && NAME.test(value) && !(value in Object.prototype)) return value;
+    this.add(path, `must be a name of letters, digits, dots, dashes or underscores, got ${describe(value)}`);
+    return '';
+  }
+
+  /** A name used as an object key. Null means it was refused and must not be stored. */
+  key(value: string, path: string): string | null {
+    const accepted = this.name(value, path);
+    return accepted === '' ? null : accepted;
   }
 
   boolean(value: unknown, path: string): boolean {
@@ -168,7 +193,7 @@ function readInterruption(r: Reader, value: unknown, path: string, settle: Settl
   const rule = r.object(value, path) ?? {};
   r.keys(rule, path, ['command', 'policy', 'curve']);
   return {
-    command: r.string(rule.command, `${path}.command`),
+    command: rule.command === '*' ? '*' : r.name(rule.command, `${path}.command`),
     policy: r.oneOf(rule.policy, `${path}.policy`, ['retarget', 'queue', 'ignore'] as const),
     curve: rule.curve === null ? null : readCurve(r, rule.curve, `${path}.curve`, settle),
   };
@@ -188,7 +213,9 @@ function readTransition(r: Reader, value: unknown, path: string, settle: SettleT
   r.keys(t, path, ['id', 'from', 'to', 'command', 'timing', 'targets', 'interruptions', 'reducedMotion']);
   const overrides = r.object(t.targets, `${path}.targets`) ?? {};
   const targets: TransitionSpec['targets'] = {};
-  for (const [id, groups] of Object.entries(overrides)) {
+  for (const [rawId, groups] of Object.entries(overrides)) {
+    const id = r.key(rawId, `${path}.targets`);
+    if (id === null) continue;
     const groupPath = `${path}.targets.${id}`;
     const group = r.object(groups, groupPath) ?? {};
     r.keys(group, groupPath, ['position', 'size', 'opacity', 'scale'], 'property');
@@ -198,10 +225,10 @@ function readTransition(r: Reader, value: unknown, path: string, settle: SettleT
     }
   }
   return {
-    id: r.string(t.id, `${path}.id`),
-    from: r.string(t.from, `${path}.from`),
-    to: r.string(t.to, `${path}.to`),
-    command: r.string(t.command, `${path}.command`),
+    id: r.name(t.id, `${path}.id`),
+    from: r.name(t.from, `${path}.from`),
+    to: r.name(t.to, `${path}.to`),
+    command: r.name(t.command, `${path}.command`),
     timing: readTiming(r, t.timing, `${path}.timing`, settle),
     targets,
     interruptions: r
@@ -283,7 +310,9 @@ export function parseMotionSpec(input: unknown, table: MigrationTable = MIGRATIO
   r.keys(component, 'component', ['id', 'version']);
 
   const targets: Record<string, TargetSpec> = {};
-  for (const [id, value] of Object.entries(r.object(doc.targets, 'targets') ?? {})) {
+  for (const [rawId, value] of Object.entries(r.object(doc.targets, 'targets') ?? {})) {
+    const id = r.key(rawId, 'targets');
+    if (id === null) continue;
     const path = `targets.${id}`;
     const target = r.object(value, path) ?? {};
     r.keys(target, path, ['bounds', 'text', 'clipRadiusPx']);
@@ -295,17 +324,20 @@ export function parseMotionSpec(input: unknown, table: MigrationTable = MIGRATIO
   }
 
   const states: Record<string, StateSpec> = {};
-  for (const [id, value] of Object.entries(r.object(doc.states, 'states') ?? {})) {
+  for (const [rawId, value] of Object.entries(r.object(doc.states, 'states') ?? {})) {
+    const id = r.key(rawId, 'states');
+    if (id === null) continue;
     const path = `states.${id}`;
     const state = r.object(value, path) ?? {};
     r.keys(state, path, ['label', 'focusTarget', 'targets']);
     const poses: StateSpec['targets'] = {};
-    for (const [targetId, pose] of Object.entries(r.object(state.targets, `${path}.targets`) ?? {})) {
-      poses[targetId] = readPose(r, pose, `${path}.targets.${targetId}`);
+    for (const [rawTarget, pose] of Object.entries(r.object(state.targets, `${path}.targets`) ?? {})) {
+      const targetId = r.key(rawTarget, `${path}.targets`);
+      if (targetId !== null) poses[targetId] = readPose(r, pose, `${path}.targets.${targetId}`);
     }
     states[id] = {
       label: r.string(state.label, `${path}.label`),
-      focusTarget: state.focusTarget === null ? null : r.string(state.focusTarget, `${path}.focusTarget`),
+      focusTarget: state.focusTarget === null ? null : r.name(state.focusTarget, `${path}.focusTarget`),
       targets: poses,
     };
   }
@@ -313,9 +345,9 @@ export function parseMotionSpec(input: unknown, table: MigrationTable = MIGRATIO
   const spec: MotionSpec = {
     format: MOTION_FORMAT,
     version: MOTION_VERSION,
-    component: { id: r.string(component.id, 'component.id'), version: r.string(component.version, 'component.version') },
-    initialState: r.string(doc.initialState, 'initialState'),
-    commands: r.array(doc.commands, 'commands').map((c, i) => r.string(c, `commands[${i}]`)),
+    component: { id: r.name(component.id, 'component.id'), version: r.version(component.version, 'component.version') },
+    initialState: r.name(doc.initialState, 'initialState'),
+    commands: r.array(doc.commands, 'commands').map((c, i) => r.name(c, `commands[${i}]`)),
     targets,
     states,
     transitions: r

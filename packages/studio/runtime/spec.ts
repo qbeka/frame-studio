@@ -100,7 +100,7 @@ export interface TransitionSpec {
   timing: Timing;
   /** Per target overrides of `timing`. */
   targets: Record<string, Partial<Record<PropertyGroup, Timing>>>;
-  /** First match wins. A rule with command "*" matches anything. */
+  /** A rule naming the command wins. Otherwise the first rule with command "*" applies. */
   interruptions: InterruptionRule[];
   reducedMotion: ReducedMotionRule;
 }

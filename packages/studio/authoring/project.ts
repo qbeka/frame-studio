@@ -36,7 +36,9 @@ function isRects(value: unknown): value is Rects {
   return Object.values(value).every(
     (r) =>
       isRecord(r) &&
-      [r.x, r.y, r.width, r.height].every((n) => typeof n === 'number' && Number.isFinite(n)),
+      [r.x, r.y, r.width, r.height].every((n) => typeof n === 'number' && Number.isFinite(n)) &&
+      (r.width as number) >= 0 &&
+      (r.height as number) >= 0,
   );
 }
 
@@ -45,6 +47,7 @@ function readTake(value: unknown, problems: Problem[]): Take | null {
   if (
     !isRecord(value) ||
     typeof value.startMs !== 'number' ||
+    !Number.isFinite(value.startMs) ||
     typeof value.initialState !== 'string' ||
     !isRects(value.initialRects) ||
     !isRecord(value.initialProps) ||
@@ -64,6 +67,7 @@ function readTake(value: unknown, problems: Problem[]): Take | null {
     if (event.atMs < previous) problems.push({ path, message: 'is out of order.' });
     previous = event.atMs;
     if (event.type === 'command' && typeof event.command === 'string') {
+      if (event.reduced !== undefined && typeof event.reduced !== 'boolean') problems.push({ path: `${path}.reduced`, message: 'must be true or false.' });
       if (event.rects !== undefined && !isRects(event.rects)) problems.push({ path: `${path}.rects`, message: 'are not valid boxes.' });
       events.push(event as TakeEvent);
     } else if (event.type === 'measure' && isRects(event.rects)) {
@@ -96,7 +100,7 @@ export function parseProject(input: unknown): ParseResult<Project> {
   const problems: Problem[] = [];
   if (typeof input.name !== 'string' || input.name === '') problems.push({ path: 'name', message: 'must be a non-empty string.' });
   const take = readTake(input.take, problems);
-  if (take && !parsed.value.states[take.initialState]) {
+  if (take && !Object.hasOwn(parsed.value.states, take.initialState)) {
     problems.push({ path: 'take.initialState', message: `no state named "${take.initialState}"` });
   }
   if (problems.length > 0) return { ok: false, problems };

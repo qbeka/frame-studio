@@ -73,7 +73,7 @@ export interface SessionOptions {
   spec: MotionSpec;
   take: Take | null;
   setTake: (take: Take | null, group?: string | null) => void;
-  /** Measures any state and props without touching the live component. */
+  /** Measures any state and props without touching the live component. Not during render. */
   probe: (state: string, props: PropsRecord) => Rects;
 }
 
@@ -86,6 +86,14 @@ export interface SessionOptions {
  */
 export function useSession({ registration, spec, take, setTake, probe }: SessionOptions) {
   const latest = useRef({ take, setTake, spec, probe });
+  // Events can arrive twice before a render, so the take is tracked here as well as in the store.
+  // Otherwise the second event would build on a copy that lacks the first and overwrite it.
+  const seenTake = useRef(take);
+  const liveTake = useRef(take);
+  if (seenTake.current !== take) {
+    seenTake.current = take;
+    liveTake.current = take;
+  }
   latest.current = { take, setTake, spec, probe };
 
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -116,6 +124,14 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     [generation.state],
   );
 
+  /** Adds an event in time order. A command is stamped earlier than the commit that records it. */
+  const append = useCallback((event: TakeEvent, fresh: Take, group: string | null = null) => {
+    const base = liveTake.current ?? fresh;
+    const next = { ...base, events: [...base.events, event].sort((a, b) => a.atMs - b.atMs) };
+    liveTake.current = next;
+    latest.current.setTake(next, group);
+  }, []);
+
   const controller = useMemo(() => {
     const created = createController(
       { ...spec, initialState: generation.state },
@@ -130,10 +146,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
           setWarnings((current) => [...current.slice(-2), text]);
         },
         onEvent(event: TakeEvent, startMs) {
-          const { take: current, setTake: store } = latest.current;
-          const rects = created.getTimeline()!.marks[0]!.rects;
-          const base = current ?? baseTake({ startMs, rects });
-          store({ ...base, events: [...base.events, event] });
+          append(event, baseTake({ startMs, rects: created.getTimeline()!.marks[0]!.rects }));
           setReplayed(null);
         },
       },
@@ -160,29 +173,35 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
       if (modeRef.current !== 'live') return;
       const timeline = controller.getTimeline();
       if (!timeline) return;
-      const { take: current, setTake: store } = latest.current;
-      const base = current ?? baseTake({ startMs: controller.getStartMs(), rects: timeline.marks[0]!.rects });
-      store({ ...base, events: [...base.events, { atMs: controller.now(), type: 'props', patch }] }, 'typing');
+      const fresh = baseTake({ startMs: controller.getStartMs(), rects: timeline.marks[0]!.rects });
+      append({ atMs: controller.now(), type: 'props', patch }, fresh, 'typing');
     },
-    [baseTake, controller],
+    [append, baseTake, controller],
   );
 
   /**
    * Layout of a state at a moment in a take. A recorded command brings its own boxes, unless an
    * edit changed which targets are in flow. Anything else is measured by the probe, once.
+   *
+   * The probe renders, so it can only run outside React's own work. `canProbe` is false during
+   * render, and a layout that is not already known then throws, which callers must handle.
    */
-  const geometryFor = useCallback((nextTake: Take, nextSpec: MotionSpec) => {
+  const geometryFor = useCallback((nextTake: Take, nextSpec: MotionSpec, canProbe: boolean) => {
     return (state: string, at: number) => {
+      const stateProps = propsAt(nextTake, at);
+      const key = `${state}|${presenceKey(nextSpec)}|${JSON.stringify(stateProps)}`;
       const inFlow = Object.keys(nextSpec.targets).filter((id) => nextSpec.states[state]!.targets[id]!.present);
       for (const event of nextTake.events) {
         if (event.type !== 'command' || event.atMs !== at || !event.rects) continue;
         const keys = Object.keys(event.rects);
-        if (keys.length === inFlow.length && inFlow.every((id) => event.rects![id])) return event.rects;
+        if (keys.length === inFlow.length && inFlow.every((id) => event.rects![id])) {
+          probed.current.set(key, event.rects);
+          return event.rects;
+        }
       }
-      const stateProps = propsAt(nextTake, at);
-      const key = `${state}|${presenceKey(nextSpec)}|${JSON.stringify(stateProps)}`;
       let rects = probed.current.get(key);
       if (!rects) {
+        if (!canProbe) throw new Error(`The layout of ${state} is not known yet.`);
         rects = latest.current.probe(state, stateProps);
         probed.current.set(key, rects);
       }
@@ -191,22 +210,35 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
   }, []);
 
   const replay = useCallback(
-    (nextTake: Take, nextSpec: MotionSpec) =>
+    (nextTake: Take, nextSpec: MotionSpec, endMs?: number, canProbe = true) =>
       replayTake(
         { ...nextSpec, initialState: nextTake.initialState },
         nextTake.startMs,
         nextTake.initialRects,
         nextTake.events,
-        geometryFor(nextTake, nextSpec),
+        geometryFor(nextTake, nextSpec, canProbe),
+        endMs === undefined ? {} : { endMs },
       ),
     [geometryFor],
   );
 
+  /** The take without one event, for the dotted path. Safe during render: it never probes. */
+  const ghost = useCallback(
+    (nextTake: Take, nextSpec: MotionSpec, index: number) => {
+      try {
+        return replay({ ...nextTake, events: nextTake.events.filter((_, i) => i !== index) }, nextSpec, undefined, false).timeline;
+      } catch {
+        return null;
+      }
+    },
+    [replay],
+  );
+
   /** Rebuilds the timeline from the take and shows it frozen at t. Every edit ends here. */
   const inspectAt = useCallback(
-    (nextTake: Take, nextSpec: MotionSpec, t: number) => {
+    (nextTake: Take, nextSpec: MotionSpec, t: number, endMs?: number) => {
       stopPlaying.current?.();
-      const { timeline, steps: replaySteps } = replay(nextTake, nextSpec);
+      const { timeline, steps: replaySteps } = replay(nextTake, nextSpec, endMs);
       controller.setSpec({ ...nextSpec, initialState: nextTake.initialState });
       setPropsState(propsAt(nextTake, t));
       controller.load(timeline, t);
@@ -279,6 +311,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     (state: string) => {
       stopPlaying.current?.();
       registration.reset();
+      liveTake.current = null;
       latest.current.setTake(null);
       probed.current.clear();
       setPropsState(defaultProps(registration));
@@ -297,7 +330,9 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     const t = playhead.get();
     const kept: Take = { ...current, events: current.events.filter((e) => e.atMs <= t) };
     store(kept);
-    inspectAt(kept, currentSpec, t);
+    liveTake.current = kept;
+    // Replay stops at t, so a queued command is still waiting and runs when time does.
+    inspectAt(kept, currentSpec, t, t);
     controller.resume();
     setReplayed(null);
     setMode('live');
@@ -314,10 +349,16 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
       ...baseTake({ startMs, rects: timeline.marks[0]!.rects }),
       events: example.map((e) => ({ atMs: startMs + 60 + e.atMs, type: 'command', command: e.command })),
     };
+    liveTake.current = take;
     store(take);
     inspectAt(take, currentSpec, startMs);
     play(take);
   }, [baseTake, controller, inspectAt, registration]);
+
+  // The browser tests compare replay against the export at exact times.
+  useEffect(() => {
+    if (testClock) (window as unknown as { __frameSession: unknown }).__frameSession = { pause, seek };
+  }, [pause, seek]);
 
   // With no take yet, an edit applies to the resting component straight away.
   useEffect(() => {
@@ -338,6 +379,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     warnings,
     replayed,
     replay,
+    ghost,
     inspectAt,
     seek,
     pause,

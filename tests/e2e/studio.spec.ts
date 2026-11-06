@@ -211,6 +211,18 @@ test('recovers a draft after a reload, and can discard it', async ({ page }) => 
   await expect(page.getByText('Use the component.')).toBeVisible();
 });
 
+test('a take with no recorded layout survives a reload', async ({ page }) => {
+  // The example take has no recorded boxes, so restoring it has to measure.
+  await page.getByRole('button', { name: /play an example/ }).click();
+  await page.waitForTimeout(1200);
+  await page.waitForTimeout(400);
+  await page.reload();
+  await expect(page.getByText('Recovered your draft')).toBeVisible();
+  await expect(page.locator('.marker')).toHaveCount(2);
+  await expect(page.locator('.mode')).toHaveText('Inspecting');
+  await expect(live(page).getByText('Corner Bakery').first()).toBeVisible();
+});
+
 test('a damaged draft cannot block the app', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('frame.draft.frame.fixture.inspector', '{not json'));
   await page.reload();

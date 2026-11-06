@@ -1,7 +1,7 @@
 {
-  "baselineTests": 94,
-  "mutants": 33,
-  "caught": 33,
+  "baselineTests": 118,
+  "mutants": 46,
+  "caught": 43,
   "restoredSuitePasses": true,
   "rows": [
     {
@@ -117,9 +117,11 @@
       "file": "packages/studio/runtime/channel.ts",
       "status": "caught",
       "killedBy": [
+        "live and replay agree when a command lands after a queued one came due but before the frame ran it",
+        "queue edge cases finishes drawing when a queued command is refused",
         "settling lands exactly on target with zero velocity at the settle time"
       ],
-      "kills": 1
+      "kills": 3
     },
     {
       "name": "a channel moves before its first leg",
@@ -153,9 +155,11 @@
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
-        "interruption a queued command runs at the exact settle time"
+        "live and replay agree takes a layout change found at the settle moment before the queued command",
+        "queue edge cases does not hang replaying a queued command with nowhere to go",
+        "queue edge cases keeps a queued command waiting when replay stops before it is due"
       ],
-      "kills": 1
+      "kills": 4
     },
     {
       "name": "interruption curve ignored",
@@ -187,20 +191,12 @@
     {
       "name": "resize always snaps",
       "file": "packages/studio/runtime/timeline.ts",
-      "status": "caught",
-      "killedBy": [
-        "layout changes retargets a running channel to the new endpoint, keeping position and speed"
-      ],
-      "kills": 1
+      "status": "did not apply"
     },
     {
       "name": "resize snap policy ignored",
       "file": "packages/studio/runtime/timeline.ts",
-      "status": "caught",
-      "killedBy": [
-        "layout changes snap jumps to the new endpoint"
-      ],
-      "kills": 1
+      "status": "did not apply"
     },
     {
       "name": "exiting targets vanish at once",
@@ -217,9 +213,11 @@
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
-        "time model prunes without changing what is ahead"
+        "live and replay agree on a queued command, without running it twice",
+        "live and replay agree when a command lands after a queued one came due but before the frame ran it",
+        "live and replay agree keeps reduced motion for a queued command"
       ],
-      "kills": 1
+      "kills": 8
     },
     {
       "name": "unchanged layout still retargets",
@@ -229,6 +227,125 @@
         "layout changes does nothing when the layout has not moved"
       ],
       "kills": 1
+    },
+    {
+      "name": "replay leaves a refused command queued",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "SURVIVED",
+      "killedBy": [],
+      "kills": 0
+    },
+    {
+      "name": "replay forgets reduced motion on a queued command",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "live and replay agree keeps reduced motion for a queued command"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "replay runs a queued command before a layout change",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "live and replay agree takes a layout change found at the settle moment before the queued command"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a layout change cancels a delay",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "a layout change and a delay leaves a leg that is still waiting on its delay at its original start"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "old exits use the latest box",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "presence draws an old exit from the box of that time, even after the layout changes"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "queued runs recorded twice",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "live and replay agree on a queued command, without running it twice"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "late command loses the queue",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "live and replay agree when a command lands after a queued one came due but before the frame ran it"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "second command judged from the old state",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "live and replay agree when a command lands after a queued one came due but before the frame ran it",
+        "several commands in one handler judges the second from the state the first reached",
+        "several commands in one handler toggles twice and lands where it began"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "ignored commands not recorded",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "recording keeps an ignored command in the take, so a rule change can be tried on it"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "refused queue skips the final draw",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "queue edge cases finishes drawing when a queued command is refused"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "restart leaves a queue stalled",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "lifecycle picks a waiting queue back up after stop and start"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "instant transitions grow without limit",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "lifecycle does not grow without limit when transitions are instant"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "names not restricted",
+      "file": "packages/studio/authoring/parse.ts",
+      "status": "caught",
+      "killedBy": [
+        "parseMotionSpec rejects a state named like an object method",
+        "parseMotionSpec rejects a transition to an object method",
+        "parseMotionSpec rejects a target named __proto__"
+      ],
+      "kills": 5
     },
     {
       "name": "unknown properties accepted",
