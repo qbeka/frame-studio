@@ -7,7 +7,7 @@ export function blankProjectFor(registration: AnyRegistration): Project {
     format: PROJECT_FORMAT,
     version: PROJECT_VERSION,
     name: registration.id,
-    spec: createStarterSpec(registration),
+    spec: registration.defaultSpec ?? createStarterSpec(registration),
     take: null,
   };
 }

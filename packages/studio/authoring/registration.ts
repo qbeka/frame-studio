@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { FrameHandle } from '../runtime/react';
-import type { BoundsMode, PropertyGroup } from '../runtime/spec';
+import type { BoundsMode, MotionSpec, PropertyGroup } from '../runtime/spec';
 
 /**
  * A registration is the whole boundary between Frame and your component. Frame sees what is
@@ -53,6 +53,8 @@ export interface Registration<Props extends Record<string, PropValue> = Record<s
   transitions: { id: string; from: string; to: string; command: string }[];
   /** Serializable inputs that controls may change. */
   props: { [K in keyof Props]: PropDefinition };
+  /** A saved spec to start from. Without one, Frame writes a starter spec. */
+  defaultSpec?: MotionSpec;
   /** Returns the fixture to a known state. Cancel timers and clear outside stores here. */
   reset: () => void;
   /** Draws the component. Called with the same context in every state. */

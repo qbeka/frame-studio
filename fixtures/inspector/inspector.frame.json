@@ -1,7 +1,7 @@
 {
   "format": "frame.project",
   "version": 1,
-  "name": "frame.fixture.inspector",
+  "name": "Expense inspector",
   "spec": {
     "format": "frame.motion",
     "version": 1,
@@ -210,12 +210,33 @@
           },
           "delayMs": 0
         },
-        "targets": {},
+        "targets": {
+          "form": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 180,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 40
+            }
+          }
+        },
         "interruptions": [
           {
-            "command": "*",
+            "command": "cancel",
             "policy": "retarget",
-            "curve": null
+            "curve": {
+              "type": "spring",
+              "stiffness": 700,
+              "damping": 48,
+              "mass": 1
+            }
           }
         ],
         "reducedMotion": {
@@ -231,8 +252,8 @@
         "timing": {
           "curve": {
             "type": "spring",
-            "stiffness": 420,
-            "damping": 34,
+            "stiffness": 700,
+            "damping": 48,
             "mass": 1
           },
           "delayMs": 0
@@ -264,11 +285,37 @@
           },
           "delayMs": 0
         },
-        "targets": {},
+        "targets": {
+          "receipt": {
+            "opacity": {
+              "curve": {
+                "type": "tween",
+                "durationMs": 180,
+                "easing": [
+                  0.2,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              "delayMs": 40
+            }
+          }
+        },
         "interruptions": [
           {
-            "command": "*",
+            "command": "back",
             "policy": "retarget",
+            "curve": {
+              "type": "spring",
+              "stiffness": 700,
+              "damping": 48,
+              "mass": 1
+            }
+          },
+          {
+            "command": "done",
+            "policy": "queue",
             "curve": null
           }
         ],
@@ -285,8 +332,8 @@
         "timing": {
           "curve": {
             "type": "spring",
-            "stiffness": 420,
-            "damping": 34,
+            "stiffness": 700,
+            "damping": 48,
             "mass": 1
           },
           "delayMs": 0
@@ -322,7 +369,7 @@
         "interruptions": [
           {
             "command": "*",
-            "policy": "retarget",
+            "policy": "ignore",
             "curve": null
           }
         ],

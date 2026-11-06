@@ -3,15 +3,21 @@
   "compilerOptions": {
     "outDir": ".tsout",
     "rootDir": "../..",
-    "types": []
+    "types": [],
+    "resolveJsonModule": true
   },
   "include": [
     "*.tsx",
-    "*.d.ts"
+    "*.d.ts",
+    "*.json"
   ],
   "references": [
     {
       "path": "../../packages/studio"
     }
+  ],
+  "exclude": [
+    "package.json",
+    "tsconfig.json"
   ]
 }

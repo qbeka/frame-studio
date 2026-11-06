@@ -1,5 +1,7 @@
 import { defineRegistration } from 'frame-studio/registration';
+import type { MotionSpec } from 'frame-studio/pure';
 import { cancelSave, Inspector, initialInspectorProps, type InspectorProps } from './Inspector';
+import authored from './inspector.frame.json';
 import './inspector.css';
 
 /**
@@ -45,6 +47,7 @@ export const inspectorRegistration = defineRegistration<InspectorProps>({
     error: { type: 'string', label: 'Error', default: '' },
     saving: { type: 'boolean', label: 'Saving', default: false },
   },
+  defaultSpec: authored.spec as unknown as MotionSpec,
   reset: cancelSave,
   render: (context) => <Inspector {...context} />,
 });
