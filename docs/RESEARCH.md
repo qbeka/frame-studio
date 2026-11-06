@@ -19,6 +19,10 @@ Read on 2026-11-06. Comparisons below are about product scope. No benchmark here
 - The Rive features page does not state the rendering target. The web runtime page does.
 - The runtime baseline compares one interaction only.
 
+## Name check
+
+Run on 2026-11-06. `frame-studio` was free on npm and `qbeka/frame-studio` was free on GitHub. A web search found no product called Frame Studio. It did find [FrameScript](https://frame-script.github.io/FrameScript), a code-first motion graphics toolkit with a Studio app, which is a close neighbor. Framer is a large neighbor with a similar name. Check again before any public release.
+
 ## Pinned versions
 
 See `package.json` and `pnpm-lock.yaml`.

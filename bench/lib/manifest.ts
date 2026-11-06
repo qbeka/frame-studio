@@ -20,7 +20,8 @@ export function manifest(extra: Record<string, unknown>) {
   const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
   return {
     commit: text('git', ['rev-parse', 'HEAD']),
-    dirty: (text('git', ['status', '--porcelain']) ?? '').length > 0,
+    // The results folder is left out, because earlier experiments in a run write to it.
+    dirty: (text('git', ['status', '--porcelain', '--', ':!results']) ?? '').length > 0,
     measuredAt: new Date().toISOString(),
     command: process.argv.slice(1).join(' '),
     node: process.version,
