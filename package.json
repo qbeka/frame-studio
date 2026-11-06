@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "bench:smoke": "node --experimental-strip-types --no-warnings bench/run.ts --smoke",
-    "bench": "node --experimental-strip-types --no-warnings bench/run.ts"
+    "bench": "node --experimental-strip-types --no-warnings bench/run.ts",
+    "capture": "node --experimental-strip-types --no-warnings scripts/capture.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",

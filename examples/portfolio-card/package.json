@@ -1,0 +1,1 @@
+{ "name": "frame-portfolio-card", "private": true, "type": "module", "dependencies": { "frame-studio": "workspace:*" } }

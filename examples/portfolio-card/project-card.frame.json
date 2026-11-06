@@ -1,0 +1,174 @@
+{
+  "format": "frame.project",
+  "version": 1,
+  "name": "portfolio.project-card",
+  "spec": {
+    "format": "frame.motion",
+    "version": 1,
+    "component": {
+      "id": "portfolio.project-card",
+      "version": "1.0.0"
+    },
+    "initialState": "closed",
+    "commands": [
+      "open",
+      "close"
+    ],
+    "targets": {
+      "surface": {
+        "bounds": "surface",
+        "text": false,
+        "clipRadiusPx": 0
+      },
+      "content": {
+        "bounds": "clip",
+        "text": true,
+        "clipRadiusPx": 18
+      },
+      "head": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      },
+      "more": {
+        "bounds": "translate",
+        "text": true,
+        "clipRadiusPx": 0
+      }
+    },
+    "states": {
+      "closed": {
+        "label": "Closed",
+        "focusTarget": "head",
+        "targets": {
+          "surface": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "content": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "head": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "more": {
+            "present": false,
+            "opacity": 0,
+            "xPx": 0,
+            "yPx": 6,
+            "scale": 1
+          }
+        }
+      },
+      "open": {
+        "label": "Open",
+        "focusTarget": "head",
+        "targets": {
+          "surface": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "content": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "head": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          },
+          "more": {
+            "present": true,
+            "opacity": 1,
+            "xPx": 0,
+            "yPx": 0,
+            "scale": 1
+          }
+        }
+      }
+    },
+    "transitions": [
+      {
+        "id": "open",
+        "from": "closed",
+        "to": "open",
+        "command": "open",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      },
+      {
+        "id": "close",
+        "from": "open",
+        "to": "closed",
+        "command": "close",
+        "timing": {
+          "curve": {
+            "type": "spring",
+            "stiffness": 420,
+            "damping": 34,
+            "mass": 1
+          },
+          "delayMs": 0
+        },
+        "targets": {},
+        "interruptions": [
+          {
+            "command": "*",
+            "policy": "retarget",
+            "curve": null
+          }
+        ],
+        "reducedMotion": {
+          "policy": "fade",
+          "durationMs": 120
+        }
+      }
+    ],
+    "settle": {
+      "px": 0.1,
+      "pxPerSecond": 5,
+      "unit": 0.001,
+      "unitPerSecond": 0.05
+    },
+    "resize": "retarget"
+  },
+  "take": null
+}
