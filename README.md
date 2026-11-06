@@ -6,7 +6,7 @@ A local motion editor for working React components, built around one question: w
 
 Use your real component. Interrupt it. Frame records that as a take, and you can scrub it, drag the interruption to a new moment, and change what happens there. Export a small runtime that behaves the same way in your app.
 
-**[Watch 17 seconds of it working](docs/media/signature.mp4)**, or the [74 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration. There is no public demo yet. Run it locally with the steps below.
+**[Watch 17 seconds of it working](docs/media/signature.mp4)**, or the [73 second technical walkthrough](docs/media/walkthrough.mp4). The walkthrough has captions and no narration. There is no public demo yet. Run it locally with the steps below.
 
 | | |
 |---|---|
