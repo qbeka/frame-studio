@@ -162,7 +162,8 @@ packages/studio/
   editor/      The studio
   cli/         frame dev, init, validate, export
 fixtures/      The expense inspector
-examples/      Clean Vite, Next.js and tarball consumers
+site/          The project page, with the replay on the shipped runtime
+examples/      Clean Vite and Next.js apps, and a tarball consumer
 reference/     Independent spring values
 bench/         Protocol, harness and baselines
 tests/         Unit and browser suites
