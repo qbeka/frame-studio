@@ -6,7 +6,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -33,4 +33,3 @@ const files = readdirSync(out).map((name) => {
 writeFileSync(join(out, 'MANIFEST.json'), `${JSON.stringify({ commit, builtAt: new Date().toISOString(), files }, null, 2)}\n`);
 console.log(`Release in ${out} from ${commit.slice(0, 7)}`);
 for (const f of files) console.log(`  ${f.name}  ${(f.bytes / 1024).toFixed(0)} KB`);
-cpSync(join(out, 'MANIFEST.json'), 'docs/ARTIFACTS.json');
