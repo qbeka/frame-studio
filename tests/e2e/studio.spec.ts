@@ -358,7 +358,7 @@ test.describe('a first visit, with no draft and no request for an empty take', (
     await expect(page.locator('.readout')).not.toContainText('not carried');
   });
 
-  test('the example is nobody’s work, so there is nothing to save, undo or recover', async ({ page }) => {
+  test('the example is not the visitor\'s work, so there is nothing to save, undo or recover', async ({ page }) => {
     await expect(page.getByTestId('save-status')).toHaveText('Saved');
     await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
     await page.waitForTimeout(400);

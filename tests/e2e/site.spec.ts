@@ -222,7 +222,7 @@ test.describe('with the example already seen', () => {
     expect(await drawnHeight(page)).not.toBe(held);
   });
 
-  test('the exposure is drawn at the component’s own scale', async ({ page }) => {
+  test('the exposure is drawn at the scale of the component', async ({ page }) => {
     // Hold the take at the interruption. The dot on the line and the card's edge share a height.
     const handle = marker(page);
     await handle.focus();
