@@ -458,10 +458,9 @@ test.describe('with the example already seen', () => {
 });
 
 test.describe('what a visitor takes away', () => {
-  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
-
-  test('the spring copies as a Frame curve and as CSS the browser accepts', async ({ page, browserName }) => {
+  test('the spring copies as a Frame curve and as CSS the browser accepts', async ({ page, context, browserName }) => {
     test.skip(browserName !== 'chromium', 'Reading the clipboard back needs a permission only Chromium grants.');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await openAtRest(page);
     await page.getByRole('button', { name: 'Lively' }).click();
     await page.getByRole('button', { name: 'Copy the spring as a Frame curve' }).click();
@@ -478,7 +477,8 @@ test.describe('what a visitor takes away', () => {
     expect(peak).toBeGreaterThan(1.05);
   });
 
-  test('the address keeps the motion, and a copied link restores it', async ({ page, browserName }) => {
+  test('the address keeps the motion, and a copied link restores it', async ({ page, context, browserName }) => {
+    if (browserName === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await openAtRest(page);
     await page.getByRole('button', { name: 'Lively' }).click();
     await page.getByRole('button', { name: 'Finish first' }).click();
