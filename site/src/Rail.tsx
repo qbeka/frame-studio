@@ -82,7 +82,7 @@ export function CopyButton({ text, name, className = 'control', children }: { te
       onClick={async () => {
         const done = await copyText(text());
         setState(done ? 'copied' : 'failed');
-        announce(done ? `${name}, copied.` : 'Copying was blocked by the browser.');
+        announce(done ? `${name}, copied` : 'Copying was blocked by the browser');
       }}
     >
       <span className={state === 'idle' ? 'on' : ''}>{children}</span>
@@ -136,7 +136,7 @@ export function Tune({ snap, showcase, onChange }: { snap: Snapshot; showcase: S
         <Range label="Damping" value={curve.damping} range={DAMPING} disabled={unused} onChange={(damping) => set({ ...curve, damping }, false)} />
         <p className="facts" id="facts">
           {unused ? (
-            'Only Reverse from here uses this spring.'
+            'Only Reverse from here uses this spring'
           ) : (
             <>
               <span>Ratio <b>{facts.dampingRatio.toFixed(2)}</b></span>
@@ -176,7 +176,7 @@ export function Tune({ snap, showcase, onChange }: { snap: Snapshot; showcase: S
           <code id="spring-css">{easing.durationMs}ms {easing.css}</code>
           <CopyButton text={() => `transition-duration: ${easing.durationMs}ms;\ntransition-timing-function: ${easing.css};`} name="Copy the spring as CSS linear easing" className="control outline">Copy</CopyButton>
         </div>
-        <p className="note">The second line is this spring from rest as CSS, within 0.2% of its {Math.round(distance)} px, and CSS cannot start it from a speed.</p>
+        <p className="note">The second line is this spring from rest as CSS, within 0.2% of its {Math.round(distance)} px, and CSS cannot start it from a speed</p>
       </section>
     </div>
   );

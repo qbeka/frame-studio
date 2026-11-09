@@ -172,7 +172,7 @@ test('reset goes to a known endpoint', async ({ page }) => {
 
 test('inspecting blocks input until you choose how to return', async ({ page }) => {
   await recordReversal(page);
-  await expect(page.getByText('The component is paused here.')).toBeVisible();
+  await expect(page.getByText('The component is paused here, so choose how to go back to it')).toBeVisible();
   await expect(page.locator('.stage-live')).toHaveAttribute('inert', '');
 });
 

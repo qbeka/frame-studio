@@ -4,9 +4,9 @@ import type { Showcase } from './showcase';
 export type Policy = InterruptionRule['policy'];
 
 export const RULES: { policy: Policy; label: string; short: string; note: (back: string) => string }[] = [
-  { policy: 'retarget', label: 'Reverse from here', short: 'Reverse', note: (back) => `${back} takes over at once, from the current position and speed.` },
-  { policy: 'queue', label: 'Finish first', short: 'Finish first', note: (back) => `The motion runs to its end, then ${back} runs.` },
-  { policy: 'ignore', label: 'Ignore it', short: 'Ignore', note: (back) => `${back} is dropped, and the motion carries on.` },
+  { policy: 'retarget', label: 'Reverse from here', short: 'Reverse', note: (back) => `${back} takes over at once, from the current position and speed` },
+  { policy: 'queue', label: 'Finish first', short: 'Finish first', note: (back) => `The motion runs to its end, then ${back} runs` },
+  { policy: 'ignore', label: 'Ignore it', short: 'Ignore', note: (back) => `${back} is dropped, and the motion carries on` },
 ];
 
 /** The studio's spring presets. Every component here starts on Quiet. */
@@ -29,9 +29,9 @@ export function curvesFor(showcase: Showcase): { id: CurveId; label: string; not
   const go = label(showcase, showcase.go);
   const back = label(showcase, showcase.back);
   return [
-    { id: 'go', label: go, note: `Runs whenever ${go} starts.` },
-    { id: 'back', label: back, note: `Runs when ${back} lands at rest.` },
-    { id: 'interrupt', label: 'Mid flight', note: `Runs when ${back} reverses ${go}.` },
+    { id: 'go', label: go, note: `Runs whenever ${go} starts` },
+    { id: 'back', label: back, note: `Runs when ${back} lands at rest` },
+    { id: 'interrupt', label: 'Mid flight', note: `Runs when ${back} reverses ${go}` },
   ];
 }
 

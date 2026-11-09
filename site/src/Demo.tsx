@@ -62,25 +62,25 @@ function describe(snap: Snapshot, showcase: Showcase): string {
   const origin = snap.domain.start + LEAD_MS;
   const go = label(showcase, showcase.go);
   const back = label(showcase, showcase.back);
-  if (take.scripted && steps[1]) return `An example take, with ${back} landing ${Math.round(steps[1].atMs - origin)} ms into ${go}.`;
+  if (take.scripted && steps[1]) return `An example take, with ${back} landing ${Math.round(steps[1].atMs - origin)} ms into ${go}`;
   // A queued command adds a step when it finally runs. This describes the press itself.
   const pressed = take.events[take.events.length - 1];
   const last = steps.find((step) => step.atMs === pressed?.atMs && step.command === pressed?.command);
   if (take.events.length > 1 && last) {
     const name = label(showcase, last.command);
     const ms = Math.round(last.atMs - origin);
-    if (last.outcome === 'queue') return `${name} landed ${ms} ms in and waited for the motion to finish.`;
-    if (last.outcome === 'ignore') return `${name} landed ${ms} ms in and was ignored.`;
-    if (last.outcome === 'reject') return `${name} landed ${ms} ms in and had nothing to do.`;
-    if (ghost && isAnimating(ghost, last.atMs)) return `${name} landed ${ms} ms in and took over from the current position and speed.`;
-    return `${name} landed ${ms} ms in, after the motion had settled.`;
+    if (last.outcome === 'queue') return `${name} landed ${ms} ms in and waited for the motion to finish`;
+    if (last.outcome === 'ignore') return `${name} landed ${ms} ms in and was ignored`;
+    if (last.outcome === 'reject') return `${name} landed ${ms} ms in and had nothing to do`;
+    if (ghost && isAnimating(ghost, last.atMs)) return `${name} landed ${ms} ms in and took over from the current position and speed`;
+    return `${name} landed ${ms} ms in, after the motion had settled`;
   }
   if (last?.command === showcase.go) {
-    if (moving && phase === 'live') return `${go} is running, so press ${back} before it settles.`;
-    return `${go} ran to the end, so press ${back} sooner or turn on Slow motion.`;
+    if (moving && phase === 'live') return `${go} is running, so press ${back} before it settles`;
+    return `${go} ran to the end, so press ${back} sooner or turn on Slow motion`;
   }
-  if (last?.command === showcase.back) return `${back} landed after ${go} had settled, so there was nothing to interrupt.`;
-  return 'This take ran without an interruption.';
+  if (last?.command === showcase.back) return `${back} landed after ${go} had settled, so there was nothing to interrupt`;
+  return 'This take ran without an interruption';
 }
 
 /** Time, place and speed under the playhead. Written directly, once a frame. */
@@ -206,7 +206,7 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
     return () => document.removeEventListener('keydown', key);
   }, [mode]);
 
-  const status = !snap ? '' : stillNote ? 'Reduced motion is on, so Replay shows the end of the take and you can drag along the curve to step through it.' : describe(snap, showcase);
+  const status = !snap ? '' : stillNote ? 'Reduced motion is on, so Replay shows the end of the take and you can drag along the curve to step through it' : describe(snap, showcase);
   useEffect(() => announce(status), [status]);
   useEffect(() => setStillNote(false), [snap?.take]);
 

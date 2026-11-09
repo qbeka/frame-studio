@@ -68,7 +68,7 @@ export const Canvas = forwardRef<ProbeHandle, { registration: AnyRegistration; s
             <span>{registration.id}</span>
             <b>{spec.states[session.controller.getState()]?.label}</b>
           </p>
-          {inspecting ? <p className="ui stage-note">Paused on a recorded moment. Input is off.</p> : null}
+          {inspecting ? <p className="ui stage-note">Paused on a recorded moment, so input is off</p> : null}
           <div key={session.generation.key} className="stage-live" {...(inspecting ? { inert: true } : {})}>
             {registration.render({ frame: session.frame, props: session.props, setProps: session.setProps })}
           </div>

@@ -103,9 +103,9 @@ function CurveEditor({
             onChange={(mass) => onChange({ ...curve, mass }, `${group}.mass`)} />
           <p className="hint">
             {facts!.overshoot > 0.0005
-              ? `Passes its target by ${(facts!.overshoot * 100).toFixed(1)}% of the distance.`
-              : 'Does not pass its target when starting from rest.'}{' '}
-            Settles in about {Math.round(facts!.settleMs)} ms over 100 px.
+              ? `Passes its target by ${(facts!.overshoot * 100).toFixed(1)}% of the distance`
+              : 'Does not pass its target when starting from rest'}{' '}
+            and settles in about {Math.round(facts!.settleMs)} ms over 100 px
           </p>
         </>
       ) : (

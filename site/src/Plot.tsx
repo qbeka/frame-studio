@@ -357,7 +357,7 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
           <i />
         </div>
       ) : null}
-      <span className="sr-only">{`${back} can be moved along the take, and the spring handle reshapes ${go}.`}</span>
+      <span className="sr-only">{`${back} can be moved along the take, and the spring handle reshapes ${go}`}</span>
     </div>
   );
 });

@@ -242,7 +242,7 @@ export function Transport({ spec, take, session, store, canLoadExample }: { spec
 
       {!live && hasTake ? (
         <div className="transport-row transport-inspect">
-          <p className="hint">The component is paused here. Choose how to go back to it.</p>
+          <p className="hint">The component is paused here, so choose how to go back to it</p>
           <button type="button" className="button" onClick={session.continueFromHere}>Continue from here</button>
           <select aria-label="Reset to state" value={resetState} onChange={(e) => setResetState(e.target.value)}>
               {Object.entries(spec.states).map(([id, s]) => <option key={id} value={id}>{s.label}</option>)}
