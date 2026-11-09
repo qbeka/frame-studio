@@ -14,7 +14,7 @@ Use your real component. Interrupt it. Frame records that as a take, and you can
 | **What you inspect matches what ships** | The same limits, comparing the replayed take to the export |
 | **Those checks can fail** | 9 of 9 seeded faults caught, and clean builds not flagged |
 | **Physics** | Real browser geometry within 0.094 px of an independent numerical solution |
-| **Editing at 30 targets** | Median 1.5 ms, p95 2.2 ms to update the DOM |
+| **Editing at 30 targets** | Median 1.1 ms, p95 1.3 ms to update the DOM |
 | **Cost to your app** | 6.2 KB of gzipped JavaScript and 0.14 KB of CSS, with no dependency except React |
 
 Measured on one Apple M5 Pro Mac in headless browsers, with other work running. The fidelity check compares two builds of the same code, so it tests everything around the physics, and a separate check tests the physics. No person has run the usability task, and no physical phone was tested. [What the numbers leave out](docs/REPORT.md#what-the-numbers-leave-out) has the details.

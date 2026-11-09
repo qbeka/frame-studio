@@ -45,7 +45,7 @@
         <div><dt>Physics</dt><dd><b>Worst 0.094 px</b>Real browser geometry against an independent RK4 solution, against a 0.11 px target. Most of that is the 0.1 px settle snap.</dd></div>
         <div><dt>Could the checks fail</dt><dd><b>9 of 9 seeded faults caught</b>0 of 2 clean builds were flagged. The first full run caught 8 of 9, so it was discarded and everything was measured again.</dd></div>
         <div><dt>Cost to an app</dt><dd><b>6.2 KB of JavaScript, 0.14 KB of CSS</b>Gzipped, over the same UI with no animation, in a Vite build of this one interaction. Motion 14.9.1 added 45.1 KB there, and Motion does far more.</dd></div>
-        <div><dt>Editing at 30 targets</dt><dd><b>Median 1.5 ms, p95 2.2 ms</b>Edit to DOM in a production build, against a 16.7 ms target.</dd></div>
+        <div><dt>Editing at 30 targets</dt><dd><b>Median 1.1 ms, p95 1.3 ms</b>Edit to DOM in a production build of the studio, against a 16.7 ms target.</dd></div>
         <div><dt>The CSS line</dt><dd><b>Within 0.2% of the distance</b>The copied linear() easing against the same spring from rest, for the four presets and the corners of both sliders. It cannot carry speed through an interruption.</dd></div>
         <div><dt>Speed at runtime</dt><dd><b>No clear win</b>Main thread per open and reverse cycle: Frame 13.9 ms (10.9 to 18.8), Motion 14.9.1 16.6 ms (14.6 to 20.5). The ranges overlap.</dd></div>
       </dl>
