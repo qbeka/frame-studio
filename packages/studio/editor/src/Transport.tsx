@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { MotionSpec } from '../../runtime/spec';
 import type { ChannelName } from '../../runtime/channel';
-import { inspectChannel } from '../../runtime/timeline';
+import { inspectChannel, sampleTimeline, type Timeline } from '../../runtime/timeline';
 import type { Take } from '../../authoring/project';
 import type { ProjectStore } from './store';
 import { takeRange, usePlayhead, type Session } from './session';
@@ -9,6 +9,34 @@ import { Ribbon, type Marker } from './Ribbon';
 
 const CHANNELS: ChannelName[] = ['height', 'width', 'y', 'x', 'opacity', 'scale'];
 const FRAME_MS = 1000 / 60;
+
+/** The target and channel that travel furthest in pixels, which is what a first look should show. */
+function busiest(timeline: Timeline, targetIds: string[], start: number, end: number): { target: string; channel: ChannelName } | null {
+  let best: { target: string; channel: ChannelName } | null = null;
+  let most = 1;
+  const samples = Array.from({ length: 25 }, (_, i) => sampleTimeline(timeline, start + ((end - start) * i) / 24));
+  for (const target of targetIds) {
+    // A translated target snaps its size, so only its position can travel.
+    const sized = timeline.spec.targets[target]!.bounds !== 'translate';
+    for (const channel of sized ? (['height', 'width', 'y', 'x'] as const) : (['y', 'x'] as const)) {
+      let min = Number.POSITIVE_INFINITY;
+      let max = Number.NEGATIVE_INFINITY;
+      for (const sample of samples) {
+        const drawn = sample.targets[target]!;
+        // A target that is not drawn has no place yet, and its first box would read as a leap.
+        if (!drawn.inFlow && !drawn.exiting) continue;
+        min = Math.min(min, drawn[channel]);
+        max = Math.max(max, drawn[channel]);
+      }
+      // Strictly more, so the first declared target wins a tie and the ribbon stays predictable.
+      if (max - min > most + 0.5) {
+        most = max - min;
+        best = { target, channel };
+      }
+    }
+  }
+  return best;
+}
 
 function format(value: number) {
   return Math.abs(value) >= 100 ? value.toFixed(1) : value.toFixed(3);
@@ -51,6 +79,17 @@ export function Transport({ spec, take, session, store, canLoadExample }: { spec
   const live = session.mode === 'live';
   const hasTake = take !== null && take.events.some((e) => e.type === 'command');
   const range = take && timeline ? takeRange(take, timeline, live ? t : 0) : { start: 0, end: 1 };
+
+  // Until someone chooses, the ribbon follows whatever moves most in the take on screen.
+  const chosen = useRef(false);
+  const takeStart = take?.startMs ?? null;
+  useEffect(() => {
+    if (chosen.current || !hasTake || !timeline || live) return;
+    const pick = busiest(timeline, targetIds, range.start, range.end);
+    if (!pick) return;
+    setTarget(pick.target);
+    setChannel(pick.channel);
+  }, [takeStart, hasTake, live, timeline === null]);
 
   const markers: Marker[] = useMemo(() => {
     if (!take) return [];
@@ -163,10 +202,10 @@ export function Transport({ spec, take, session, store, canLoadExample }: { spec
         <span className="time mono" aria-live="off">{hasTake ? `${atMs} ms` : 'No take'}</span>
         <span className="mode">{live ? 'Live' : session.mode === 'playing' ? 'Playing back' : 'Inspecting'}</span>
         <div className="grow" />
-        <select aria-label="Ribbon target" value={target} onChange={(e) => setTarget(e.target.value)}>
+        <select aria-label="Ribbon target" value={target} onChange={(e) => { chosen.current = true; setTarget(e.target.value); }}>
             {targetIds.map((id) => <option key={id}>{id}</option>)}
           </select>
-        <select aria-label="Ribbon channel" value={channel} onChange={(e) => setChannel(e.target.value as ChannelName)}>
+        <select aria-label="Ribbon channel" value={channel} onChange={(e) => { chosen.current = true; setChannel(e.target.value as ChannelName); }}>
             {CHANNELS.map((c) => <option key={c}>{c}</option>)}
           </select>
         {hasTake ? <Readout session={session} target={target} channel={channel} /> : null}
