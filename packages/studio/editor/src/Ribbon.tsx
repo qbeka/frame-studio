@@ -3,8 +3,10 @@ import { inspectChannel, type Timeline } from '../../runtime/timeline';
 import type { ChannelName } from '../../runtime/channel';
 import type { TakeEvent } from '../../runtime/timeline';
 
-const HEIGHT = 112;
-const PAD = { top: 16, bottom: 18 };
+const HEIGHT = 132;
+const PAD = { top: 18, bottom: 34 };
+/** Time before the first command in a take's range. See takeRange. */
+const LEAD_MS = 60;
 const SAMPLES = 280;
 
 export interface Marker {
@@ -116,13 +118,24 @@ export function Ribbon({
   }
 
   const here = inspectChannel(timeline, target, channel, playhead).position;
+  const every = width < 520 ? 400 : width < 900 ? 200 : 100;
+  const ticks: number[] = [];
+  for (let t = 0; t <= span - LEAD_MS; t += every) ticks.push(t);
+  const floor = HEIGHT - 18;
 
   return (
     <div className="ribbon" ref={attach} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp}>
       <svg width={width} height={HEIGHT} className="ribbon-svg" aria-hidden="true" onPointerDown={(e) => pointerDown(e, 'playhead')}>
+        <line x1={0} x2={width} y1={floor} y2={floor} className="ribbon-axis" />
+        {ticks.map((t) => (
+          <g key={t} transform={`translate(${x(start + LEAD_MS + t).toFixed(1)} 0)`}>
+            <line y1={floor} y2={floor + 4} className="ribbon-axis" />
+            <text y={HEIGHT - 4} className="ribbon-tick" textAnchor={t === 0 ? 'start' : 'middle'}>{t === 0 ? '0 ms' : t}</text>
+          </g>
+        ))}
         {dotted ? <path d={dotted} className="ribbon-ghost" /> : null}
         <path d={solid} className="ribbon-path" />
-        <line x1={x(playhead)} x2={x(playhead)} y1={0} y2={HEIGHT} className="ribbon-playhead" />
+        <line x1={x(playhead)} x2={x(playhead)} y1={0} y2={floor} className="ribbon-playhead" />
         <circle cx={x(playhead)} cy={y(here)} r={3.5} className="ribbon-dot" />
       </svg>
       <div
