@@ -1,18 +1,15 @@
-import authored from '../../fixtures/inspector/inspector.frame.json';
 import type { Curve, InterruptionRule, MotionSpec, SpringCurve, TransitionSpec } from '../../packages/studio/runtime/spec';
+import type { Showcase } from './showcase';
 
 export type Policy = InterruptionRule['policy'];
 
-export const BASE = authored.spec as unknown as MotionSpec;
-export const STATES = Object.keys(BASE.states);
-
-export const RULES: { policy: Policy; label: string; note: string }[] = [
-  { policy: 'retarget', label: 'Reverse from here', note: 'Cancel takes over at once, from the current height and speed.' },
-  { policy: 'queue', label: 'Finish first', note: 'The panel finishes opening, then Cancel runs.' },
-  { policy: 'ignore', label: 'Ignore it', note: 'Cancel is dropped and the panel stays open.' },
+export const RULES: { policy: Policy; label: string; short: string; note: (back: string) => string }[] = [
+  { policy: 'retarget', label: 'Reverse from here', short: 'Reverse', note: (back) => `${back} takes over at once, from the current position and speed.` },
+  { policy: 'queue', label: 'Finish first', short: 'Finish first', note: (back) => `The motion runs to its end, then ${back} runs.` },
+  { policy: 'ignore', label: 'Ignore it', short: 'Ignore', note: (back) => `${back} is dropped, and the motion carries on.` },
 ];
 
-/** The studio's spring presets. Open starts on Quiet, the authored curve. */
+/** The studio's spring presets. Every component here starts on Quiet. */
 export const FEELS: { name: string; curve: SpringCurve }[] = [
   { name: 'Quiet', curve: { type: 'spring', stiffness: 420, damping: 34, mass: 1 } },
   { name: 'Firm', curve: { type: 'spring', stiffness: 700, damping: 48, mass: 1 } },
@@ -20,81 +17,70 @@ export const FEELS: { name: string; curve: SpringCurve }[] = [
   { name: 'Lively', curve: { type: 'spring', stiffness: 520, damping: 20, mass: 1 } },
 ];
 
-export type CurveId = 'open' | 'cancel' | 'interrupt';
+export const STIFFNESS = { min: 60, max: 1000, step: 10 };
+export const DAMPING = { min: 8, max: 80, step: 1 };
 
-export const CURVES: { id: CurveId; label: string; note: string }[] = [
-  { id: 'open', label: 'Open', note: 'This runs whenever Open starts.' },
-  { id: 'cancel', label: 'Cancel', note: 'This runs when Cancel lands at rest.' },
-  { id: 'interrupt', label: 'Mid flight', note: 'This runs when Cancel reverses.' },
-];
+/** The first command's curve, the returning command's curve, and the one used mid flight. */
+export type CurveId = 'go' | 'back' | 'interrupt';
 
-export const TARGET_NAMES: Record<string, string> = {
-  surface: 'Surface',
-  content: 'Content',
-  summary: 'Summary',
-  open: 'Button',
-  form: 'Form',
-  receipt: 'Receipt',
-};
+export const label = (showcase: Showcase, command: string) => showcase.registration.commands[command]?.label ?? command;
 
-function transition(spec: MotionSpec, id: string): TransitionSpec {
-  return spec.transitions.find((item) => item.id === id)!;
+export function curvesFor(showcase: Showcase): { id: CurveId; label: string; note: string }[] {
+  const go = label(showcase, showcase.go);
+  const back = label(showcase, showcase.back);
+  return [
+    { id: 'go', label: go, note: `Runs whenever ${go} starts.` },
+    { id: 'back', label: back, note: `Runs when ${back} lands at rest.` },
+    { id: 'interrupt', label: 'Mid flight', note: `Runs when ${back} reverses ${go}.` },
+  ];
+}
+
+function transitionId(spec: MotionSpec, showcase: Showcase, id: 'go' | 'back'): string {
+  const [command, from] = id === 'go' ? [showcase.go, showcase.from] : [showcase.back, showcase.to];
+  return spec.transitions.find((item) => item.command === command && item.from === from)!.id;
+}
+
+function transition(spec: MotionSpec, showcase: Showcase, id: 'go' | 'back'): TransitionSpec {
+  const wanted = transitionId(spec, showcase, id);
+  return spec.transitions.find((item) => item.id === wanted)!;
 }
 
 function withTransition(spec: MotionSpec, id: string, change: (item: TransitionSpec) => TransitionSpec): MotionSpec {
   return { ...spec, transitions: spec.transitions.map((item) => (item.id === id ? change(item) : item)) };
 }
 
-export function policyOf(spec: MotionSpec): Policy {
-  return transition(spec, 'open').interruptions.find((rule) => rule.command === 'cancel')!.policy;
-}
-
-export function withPolicy(spec: MotionSpec, policy: Policy): MotionSpec {
-  return withTransition(spec, 'open', (item) => ({
+function withRule(spec: MotionSpec, showcase: Showcase, change: (rule: InterruptionRule) => InterruptionRule): MotionSpec {
+  return withTransition(spec, transitionId(spec, showcase, 'go'), (item) => ({
     ...item,
-    interruptions: item.interruptions.map((rule) => (rule.command === 'cancel' ? { ...rule, policy } : rule)),
+    interruptions: item.interruptions.map((rule) => (rule.command === showcase.back ? change(rule) : rule)),
   }));
 }
 
-export function curveOf(spec: MotionSpec, id: CurveId): SpringCurve {
-  const open = transition(spec, 'open');
-  const curve: Curve | null | undefined =
-    id === 'interrupt' ? open.interruptions.find((rule) => rule.command === 'cancel')!.curve : transition(spec, id).timing.curve;
+const ruleOf = (spec: MotionSpec, showcase: Showcase) => transition(spec, showcase, 'go').interruptions.find((rule) => rule.command === showcase.back)!;
+
+export const policyOf = (spec: MotionSpec, showcase: Showcase): Policy => ruleOf(spec, showcase).policy;
+
+export const withPolicy = (spec: MotionSpec, showcase: Showcase, policy: Policy): MotionSpec => withRule(spec, showcase, (rule) => ({ ...rule, policy }));
+
+export function curveOf(spec: MotionSpec, showcase: Showcase, id: CurveId): SpringCurve {
+  const curve: Curve | null = id === 'interrupt' ? ruleOf(spec, showcase).curve : transition(spec, showcase, id).timing.curve;
   return curve as SpringCurve;
 }
 
-export function withCurve(spec: MotionSpec, id: CurveId, curve: SpringCurve): MotionSpec {
-  if (id === 'interrupt') {
-    return withTransition(spec, 'open', (item) => ({
-      ...item,
-      interruptions: item.interruptions.map((rule) => (rule.command === 'cancel' ? { ...rule, curve } : rule)),
-    }));
-  }
-  return withTransition(spec, id, (item) => ({ ...item, timing: { ...item.timing, curve } }));
+export function withCurve(spec: MotionSpec, showcase: Showcase, id: CurveId, curve: SpringCurve): MotionSpec {
+  if (id === 'interrupt') return withRule(spec, showcase, (rule) => ({ ...rule, curve }));
+  return withTransition(spec, transitionId(spec, showcase, id), (item) => ({ ...item, timing: { ...item.timing, curve } }));
 }
 
-export function feelOf(spec: MotionSpec): string | null {
-  const { stiffness, damping } = curveOf(spec, 'open');
-  return FEELS.find((feel) => feel.curve.stiffness === stiffness && feel.curve.damping === damping)?.name ?? null;
+export function feelOf(curve: SpringCurve): string | null {
+  return FEELS.find((feel) => feel.curve.stiffness === curve.stiffness && feel.curve.damping === curve.damping)?.name ?? null;
 }
 
-/** Per target opacity timings that a selected curve can override. Mid flight has none. */
-export function overridesOf(spec: MotionSpec, id: CurveId) {
-  if (id === 'interrupt') return [];
-  return Object.entries(transition(spec, id).targets).flatMap(([target, groups]) => {
-    const timing = groups.opacity;
-    return timing && timing.curve.type === 'tween'
-      ? [{ target, name: `${TARGET_NAMES[target] ?? target} fade`, durationMs: timing.curve.durationMs, delayMs: timing.delayMs }]
-      : [];
-  });
-}
+export const sameSpec = (a: MotionSpec, b: MotionSpec) => a === b || JSON.stringify(a) === JSON.stringify(b);
 
-export function withOverride(spec: MotionSpec, id: CurveId, target: string, durationMs: number): MotionSpec {
-  return withTransition(spec, id, (item) => {
-    const groups = item.targets[target]!;
-    const timing = groups.opacity!;
-    if (timing.curve.type !== 'tween') return item;
-    const opacity = { ...timing, curve: { ...timing.curve, durationMs } };
-    return { ...item, targets: { ...item.targets, [target]: { ...groups, opacity } } };
-  });
-}
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const snap = (value: number, range: { min: number; max: number; step: number }) =>
+  clamp(Math.round(value / range.step) * range.step, range.min, range.max);
+
+/** Stiffness and damping snapped to the sliders' own steps, so every control agrees. */
+export const tidy = (curve: SpringCurve): SpringCurve => ({ ...curve, stiffness: snap(curve.stiffness, STIFFNESS), damping: snap(curve.damping, DAMPING) });
