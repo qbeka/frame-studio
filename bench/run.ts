@@ -101,8 +101,9 @@ async function playAndReplay(browser: Browser, script: (typeof SCRIPTS)[number],
   return { live, replayed };
 }
 
-const STUDIO_PORT = 5301;
-const CONSUMER_PORT = 5302;
+// FRAME_BENCH_PORT moves the two servers, for a machine where 5301 and 5302 are taken.
+const STUDIO_PORT = Number(process.env.FRAME_BENCH_PORT ?? 5301);
+const CONSUMER_PORT = STUDIO_PORT + 1;
 const studioUrl = `http://localhost:${STUDIO_PORT}/?clock=manual`;
 const consumerUrl = `http://localhost:${CONSUMER_PORT}/?clock=manual`;
 
