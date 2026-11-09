@@ -2,7 +2,7 @@
 
 A local motion editor for working React components, built around one question: what should happen when someone changes their mind halfway?
 
-![Frame showing an interrupted transition. The solid line is the path that happened, and the dotted line is the path without the interruption.](docs/media/cover.png)
+![The Frame project page. An expense card is held partway open, and beside it the card's height is drawn over time at the card's own scale, solid where it was interrupted and dotted where it would have gone.](docs/media/cover.png)
 
 Use your real component. Interrupt it. Frame records that as a take, and you can scrub it, drag the interruption to a new moment, and change what happens there. Export a small runtime that behaves the same way in your app.
 
@@ -39,7 +39,11 @@ pnpm install
 pnpm dev
 ```
 
-Open <http://localhost:5172>. Press **Edit expense**, then press **Cancel** before it settles. Press **Pause**, and drag the `cancel` marker.
+Open <http://localhost:5172>. It opens on an example take, held at the moment its interruption lands. Drag the `cancel` marker, or change the spring and watch the same take rerun.
+
+![The studio as it opens, with the example take on the ribbon and the component paused mid flight.](docs/media/studio.png)
+
+To record your own, press **Reset to this state**, press **Edit expense**, then press **Cancel** before it settles, and press **Pause**. Add `?take=none` to the address to open without the example.
 
 ## Use it on your own component
 
@@ -92,12 +96,19 @@ The export is readable TypeScript. It needs React 18.3 or 19 and a bundler that 
 - **Inspection.** Read position, velocity and target at any moment. Scrubbing gives a defined sample, and you choose whether to continue from there or reset.
 - **Files.** Undo, automatic drafts, and a portable project file. A bad file changes nothing and tells you why.
 
+The [project page](https://www.qendrimbeka.com/projects/frame/) is a smaller instrument built on the same runtime, with three registered components: an expense card, a status menu and a bottom sheet.
+
+- **A long exposure.** The take is drawn at the component's own scale, one bar for each 60 Hz frame, so the line beside the component is the path of its moving edge. These are computed moments of the take, not measured paints.
+- **Handles.** Drag the interruption along the take, or drag the spring itself: sideways for stiffness, up and down for damping.
+- **A race.** A second copy of the component gets the same commands under another spring or another rule.
+- **Something to take.** The spring copies as a Frame curve, or from rest as a CSS `linear()` easing. The address keeps the motion, so a link restores it.
+
 ## Limits
 
 - It works on components you register. It cannot import an arbitrary website.
 - Motion is limited to translation, scale on text-free elements, opacity, clipping and measured bounds. Anything else is rejected with a reason.
 - Elements outside the registered root do not animate.
-- A CSS or Web Animations export is not offered. Neither can start a spring from a speed, so it would look close and behave differently. Each export lists this per transition.
+- A CSS or Web Animations export is not offered. Neither can start a spring from a speed, so it would look close and behave differently. Each export lists this per transition. The project page copies one spring from rest as a CSS `linear()` easing, and says beside it that an interruption restarts it.
 - It is a desktop workspace. On a phone you get the preview, the transport and the selected property. Exports work on phones.
 
 ## Test it
@@ -162,7 +173,7 @@ packages/studio/
   editor/      The studio
   cli/         frame dev, init, validate, export
 fixtures/      The expense inspector
-site/          The project page, with the live component on the shipped runtime
+site/          The project page: three registered components on the shipped runtime
 examples/      Clean Vite and Next.js apps, and a tarball consumer
 reference/     Independent spring values
 bench/         Protocol, harness and baselines
