@@ -24,18 +24,19 @@
   <main>
     <header class="title">
       <h1>Frame</h1>
-      <a class="control outline" href="studio/index.html">Open studio</a>
+      <a class="control outline" href="studio/">Open studio</a>
       <p>Tweak the motion in the actual component</p>
     </header>
 
-    <section class="stage" id="stage" aria-label="Expense panel and its motion curve">
+    <section class="stage" id="stage" aria-label="A working component, its motion drawn in time, and its controls">
       <noscript><p class="prose">The demo needs JavaScript. The details below still work.</p></noscript>
     </section>
 
     <section class="reading" id="details" aria-labelledby="details-title">
       <h2 id="details-title">Details</h2>
       <p class="prose">Frame is a motion editor for working React components, built around one question: what should happen when someone changes their mind halfway? You use your real component, interrupt it, and decide what it does at that moment. Export gives you a small runtime that behaves the same way in your app, with no dependency except React.</p>
-      <p class="prose">The <a href="studio/index.html">studio</a> is the full tool, with every state, target and command. The <a href="studio/try/index.html">exported build</a> is a separate app made from those files with the default motion. The preview under Export on this page runs the generated files inside this page, so it always follows what you just changed.</p>
+      <p class="prose">The stage draws the take at the component's own scale, so the line is the path of its moving edge and each bar is that edge at one 60 Hz frame. The bars and the faint outlines are worked out from the take, they are not measured paints. Drag the round handle to move the interruption, drag the square one to reshape the spring, and the address keeps what you made.</p>
+      <p class="prose">The three components are registered the way any component is, and the <a href="studio/">studio</a> opens the same three with every state, target and command. Race runs a second copy of the component on another spring or rule, from the same commands. The copy under Export runs the downloaded motion config on the runtime source that the zip holds, inside this page, and the <a href="studio/try/">exported build</a> is a separate app made from those files for the expense card with its default motion.</p>
 
       <h3>Results</h3>
       <dl class="results">
@@ -45,6 +46,7 @@
         <div><dt>Could the checks fail</dt><dd><b>9 of 9 seeded faults caught</b>0 of 2 clean builds were flagged. The first full run caught 8 of 9, so it was discarded and everything was measured again.</dd></div>
         <div><dt>Cost to an app</dt><dd><b>6.2 KB of JavaScript, 0.14 KB of CSS</b>Gzipped, over the same UI with no animation, in a Vite build of this one interaction. Motion 14.9.1 added 45.1 KB there, and Motion does far more.</dd></div>
         <div><dt>Editing at 30 targets</dt><dd><b>Median 1.5 ms, p95 2.2 ms</b>Edit to DOM in a production build, against a 16.7 ms target.</dd></div>
+        <div><dt>The CSS line</dt><dd><b>Within 0.2% of the distance</b>The copied linear() easing against the same spring from rest, for the four presets and the corners of both sliders. It cannot carry speed through an interruption.</dd></div>
         <div><dt>Speed at runtime</dt><dd><b>No clear win</b>Main thread per open and reverse cycle: Frame 13.9 ms (10.9 to 18.8), Motion 14.9.1 16.6 ms (14.6 to 20.5). The ranges overlap.</dd></div>
       </dl>
 
@@ -55,6 +57,7 @@
         <li>No physical phone was tested, and touch was emulated.</li>
         <li>No one using a screen reader has tried it, and no human has reviewed the code.</li>
         <li>Only registered components work. Elements outside the registered root do not animate.</li>
+        <li>The results above were measured on the expense card. The menu and the sheet use the same runtime and were not part of those runs.</li>
         <li>Scrubbing back across a viewport change reflows text to the current width.</li>
       </ul>
 
