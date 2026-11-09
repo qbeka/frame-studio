@@ -7,7 +7,8 @@ import type {
   StateTargetValue,
   TransitionSpec,
 } from '../../runtime/spec';
-import { describeSpring } from '../../runtime/spring';
+import { describeSpring, springAt } from '../../runtime/spring';
+import { tweenAt } from '../../runtime/tween';
 import { LIMITS } from '../../authoring/parse';
 import { NumberField } from './NumberField';
 import { PRESETS } from './presets';
@@ -43,6 +44,27 @@ function Select<T extends string>({
   );
 }
 
+const PREVIEW = { width: 240, height: 56, samples: 60 };
+
+/** The curve from rest, drawn small, so a preset or a number can be judged before a take exists. */
+function CurvePreview({ curve, settle }: { curve: Curve; settle: MotionSpec['settle'] }) {
+  const ms = curve.type === 'spring' ? Math.max(1, describeSpring(curve, settle).settleMs) : Math.max(1, curve.durationMs);
+  const at = (t: number) => (curve.type === 'spring' ? springAt(curve, 0, 0, 1, t / 1000).position : tweenAt(curve, 0, 1, t).position);
+  const y = (value: number) => 46 - value * 34;
+  let d = '';
+  for (let i = 0; i <= PREVIEW.samples; i += 1) {
+    const t = (ms * i) / PREVIEW.samples;
+    d += `${i === 0 ? 'M' : 'L'}${((i / PREVIEW.samples) * PREVIEW.width).toFixed(1)} ${y(at(t)).toFixed(1)}`;
+  }
+  return (
+    <svg className="curve-preview" viewBox={`0 0 ${PREVIEW.width} ${PREVIEW.height}`} preserveAspectRatio="none" aria-hidden="true">
+      <line x1={0} x2={PREVIEW.width} y1={y(1)} y2={y(1)} className="curve-preview-target" />
+      <line x1={0} x2={PREVIEW.width} y1={y(0)} y2={y(0)} className="curve-preview-rest" />
+      <path d={d} className="curve-preview-path" />
+    </svg>
+  );
+}
+
 function CurveEditor({
   curve,
   settle,
@@ -57,6 +79,7 @@ function CurveEditor({
   const facts = curve.type === 'spring' ? describeSpring(curve, settle) : null;
   return (
     <div className="curve">
+      <CurvePreview curve={curve} settle={settle} />
       <div className="presets" role="group" aria-label="Presets">
         {PRESETS.map((preset) => (
           <button
@@ -203,18 +226,24 @@ function TransitionPanel({ spec, transition, edit }: { spec: MotionSpec; transit
 
   return (
     <div className="properties">
-      <h2>
-        {spec.states[transition.from]?.label} to {spec.states[transition.to]?.label}
-      </h2>
-      <Select label="Applies to" value={scope} options={scopes} onChange={setScope} />
-      <CurveEditor curve={timing.curve} settle={spec.settle} group={group} onChange={(curve, g) => setTiming({ ...timing, curve }, g)} />
-      <NumberField label="Delay" unit="ms" value={timing.delayMs} min={LIMITS.delayMs[0]} max={LIMITS.delayMs[1]} step={10}
-        onChange={(delayMs) => setTiming({ ...timing, delayMs }, `${group}.delay`)} />
-      {override ? (
-        <button type="button" className="link" onClick={clearOverride}>
-          Use the transition's curve
-        </button>
-      ) : null}
+      <header className="properties-head">
+        <h2>
+          {spec.states[transition.from]?.label} to {spec.states[transition.to]?.label}
+        </h2>
+        <p className="tag">Runs on {transition.command}</p>
+      </header>
+      <section className="section section-first">
+        <h3>Curve</h3>
+        <Select label="Applies to" value={scope} options={scopes} onChange={setScope} />
+        <CurveEditor curve={timing.curve} settle={spec.settle} group={group} onChange={(curve, g) => setTiming({ ...timing, curve }, g)} />
+        <NumberField label="Delay" unit="ms" value={timing.delayMs} min={LIMITS.delayMs[0]} max={LIMITS.delayMs[1]} step={10}
+          onChange={(delayMs) => setTiming({ ...timing, delayMs }, `${group}.delay`)} />
+        {override ? (
+          <button type="button" className="link" onClick={clearOverride}>
+            Use the transition's curve
+          </button>
+        ) : null}
+      </section>
       <InterruptionEditor spec={spec} transition={transition} edit={edit} />
       <section className="section">
         <h3>With reduced motion</h3>
@@ -260,7 +289,10 @@ function StatePoses({ spec, id, edit }: { spec: MotionSpec; id: string; edit: Ed
 
   return (
     <div className="properties">
-      <h2>{state.label}</h2>
+      <header className="properties-head">
+        <h2>{state.label}</h2>
+        <p className="tag">State</p>
+      </header>
       <p className="hint">A target's pose in this state, as an offset from its measured box.</p>
       <Select label="Target" value={targetId} options={targetIds.map((t) => ({ value: t, label: t }))} onChange={setTargetId} />
       <label className="check">
