@@ -338,22 +338,44 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     setMode('live');
   }, [controller, inspectAt, playhead, setMode]);
 
-  /** Builds a take from named commands and plays it, with the layout measured by the probe. */
-  const loadExample = useCallback(() => {
+  /** The registration's example as a take that starts now, with the layout left to the probe. */
+  const exampleTake = useCallback((): Take | null => {
     const timeline = controller.getTimeline();
     const example = registration.exampleTake;
-    if (!timeline || !example) return;
-    const { spec: currentSpec, setTake: store } = latest.current;
+    if (!timeline || !example) return null;
     const startMs = controller.now();
-    const take: Take = {
+    return {
       ...baseTake({ startMs, rects: timeline.marks[0]!.rects }),
       events: example.map((e) => ({ atMs: startMs + 60 + e.atMs, type: 'command', command: e.command })),
     };
+  }, [baseTake, controller, registration]);
+
+  /** Builds a take from named commands and plays it, with the layout measured by the probe. */
+  const loadExample = useCallback(() => {
+    const take = exampleTake();
+    if (!take) return;
+    const { spec: currentSpec, setTake: store } = latest.current;
     liveTake.current = take;
     store(take);
-    inspectAt(take, currentSpec, startMs);
+    inspectAt(take, currentSpec, take.startMs);
     play(take);
-  }, [baseTake, controller, inspectAt, registration]);
+  }, [exampleTake, inspectAt, play]);
+
+  /**
+   * Opens on the example, held at the moment of its interruption, so the first thing a visitor
+   * sees is a take with both paths drawn. `seed` stores it without marking the project changed.
+   */
+  const showExample = useCallback(
+    (seed: (take: Take) => void) => {
+      const take = exampleTake();
+      if (!take) return;
+      liveTake.current = take;
+      seed(take);
+      const interruption = take.events[1] ?? take.events[0];
+      inspectAt(take, latest.current.spec, interruption?.atMs ?? take.startMs);
+    },
+    [exampleTake, inspectAt],
+  );
 
   // The browser tests compare replay against the export at exact times.
   useEffect(() => {
@@ -387,6 +409,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
     resetTo,
     continueFromHere,
     loadExample,
+    showExample,
     timeline: () => replayed ?? controller.getTimeline(),
   };
 }

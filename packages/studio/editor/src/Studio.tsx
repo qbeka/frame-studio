@@ -25,7 +25,12 @@ export function Studio({ registration, registrations, onPickRegistration, initia
   const probeRef = useRef<ProbeHandle | null>(null);
   const probe = useCallback((state: string, props: PropsRecord) => probeRef.current!.measure(state, props), []);
   const session = useSession({ registration, spec, take, setTake: store.setTake, probe });
-  const { inspectAt, playhead, resetTo } = session;
+  const { inspectAt, playhead, resetTo, showExample } = session;
+  // A first visit opens on the registration's example take. A recovered draft is the visitor's own
+  // work and wins, ?take=none opens empty, and the manual test clock never loads one.
+  const wantsExample = useRef(
+    recoveredAt === null && initial.take === null && Boolean(registration.exampleTake) && !/[?&](take=none|clock=manual)(&|$)/.test(location.search),
+  );
 
   // Undo, redo, opening a file and recovering a draft all replace the project from outside the
   // session, so the session catches up here. It runs in a task of its own, because a replay may
@@ -52,6 +57,22 @@ export function Studio({ registration, registrations, onPickRegistration, initia
     });
     return () => clearTimeout(timer);
   });
+
+  // In a task of its own for the same reason as above, and once only. It does not ride on the
+  // effect above, whose timer is dropped by any render that lands before it fires.
+  const latestExample = useRef(showExample);
+  latestExample.current = showExample;
+  useEffect(() => {
+    if (!wantsExample.current) return undefined;
+    const timer = setTimeout(() => {
+      try {
+        latestExample.current(store.seedTake);
+      } catch (error) {
+        console.warn('Frame could not load the example take.', error);
+      }
+    });
+    return () => clearTimeout(timer);
+  }, [store.seedTake]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {

@@ -13,6 +13,8 @@ interface History {
   future: Project[];
   group: string | null;
   saved: string;
+  /** The project with the registration's example take loaded. It was never the visitor's work. */
+  seeded: string | null;
   /** Moves when the project changes from outside the session: undo, redo, open. */
   revision: number;
 }
@@ -22,6 +24,7 @@ type Action =
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'replace'; project: Project; saved?: string }
+  | { type: 'seed'; take: Take }
   | { type: 'saved'; saved: string };
 
 const HISTORY_LIMIT = 200;
@@ -57,8 +60,14 @@ function reducer(history: History, action: Action): History {
         future: [],
         group: null,
         saved: action.saved ?? history.saved,
+        seeded: null,
         revision: history.revision + 1,
       };
+    case 'seed': {
+      // Not an edit: there is nothing to undo, and nothing here that needs saving.
+      const present = { ...history.present, take: action.take };
+      return { ...history, present, group: null, seeded: serializeProject(present) };
+    }
     case 'saved':
       return { ...history, saved: action.saved };
   }
@@ -111,12 +120,13 @@ export function useProjectStore(initial: Project, saved: string) {
     future: [],
     group: null,
     saved,
+    seeded: null,
     revision: 0,
   }));
   const project = history.present;
   const componentId = project.spec.component.id;
   const serialized = useMemo(() => serializeProject(project), [project]);
-  const dirty = serialized !== history.saved;
+  const dirty = serialized !== history.saved && serialized !== history.seeded;
 
   useEffect(() => {
     if (!dirty) {
@@ -145,6 +155,7 @@ export function useProjectStore(initial: Project, saved: string) {
   const redo = useCallback(() => dispatch({ type: 'redo' }), []);
   const replace = useCallback((next: Project, savedText?: string) => dispatch({ type: 'replace', project: next, saved: savedText }), []);
   const markSaved = useCallback((text: string) => dispatch({ type: 'saved', saved: text }), []);
+  const seedTake = useCallback((take: Take) => dispatch({ type: 'seed', take }), []);
 
   return {
     project,
@@ -160,6 +171,7 @@ export function useProjectStore(initial: Project, saved: string) {
     redo,
     replace,
     markSaved,
+    seedTake,
   };
 }
 
