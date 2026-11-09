@@ -5,7 +5,7 @@
  *   frame init <registrations.tsx> [--out component.frame.json]
  *   frame export <project.frame.json> [--out frame-export]
  *   frame validate <file.json>
- *   frame build-demo <registrations.tsx> --out dist/demo [--base /]
+ *   frame build-demo <registrations.tsx> --out dist/demo [--base /] [--with-try] [--try-for id]
  *
  * It is plain JavaScript with Vite as its only tool. Vite compiles the editor and your
  * registration file, and also loads the TypeScript authoring code for the commands that need it.
@@ -56,8 +56,12 @@ async function buildDemo(args) {
   const file = resolve(args[0] ?? fail('Pass your registrations file.'));
   await build({
     ...editorConfig(file),
-    // Set by scripts/build-site.mjs, which puts a built export at ./try/.
-    define: { 'import.meta.env.VITE_FRAME_TRY': JSON.stringify(args.includes('--with-try') ? '1' : '') },
+    // Set by scripts/build-site.mjs, which puts a built export at ./try/. --try-for names the one
+    // component that export was made from, when the demo registers more than one.
+    define: {
+      'import.meta.env.VITE_FRAME_TRY': JSON.stringify(args.includes('--with-try') ? '1' : ''),
+      'import.meta.env.VITE_FRAME_TRY_FOR': JSON.stringify(argument(args, 'try-for', '')),
+    },
     base: argument(args, 'base', './'),
     logLevel: 'warn',
     build: { outDir: resolve(argument(args, 'out', 'dist/demo')), emptyOutDir: true },

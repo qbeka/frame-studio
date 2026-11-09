@@ -16,7 +16,8 @@ const run = (command, commandArgs) => execFileSync(command, commandArgs, { stdio
 
 const studio = join(out, 'studio');
 run('pnpm', ['--filter', '@frame-studio/site', 'exec', 'vite', 'build', '--outDir', out, '--emptyOutDir']);
-run('node', ['packages/studio/cli/frame.mjs', 'build-demo', 'fixtures/inspector/frame.registrations.tsx', '--out', studio, '--with-try']);
+// The studio opens the same three components as the page. The built export at ./try/ is the expense card.
+run('node', ['packages/studio/cli/frame.mjs', 'build-demo', 'site/src/showcase/frame.registrations.tsx', '--out', studio, '--with-try', '--try-for', 'frame.fixture.inspector']);
 run('node', ['scripts/consumer.mjs', 'vite', '--out', consumer]);
 cpSync(join(consumer, 'dist'), join(studio, 'try'), { recursive: true });
 rmSync(consumer, { recursive: true, force: true });
