@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { live, openFresh, readoutPosition, recordReversal, seekToFraction, STUDIO, stiffness, surfaceHeight } from './helpers';
+import { live, openFresh, readoutPosition, recordReversal, seekToFraction, STUDIO, STUDIO_HOME, stiffness, surfaceHeight } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await openFresh(page);
@@ -334,4 +334,65 @@ test('works by touch width from open to inspected take', async ({ page }) => {
   await expect(page.locator('.ribbon')).toBeVisible();
   await expect(stiffness(page)).toBeVisible();
   await expect(page.locator('.graph')).toBeHidden();
+});
+
+test.describe('a first visit, with no draft and no request for an empty take', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(STUDIO_HOME);
+    await expect(page.locator('.mode')).toHaveText('Inspecting');
+  });
+
+  test('opens on the example take, held at its interruption, with both paths drawn', async ({ page }) => {
+    await expect(page.locator('.marker')).toHaveCount(2);
+    await expect(page.locator('.marker').nth(1)).toContainText('cancel');
+    await expect(page.locator('.ribbon-ghost')).toHaveCount(1);
+    await expect(page.locator('.ribbon-tick').first()).toHaveText('0 ms');
+    await expect(page.locator('.stage-live')).toHaveAttribute('inert', '');
+    await expect(page.locator('.stage-label')).toContainText('frame.fixture.inspector');
+    // 150 ms after the open, which is where the example's cancel lands, and mid flight.
+    await expect(page.locator('.time')).toHaveText('210 ms');
+    const reading = await readoutPosition(page);
+    expect(Math.abs((await surfaceHeight(page)) - reading)).toBeLessThan(0.5);
+    const rest = await page.locator('.stage-probe [data-frame-target=surface]').count();
+    expect(rest).toBeGreaterThan(0);
+    await expect(page.locator('.readout')).not.toContainText('not carried');
+  });
+
+  test('the example is nobody’s work, so there is nothing to save, undo or recover', async ({ page }) => {
+    await expect(page.getByTestId('save-status')).toHaveText('Saved');
+    await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    await page.waitForTimeout(400);
+    await page.reload();
+    await expect(page.locator('.mode')).toHaveText('Inspecting');
+    await expect(page.getByText('Recovered your draft')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Reset to this state' }).click();
+    await expect(page.getByText('Use the component.')).toBeVisible();
+    await expect(page.getByTestId('save-status')).toHaveText('Saved');
+    await live(page).getByRole('button', { name: 'Edit expense' }).click();
+    await expect(live(page).getByLabel('Merchant')).toBeVisible();
+  });
+
+  test('an edit to the example becomes a draft, and the draft wins on the next visit', async ({ page }) => {
+    await stiffness(page).fill('777');
+    await expect(page.getByTestId('save-status')).toHaveText('Unsaved changes');
+    await page.waitForTimeout(400);
+    await page.reload();
+    await expect(page.getByText('Recovered your draft')).toBeVisible();
+    await expect(stiffness(page)).toHaveValue('777');
+    await expect(page.locator('.marker')).toHaveCount(2);
+    await page.getByRole('button', { name: 'Discard it' }).click();
+    await expect(stiffness(page)).toHaveValue('420');
+  });
+
+  test('the property rail draws the curve it is editing', async ({ page }) => {
+    const preview = page.locator('.curve-preview-path').first();
+    const quiet = await preview.getAttribute('d');
+    await page.getByRole('button', { name: 'Lively' }).first().click();
+    await expect(preview).not.toHaveAttribute('d', quiet!);
+    await page.getByRole('button', { name: 'Timed' }).first().click();
+    await expect(page.getByLabel('Duration').first()).toHaveValue('220');
+    await expect(preview).not.toHaveAttribute('d', quiet!);
+    await expect(page.locator('.section h3').first()).toHaveText('Curve');
+  });
 });

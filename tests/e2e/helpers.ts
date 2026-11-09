@@ -1,6 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 
-export const STUDIO = 'http://localhost:5172/';
+/**
+ * The studio opens on its example take. These suites record their own, so they ask for an empty
+ * one. STUDIO_URL points them at a studio served somewhere else.
+ */
+export const STUDIO_HOME = process.env.STUDIO_URL ?? 'http://localhost:5172/';
+export const STUDIO = `${STUDIO_HOME}?take=none`;
 
 export const live = (page: Page) => page.locator('.stage-live');
 export const surface = (page: Page) => live(page).locator('[data-frame-target=surface]');
