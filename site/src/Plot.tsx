@@ -332,7 +332,7 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
             <i style={{ top: y(reading.position) }} />
             <span>
               <b>{name}</b> {ms} ms
-              {outcome === 'start' && index === marker ? <em>{Math.round(Math.abs(reading.velocity)).toLocaleString('en-US')} px/s kept</em> : null}
+              {outcome === 'start' && index === marker && Math.abs(reading.velocity) >= 20 ? <em>{Math.round(Math.abs(reading.velocity)).toLocaleString('en-US')} px/s kept</em> : null}
               {outcome === 'queue' ? <em>waits</em> : null}
               {outcome === 'ignore' ? <em>ignored</em> : null}
             </span>
