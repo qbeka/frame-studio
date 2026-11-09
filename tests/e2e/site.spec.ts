@@ -71,6 +71,21 @@ test.describe('with the example already seen', () => {
     await expect.poll(() => drawnHeight(page)).toBeLessThan(closed + 5);
   });
 
+  test('content that is leaving stays drawn until its exit ends', async ({ page }) => {
+    const form = page.locator('.live [data-frame-target=form]');
+    await openButton(page).click();
+    await waitForStill(page);
+    await page.locator('#slow').click();
+    await cancelButton(page).click();
+    // The form is out of the document flow at once, and still on screen while it fades.
+    await expect(form).toHaveAttribute('data-frame-exiting', '');
+    await expect(form).toBeVisible();
+    expect((await form.boundingBox())!.height).toBeGreaterThan(100);
+    expect(Number(await form.evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0);
+    await expect(form).toBeHidden({ timeout: 5_000 });
+    await expect(form).not.toHaveAttribute('data-frame-exiting', '');
+  });
+
   test('runs at normal speed by default, and slow motion also slows the live panel', async ({ page }) => {
     await expect(page.locator('#slow')).toHaveAttribute('aria-pressed', 'false');
     const started = Date.now();
