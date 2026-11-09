@@ -12,6 +12,7 @@ Frame works only with what you declare. It does not read React internals, and it
 | `commands` | Named actions your component sends. Takes record these, never coordinates. |
 | `transitions` | The allowed moves. Each one becomes editable. |
 | `props` | Serializable inputs. Text you want to scrub through has to be a prop. |
+| `exampleTake` | Optional. Named commands and their times. The studio opens on this take, so a first visit shows an interruption at once. |
 | `reset` | Clears anything a remount would not, such as timers. |
 | `render` | Draws the component with the context Frame passes. |
 
