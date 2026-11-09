@@ -57,10 +57,14 @@ async function press(page: Page, locator: ReturnType<Page['locator']>) {
   await page.mouse.up();
 }
 
+/**
+ * Opens the card and cancels it mid flight. The cancel is the Escape key, because moving the
+ * pointer to a button that has only just appeared takes longer than the transition does.
+ */
 async function interrupt(page: Page) {
   await press(page, page.locator('.stage-live').getByRole('button', { name: 'Edit expense' }));
-  await wait(120);
-  await press(page, page.locator('.stage-live').getByRole('button', { name: 'Cancel' }));
+  await wait(110);
+  await page.keyboard.press('Escape');
   await wait(900);
 }
 
@@ -121,8 +125,8 @@ async function signature(page: Page) {
   await page.waitForSelector('[data-frame-root]');
   await wait(700);
   await press(page, page.getByRole('button', { name: 'Edit expense' }));
-  await wait(120);
-  await press(page, page.getByRole('button', { name: 'Cancel' }));
+  await wait(110);
+  await page.keyboard.press('Escape');
   await wait(1100);
 }
 
@@ -154,8 +158,8 @@ async function walkthrough(page: Page) {
   await press(page, page.getByRole('link', { name: /built export/ }));
   await page.waitForSelector('[data-frame-root]');
   await press(page, page.getByRole('button', { name: 'Edit expense' }));
-  await wait(120);
-  await press(page, page.getByRole('button', { name: 'Cancel' }));
+  await wait(110);
+  await page.keyboard.press('Escape');
   await say('Same input, same times, compared by geometry in three browser engines', 6000);
   await say('The results and their limits are in docs/REPORT.md', 4000);
 }
@@ -182,7 +186,7 @@ async function stills() {
     const box = (await page.locator('.marker').boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + 150);
     await page.mouse.down();
-    await page.mouse.move(box.x + box.width / 2 - 20, box.y + 150, { steps: 8 });
+    await page.mouse.move(box.x + box.width / 2 + 16, box.y + 150, { steps: 8 });
     await page.waitForTimeout(200);
   };
   await shot(base, 1440, 800, 'cover.png', dragging);
