@@ -2,7 +2,7 @@
 
 Frame lets you author what happens when a transition is interrupted, on a real React component, and export a small working version. This report says what was measured, what failed, and what the numbers leave out.
 
-All measured results come from commit `909eca6`, on 2026-11-06, on one Apple M5 Pro Mac on AC power. Other work was running on the machine. Chromium 158, WebKit 27.2 and Firefox 159 came from Playwright 1.65 and ran headless. The workload and pass criteria are in [`bench/PROTOCOL.md`](../bench/PROTOCOL.md), which was frozen before the first run and amended once, for the reason given under [Failures](#failures).
+All measured results come from commit `909eca6`, on 2026-11-06, on one Apple M5 Pro Mac on AC power, with two exceptions. The authoring timings were measured again at `4f14399` on 2026-11-09, on the same machine, because the studio's interface changed. The CSS easing check is a unit test added the same day. The runtime has not changed since `909eca6`, so the fidelity, physics, control, size and main thread results stand as measured. Other work was running on the machine. Chromium 158, WebKit 27.2 and Firefox 159 came from Playwright 1.65 and ran headless. The workload and pass criteria are in [`bench/PROTOCOL.md`](../bench/PROTOCOL.md), which was frozen before the first run and amended once, for the reason given under [Failures](#failures).
 
 ## Results
 
@@ -13,8 +13,9 @@ All measured results come from commit `909eca6`, on 2026-11-06, on one Apple M5 
 | Does real geometry match independent physics? | 0.11 px | Worst 0.094 px | Met |
 | Would these checks notice a broken export? | Every fault | 9 of 9 faults caught, 0 of 2 clean builds flagged | Met |
 | Do the tests notice broken logic? | Reported | 46 of 46 mutants caught | Reported |
-| Is editing fast at 30 targets? | Under 16.7 ms to DOM | Median 1.5 ms, p95 2.2 ms | Met |
+| Is editing fast at 30 targets? | Under 16.7 ms to DOM | Median 1.1 ms, p95 1.3 ms | Met |
 | What does a consumer pay? | Reported | 6.2 KB of gzipped JavaScript, 0.14 KB of CSS | Reported |
+| Does the copied CSS easing follow its spring from rest? | 0.2% of the distance | Within it for 13 springs at 3 distances | Met |
 
 ### Fidelity
 
@@ -65,14 +66,22 @@ Production build, Chromium, 5 runs of 60 samples after 20 warmup samples. Each c
 
 | Declared targets | Edit, p50 | Edit, p95 | Seek, p50 | Seek, p95 |
 |---|---|---|---|---|
-| 1 | 1.0 ms | 1.7 ms | 1.0 ms | 1.4 ms |
-| 10 | 1.3 ms | 2.1 ms | 0.8 ms | 1.5 ms |
-| 30 | 1.5 ms | 2.2 ms | 1.0 ms | 1.5 ms |
-| 200 (stress) | 4.0 ms | 4.5 ms | 1.9 ms | 2.6 ms |
+| 1 | 0.9 ms | 1.0 ms | 0.6 ms | 0.7 ms |
+| 10 | 1.0 ms | 1.1 ms | 0.6 ms | 0.8 ms |
+| 30 | 1.1 ms | 1.3 ms | 0.7 ms | 0.9 ms |
+| 200 (stress) | 2.9 ms | 3.2 ms | 1.4 ms | 1.8 ms |
 
-The p95 ranged from 1.9 to 2.3 ms for edits at 30 targets across runs. The clock stops only after reading back a changed ribbon path, or a moved slider value for seeks, so it cannot stop before the update lands.
+These are from the run at `4f14399`, after the property rail gained a curve preview and the ribbon a time axis. The run at `909eca6`, on the earlier interface, gave a median of 1.5 ms and a p95 of 2.2 ms at 30 targets. The machine had other work running both times, so the difference between the two runs is not a result.
 
-The time to the next frame callback was at most 18.8 ms at p95 for these sizes. Frame callback timing is a proxy, and it does not prove a displayed frame. Export took a median of 36 ms in the browser, from click to download, with all sizes between 32 and 46 ms. The command line took 167 ms in one run, most of it starting Vite.
+The p95 ranged from 1.2 to 1.4 ms for edits at 30 targets across runs. The clock stops only after reading back a changed ribbon path, or a moved slider value for seeks, so it cannot stop before the update lands.
+
+The time to the next frame callback was at most 18.6 ms at p95 for these sizes. Frame callback timing is a proxy, and it does not prove a displayed frame. Export took a median of 38.5 ms in the browser, from click to download, with all sizes between 34 and 46 ms. The command line took 165 ms in one run, most of it starting Vite.
+
+### CSS easing
+
+The project page copies a spring from rest as a CSS `linear()` easing and a duration. `tests/unit/linear-easing.test.ts` reads the written string back and compares it with the closed form at 2,000 moments, for the four presets and the nine corner and middle settings of the page's two sliders, each over 40, 208 and 900 px. The worst gap has to stay under 0.2% of the distance, and a control with the points thinned further has to fail that limit, which it does.
+
+This is one spring from rest and nothing more. CSS cannot start an easing from a speed, so a transition that uses the string restarts when it is interrupted, where the runtime carries on. The page says so beside the string. No browser run compares a CSS transition using the string against the runtime.
 
 ### Consumer cost
 
@@ -129,6 +138,7 @@ The first full measurement caught 8 of 9 faults. By the rules in the protocol th
 - **Queued commands** are covered by unit tests against the real controller with a stub DOM, not by the browser fidelity scripts.
 - **No field data.** Lab timings are not field INP. Automated accessibility checks pass, and that does not establish full accessibility. Keyboard, touch width, 200 percent zoom, reduced motion, long labels and dense data were tested. No one using a screen reader has tried it.
 - **No usability data.** No person has completed the task. See [`USABILITY.md`](USABILITY.md).
+- **The project page.** Its bars and outlines are moments worked out from the take at 60 Hz, not measured paints. Its status menu and bottom sheet run on the same runtime and are covered by browser tests, but every measured result here is for the expense inspector. The page was checked for long tasks in headless Chromium at 4 times CPU slowdown while dragging, scrubbing, replaying, racing and exporting, and none passed 50 ms. That is one lab check on one machine, not a frame rate.
 - **Manifest flag.** Most result manifests show `dirty: true`. The cause was earlier experiments in the same run writing to `results/`. The fidelity manifest, written first, shows the tree was clean at `909eca6`, and the flag now ignores that folder.
 - **Commit hashes.** A working file that no test or benchmark reads was removed from git history after these runs. That changed the commit hashes and no measured file. The hash here and in the manifests is the new one.
 
