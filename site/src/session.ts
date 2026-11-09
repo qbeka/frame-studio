@@ -1,8 +1,6 @@
 import { createController } from '../../packages/studio/runtime/controller';
 import type { MotionSpec, Rects } from '../../packages/studio/runtime/spec';
 import {
-  createTimeline,
-  inspectChannel,
   isAnimating,
   lastMark,
   pendingQueue,
@@ -11,7 +9,8 @@ import {
   type TakeEvent,
   type Timeline,
 } from '../../packages/studio/runtime/timeline';
-import { BASE } from './motion';
+import type { Showcase } from './showcase';
+import { edgeAt, type Levels } from './trace';
 
 export type Geometry = Record<string, Rects>;
 export type Command = Extract<TakeEvent, { type: 'command' }>;
@@ -39,6 +38,10 @@ export interface Snapshot {
   timeline: Timeline;
   /** The same take without the interruption, for the dotted line. */
   ghost: Timeline | null;
+  /** The same take under a second spec, when two are being raced. */
+  rival: Timeline | null;
+  rivalSpec: MotionSpec | null;
+  levels: Levels;
   steps: ReplayStep[];
   domain: { start: number; end: number };
   /** When the take has finished, with a little air. */
@@ -55,11 +58,10 @@ export interface Snapshot {
 export const LEAD_MS = 60;
 const TAIL_MS = 60;
 /** The curve keeps this width unless a take needs more, so its axis does not jump. */
-const WINDOW_MS = 1000;
-const WINDOW_STEP_MS = 200;
+const WINDOW_MS = 700;
+const WINDOW_STEP_MS = 100;
 export const SLOW_RATE = 0.25;
 const MARKER_GAP_MS = 10;
-const EXAMPLE_DELAY_MS = 150;
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -85,21 +87,29 @@ function createRateClock() {
 
 export type Session = ReturnType<typeof createSession>;
 
-export function createSession() {
+export interface SessionStart {
+  spec: MotionSpec;
+  /** When the interruption lands in the example take, after the first command. */
+  delayMs: number;
+}
+
+export function createSession(showcase: Showcase, start: SessionStart) {
   const clock = createRateClock();
   const listeners = new Set<() => void>();
   const frameListeners = new Set<(t: number) => void>();
 
-  let spec = BASE;
+  let spec = start.spec;
+  let rivalSpec: MotionSpec | null = null;
+  let levels: Levels = { low: 0, high: 0, clip: Number.POSITIVE_INFINITY };
   let geometry: Geometry | null = null;
   let snapshot: Snapshot | null = null;
   let take: Take = {
     startMs: 0,
-    initialState: BASE.initialState,
+    initialState: showcase.spec.initialState,
     scripted: true,
     events: [
-      { atMs: LEAD_MS, type: 'command', command: 'open' },
-      { atMs: LEAD_MS + EXAMPLE_DELAY_MS, type: 'command', command: 'cancel' },
+      { atMs: LEAD_MS, type: 'command', command: showcase.go },
+      { atMs: LEAD_MS + start.delayMs, type: 'command', command: showcase.back },
     ],
   };
   let phase: Phase = 'paused';
@@ -112,7 +122,7 @@ export function createSession() {
   let lockedDomain: Snapshot['domain'] | null = null;
   let cancelPending: (() => void) | null = null;
 
-  const controller = createController(BASE, {
+  const controller = createController(start.spec, {
     clock,
     history: true,
     onEvent(event) {
@@ -125,9 +135,9 @@ export function createSession() {
     },
   });
 
-  function replay(events: Command[], initialState: string, startMs: number, endMs?: number) {
+  function replay(events: Command[], initialState: string, startMs: number, endMs?: number, using: MotionSpec = spec) {
     return replayTake(
-      { ...spec, initialState },
+      { ...using, initialState },
       startMs,
       geometry![initialState]!,
       events,
@@ -145,7 +155,8 @@ export function createSession() {
     const ghost = marker === null ? null : replay(take.events.filter((_, i) => i !== marker), take.initialState, take.startMs).timeline;
     const first = take.events[0]?.atMs ?? take.startMs;
     const last = take.events[take.events.length - 1]?.atMs ?? first;
-    const settled = Math.max(lastMark(timeline).settleMs, ghost ? lastMark(ghost).settleMs : 0, last);
+    const rival = rivalSpec ? replay(take.events, take.initialState, take.startMs, undefined, rivalSpec).timeline : null;
+    const settled = Math.max(lastMark(timeline).settleMs, ghost ? lastMark(ghost).settleMs : 0, rival ? lastMark(rival).settleMs : 0, last);
     const start = first - LEAD_MS;
     const needed = Math.ceil((settled + TAIL_MS - start) / WINDOW_STEP_MS) * WINDOW_STEP_MS;
     const domain = lockedDomain ?? { start, end: start + Math.max(WINDOW_MS, needed) };
@@ -154,6 +165,9 @@ export function createSession() {
       take,
       timeline,
       ghost,
+      rival,
+      rivalSpec,
+      levels,
       steps,
       domain,
       takeEnd: lastMark(timeline).settleMs + TAIL_MS,
@@ -344,9 +358,10 @@ export function createSession() {
     seek,
     pause,
 
-    setGeometry(next: Geometry) {
+    setGeometry(next: Geometry, nextLevels: Levels) {
       const first = geometry === null;
       geometry = next;
+      levels = nextLevels;
       derive();
       if (first) {
         hold(snapshot!.takeEnd);
@@ -437,6 +452,15 @@ export function createSession() {
       derive();
     },
 
+    /**
+     * Holds the time axis still while the spring is dragged on the plot. A softer spring settles
+     * later, and an axis that grew under the pointer would read as a still softer spring.
+     */
+    holdAxis(held: boolean) {
+      lockedDomain = held ? snapshot!.domain : null;
+      if (!held) derive();
+    },
+
     /** Moves one interruption along the take. The panel follows, held at that moment. */
     moveMarker(index: number, atMs: number) {
       dismissPending();
@@ -453,10 +477,21 @@ export function createSession() {
       emit();
     },
 
-    /** The surface height at a moment of the take shown. */
-    reading(t: number): { position: number; velocity: number } {
-      const { position, velocity } = inspectChannel(snapshot!.timeline, 'surface', 'height', t);
-      return { position, velocity };
+    /** Races the take under a second spec, or stops when given null. Nothing else changes. */
+    setRival(next: MotionSpec | null) {
+      if (next === rivalSpec) return;
+      rivalSpec = next;
+      derive();
+      queueMicrotask(emit);
+    },
+
+    /** Moves the example's interruption without touching the panel, for restoring a link. */
+    exampleDelay: () => (take.events.length > 1 ? take.events[1]!.atMs - take.events[0]!.atMs : null),
+
+    /** The followed edge at a moment of the take shown. */
+    reading(t: number, of: 'take' | 'rival' = 'take'): { position: number; velocity: number } {
+      const timeline = of === 'rival' ? snapshot!.rival : snapshot!.timeline;
+      return edgeAt(timeline ?? snapshot!.timeline, showcase, t, levels);
     },
   };
 }
