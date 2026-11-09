@@ -9,10 +9,12 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium, type Page } from '@playwright/test';
 
-const PORT = 5320;
+const PORT = Number(process.env.FRAME_CAPTURE_PORT ?? 5320);
 const base = `http://localhost:${PORT}/`;
+/** The studio opens on its example take. The recordings make their own, so they start empty. */
+const studio = `${base}studio/`;
 const media = resolve('docs/media');
-const server = spawn('pnpm', ['exec', 'vite', 'preview', '--outDir', 'dist/site/studio', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
+const server = spawn('pnpm', ['exec', 'vite', 'preview', '--outDir', 'dist/site', '--port', String(PORT), '--strictPort'], { stdio: 'ignore', detached: true });
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 for (let i = 0; i < 100; i += 1) {
   try {
@@ -83,7 +85,7 @@ async function record(name: string, script: (page: Page) => Promise<void>) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir, size: { width: 1280, height: 720 } } });
   await context.addInitScript(overlay);
   const page = await context.newPage();
-  await page.goto(base);
+  await page.goto(`${studio}?take=none`);
   await page.waitForSelector('[data-frame-root]');
   await page.evaluate(() => document.fonts.ready);
   await script(page);
@@ -160,25 +162,33 @@ async function walkthrough(page: Page) {
 
 async function stills() {
   const browser = await chromium.launch();
-  const shot = async (w: number, h: number, name: string, prepare?: (page: Page) => Promise<void>, fullPage = false) => {
+  const shot = async (url: string, w: number, h: number, name: string, prepare?: (page: Page) => Promise<void>, fullPage = false) => {
     const page = await (await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2 })).newPage();
-    await page.goto(base);
+    await page.goto(url);
     await page.waitForSelector('[data-frame-root]');
     await page.evaluate(() => document.fonts.ready);
     await prepare?.(page);
     await page.screenshot({ path: join(media, name), fullPage });
   };
-  const inspected = async (page: Page) => {
-    await page.getByRole('button', { name: /play an example/ }).click();
-    await page.waitForTimeout(1300);
-    const box = (await page.locator('.ribbon-svg').boundingBox())!;
-    await page.mouse.click(box.x + box.width * 0.3, box.y + 40);
-    await page.waitForTimeout(150);
+  // The studio as it opens: the example take, held at its interruption.
+  const opened = async (page: Page) => {
+    await page.waitForSelector('.ribbon-ghost');
+    await page.waitForTimeout(300);
   };
-  await shot(1280, 640, 'cover.png', inspected);
-  await shot(1440, 900, 'studio.png', inspected);
-  await shot(390, 844, 'mobile.png', inspected);
-  await shot(1440, 900, 'empty.png');
+  // The project page with the interruption being dragged, which holds the card mid flight.
+  const dragging = async (page: Page) => {
+    await page.waitForSelector('.plot .line-take');
+    await page.locator('#take-note').click();
+    const box = (await page.locator('.marker').boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + 150);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 - 20, box.y + 150, { steps: 8 });
+    await page.waitForTimeout(200);
+  };
+  await shot(base, 1440, 800, 'cover.png', dragging);
+  await shot(studio, 1440, 900, 'studio.png', opened);
+  await shot(studio, 390, 844, 'mobile.png', opened);
+  await shot(`${studio}?take=none`, 1440, 900, 'empty.png');
   await browser.close();
 }
 
