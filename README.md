@@ -125,7 +125,7 @@ pnpm test
 pnpm test:e2e
 ```
 
-`pnpm check` runs the type checker and the writing rules. `pnpm test` runs 118 unit tests, including 50 digit reference values. `pnpm test:e2e` runs 90 browser tests against the project page, the studio, clean Vite and Next.js apps, and a full release run, which needs consumers built outside this folder and takes a few minutes.
+`pnpm check` runs the type checker and the writing rules. `pnpm test` runs 123 unit tests, including 50 digit reference values. `pnpm test:e2e` runs 104 browser tests against the project page, the studio, clean Vite and Next.js apps, and a full release run, which needs consumers built outside this folder and takes a few minutes.
 
 To run the suites in another engine:
 
