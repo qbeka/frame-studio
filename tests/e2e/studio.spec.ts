@@ -193,7 +193,7 @@ test('undo and redo restore the spec and the replay', async ({ page }) => {
 test('a bad number is refused and leaves the project alone', async ({ page }) => {
   await recordReversal(page);
   await stiffness(page).fill('-4');
-  await expect(page.getByText('Use 1 to 10000.')).toBeVisible();
+  await expect(page.getByText('Use 1 to 10000')).toBeVisible();
   await page.getByLabel('Mass').first().click();
   await expect(stiffness(page)).toHaveValue('420');
 });
@@ -282,7 +282,7 @@ test('a state edit changes the pose used by the same take', async ({ page }) => 
   await seekToFraction(page, 0.3);
   const transform = await live(page).locator('[data-frame-target=summary]').evaluate((e) => (e as HTMLElement).style.transform);
   expect(transform).toContain('translate');
-  await expect(page.getByText('This target holds text, so Frame never scales it.')).toBeVisible();
+  await expect(page.getByText('This target holds text, so Frame never scales it')).toBeVisible();
 });
 
 test('an interruption rule changes the replayed outcome', async ({ page }) => {

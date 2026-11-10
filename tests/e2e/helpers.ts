@@ -26,6 +26,8 @@ export async function openFresh(page: Page) {
   await page.evaluate(() => localStorage.clear());
   await page.goto(STUDIO);
   await expect(page.getByText('Use the component by pressing its first control')).toBeVisible();
+  // The workspace has arrived by the time a test looks at it.
+  await page.waitForFunction(() => document.getAnimations().every((item) => item.playState !== 'running'));
 }
 
 /** Opens the inspector and cancels partway through, using the real UI. */

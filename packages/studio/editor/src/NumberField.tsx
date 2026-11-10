@@ -57,7 +57,7 @@ export function NumberField({
       </div>
       {valid ? null : (
         <p className="field-error" id={`${id}-error`}>
-          Use {min} to {max}.
+          Use {min} to {max}
         </p>
       )}
     </div>

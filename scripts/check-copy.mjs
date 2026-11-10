@@ -41,7 +41,7 @@ for (const file of files) {
 const INTERFACE = /^(site\/src|packages\/studio\/editor\/src)\/.*\.tsx?$/;
 const CONTENT = /^site\/src\/showcase\//;
 /** Text that ends a sentence right before its element closes. */
-const CLOSING = /[A-Za-z0-9)%]\.\s*<\/(p|span|li|dd|dt|em|b|h[1-6]|button|label|figcaption|output|strong|small|div|a)>/g;
+const CLOSING = /[A-Za-z0-9)%}]\.\s*<\/(p|span|li|dd|dt|em|b|h[1-6]|button|label|figcaption|output|strong|small|div|a)>/g;
 /** A string or template that reads as a sentence and ends with a period. */
 const LITERAL = /(['"`])((?:(?!\1)[^\\\n]|\\.)*?[A-Za-z0-9)%}]\.)\1/g;
 const DEVELOPER = /throw new Error\(|console\.(warn|error|log)\(/;
