@@ -155,6 +155,8 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
   useEffect(() => {
     if (width === 0) return undefined;
     const draw = (t: number) => {
+      // A frame can land after a render has taken the drawing away and before this stops listening.
+      if (!reveal.current || !head.current) return;
       const at = clamp(scale.x(t), 0, width);
       const y = scale.y(edgeAt(timeline, showcase, t, levels).position);
       reveal.current!.setAttribute('width', at.toFixed(1));
@@ -458,12 +460,31 @@ export const Velocity = memo(function Velocity({ session, snap, showcase }: { se
   useEffect(() => {
     if (!drawn) return undefined;
     const draw = (t: number) => {
-      head.current!.setAttribute('transform', `translate(${clamp(drawn.x(t), 0, width).toFixed(1)} 0)`);
-      dot.current!.setAttribute('cy', drawn.y(edgeAt(timeline, showcase, t, levels).velocity * direction).toFixed(1));
+      if (!head.current || !dot.current) return;
+      head.current.setAttribute('transform', `translate(${clamp(drawn.x(t), 0, width).toFixed(1)} 0)`);
+      dot.current.setAttribute('cy', drawn.y(edgeAt(timeline, showcase, t, levels).velocity * direction).toFixed(1));
+      scrub.current?.setAttribute('aria-valuenow', String(Math.round(t - domain.start)));
+      scrub.current?.setAttribute('aria-valuetext', `${Math.max(0, Math.round(t - domain.start - LEAD_MS))} ms`);
     };
     draw(session.time());
     return session.onFrame(draw);
-  }, [session, drawn, timeline, levels, direction, width, showcase]);
+  }, [session, drawn, timeline, levels, direction, width, showcase, domain]);
+
+  // The strip shares the trace's time axis, so it can be scrubbed the same way.
+  const scrub = useRef<HTMLDivElement>(null);
+  const scrubbing = useRef(false);
+  const timeAt = (clientX: number) => {
+    const rect = box.current!.getBoundingClientRect();
+    return domain.start + (clamp(clientX - rect.left, 0, rect.width) / rect.width) * span;
+  };
+  function scrubKey(event: KeyboardEvent) {
+    const stepMs = event.shiftKey ? 50 : 10;
+    const now = session.time();
+    const next = { ArrowLeft: now - stepMs, ArrowDown: now - stepMs, ArrowRight: now + stepMs, ArrowUp: now + stepMs, Home: domain.start, End: snap.takeEnd }[event.key];
+    if (next === undefined) return;
+    event.preventDefault();
+    session.seek(next);
+  }
 
   return (
     <div className="velocity" ref={box}>
@@ -486,6 +507,29 @@ export const Velocity = memo(function Velocity({ session, snap, showcase }: { se
           </>
         ) : null}
       </svg>
+      <div
+        ref={scrub}
+        className="seek"
+        role="slider"
+        tabIndex={0}
+        aria-label="Moment on the speed strip"
+        aria-valuemin={0}
+        aria-valuemax={Math.round(span)}
+        aria-valuenow={0}
+        onKeyDown={scrubKey}
+        onPointerDown={(event: PointerEvent) => {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement).focus({ preventScroll: true });
+          (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+          scrubbing.current = true;
+          session.seek(timeAt(event.clientX));
+        }}
+        onPointerMove={(event: PointerEvent) => {
+          if (scrubbing.current) session.seek(timeAt(event.clientX));
+        }}
+        onPointerUp={() => (scrubbing.current = false)}
+        onPointerCancel={() => (scrubbing.current = false)}
+      />
       <span className="velocity-name">Speed{drawn ? `, peak ${Math.round(drawn.peak).toLocaleString('en-US')} px/s` : ''}</span>
     </div>
   );
