@@ -340,6 +340,23 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
     return done;
   }, [session, showcase]);
 
+  // ?capture lets the script that draws the share card ask the page for its own art.
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).has('capture')) return undefined;
+    const hook = window as unknown as { __frameArt?: (width: number, height: number, unit: number) => Promise<string | null> };
+    hook.__frameArt = async (width, height, unit) => {
+      const now = session.get();
+      if (!now) return null;
+      const { drawArt } = await import('./print');
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      drawArt(canvas.getContext('2d')!, now, showcase, { x: unit * 2, y: unit * 2, width: width - unit * 4, height: height - unit * 4 }, unit);
+      return canvas.toDataURL('image/png');
+    };
+    return () => void delete hook.__frameArt;
+  }, [session, showcase]);
+
   // Shortcuts work from anywhere on the page except a field, and never with a modifier held.
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
