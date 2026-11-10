@@ -220,9 +220,13 @@ body { margin: 0; background: var(--white); }
 @keyframes studio-in { from { opacity: 0; transform: translateY(6px); } }
 .topbar { animation: studio-in .32s cubic-bezier(.2, .7, .2, 1) both; }
 .pane { animation: studio-in .36s cubic-bezier(.2, .7, .2, 1) .06s both; }
-.canvas, .transport { animation: studio-in .4s cubic-bezier(.2, .7, .2, 1) .12s both; }
+/* The canvas only fades, so nothing above the live component is ever transformed. */
+@keyframes studio-fade { from { opacity: 0; } }
+.canvas { animation: studio-fade .4s ease-out .12s both; }
+.transport { animation: studio-in .4s cubic-bezier(.2, .7, .2, 1) .12s both; }
 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto; }
   .ui, .ui * { transition: none !important; }
+  .topbar, .pane, .canvas, .transport { animation: none; }
 }
