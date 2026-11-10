@@ -25,7 +25,7 @@ export function App({ registrations }: { registrations: AnyRegistration[] }) {
       <main className="empty-app">
         <h1>No component is registered</h1>
         <p>
-          Pass a registrations file to <code>frame dev</code>. Its default export should be a list of registrations.
+          Pass a registrations file to <code>frame dev</code>, with a list of registrations as its default export
         </p>
       </main>
     );

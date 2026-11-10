@@ -58,7 +58,7 @@ function Readout({ session, target, channel }: { session: Session; target: strin
       <div><dt>Position</dt><dd>{format(reading.position)}{unit}</dd></div>
       <div>
         <dt>Velocity</dt>
-        <dd title={carries ? undefined : 'A timed curve or a jump does not carry speed into what follows.'}>
+        <dd title={carries ? undefined : 'A timed curve or a jump does not carry speed into what follows'}>
           {format(reading.velocity)}{unit}/s{carries ? '' : ' (not carried)'}
         </dd>
       </div>
@@ -232,8 +232,8 @@ export function Transport({ spec, take, session, store, canLoadExample }: { spec
         />
       ) : (
         <div className="ribbon-empty">
-          <p className="lede">Use the component. Press its first control, then interrupt it before it settles.</p>
-          <p className="hint">Frame records what you do as named commands, with the measured layout at each one.</p>
+          <p className="lede">Use the component by pressing its first control, then interrupt it before it settles</p>
+          <p className="hint">Frame records what you do as named commands, with the measured layout at each one</p>
           {canLoadExample ? (
             <button type="button" className="link" onClick={session.loadExample}>Or play an example of an interrupted open</button>
           ) : null}

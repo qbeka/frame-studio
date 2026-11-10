@@ -158,7 +158,7 @@ export function Ribbon({
           data-active={marker.index === activeMarker || undefined}
           data-outcome={marker.outcome ?? undefined}
           style={{ left: x(marker.event.atMs) }}
-          aria-label={`${marker.event.command} at ${Math.round(marker.event.atMs - start)} ms. Arrow keys move it.`}
+          aria-label={`${marker.event.command} at ${Math.round(marker.event.atMs - start)} ms, moved with the arrow keys`}
           onPointerDown={(e) => pointerDown(e, marker.index)}
           onFocus={() => onPickMarker(marker.index)}
           onKeyDown={(event) => {

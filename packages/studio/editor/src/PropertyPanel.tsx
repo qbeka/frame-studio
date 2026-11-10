@@ -112,7 +112,7 @@ function CurveEditor({
         <>
           <NumberField label="Duration" unit="ms" value={curve.durationMs} min={LIMITS.durationMs[0]} max={LIMITS.durationMs[1]} step={10}
             onChange={(durationMs) => onChange({ ...curve, durationMs }, `${group}.duration`)} />
-          <p className="hint">A timed curve keeps position through an interruption but drops speed. A spring keeps both.</p>
+          <p className="hint">A timed curve keeps position through an interruption but drops speed, and a spring keeps both</p>
         </>
       )}
     </div>
@@ -137,7 +137,7 @@ function InterruptionEditor({ spec, transition, edit }: { spec: MotionSpec; tran
     <section className="section">
       <h3>When interrupted</h3>
       {transition.interruptions.length === 0 ? (
-        <p className="hint">No rule yet. Commands retarget from the current position and speed.</p>
+        <p className="hint">With no rule yet, commands retarget from the current position and speed</p>
       ) : null}
       {transition.interruptions.map((rule, index) => (
         <div className="rule" key={index} data-rule={rule.command}>
@@ -293,7 +293,7 @@ function StatePoses({ spec, id, edit }: { spec: MotionSpec; id: string; edit: Ed
         <h2>{state.label}</h2>
         <p className="tag">State</p>
       </header>
-      <p className="hint">A target's pose in this state, as an offset from its measured box.</p>
+      <p className="hint">A target's pose in this state, as an offset from its measured box</p>
       <Select label="Target" value={targetId} options={targetIds.map((t) => ({ value: t, label: t }))} onChange={setTargetId} />
       <label className="check">
         <input
@@ -308,7 +308,7 @@ function StatePoses({ spec, id, edit }: { spec: MotionSpec; id: string; edit: Ed
       <NumberField label="X offset" unit="px" value={pose.xPx} min={-LIMITS.offsetPx} max={LIMITS.offsetPx} step={1} onChange={(xPx) => setPose({ xPx }, `${group}.x`)} />
       <NumberField label="Y offset" unit="px" value={pose.yPx} min={-LIMITS.offsetPx} max={LIMITS.offsetPx} step={1} onChange={(yPx) => setPose({ yPx }, `${group}.y`)} />
       {spec.targets[targetId]!.text ? (
-        <p className="hint">This target holds text, so Frame never scales it.</p>
+        <p className="hint">This target holds text, so Frame never scales it</p>
       ) : (
         <NumberField label="Scale" unit="" value={pose.scale} min={0} max={10} step={0.01} onChange={(scale) => setPose({ scale }, `${group}.scale`)} />
       )}
@@ -337,9 +337,9 @@ export function PropertyPanel({
 
   if (selection.kind === 'transition') {
     const transition = spec.transitions.find((t) => t.id === selection.id);
-    if (!transition) return <p className="hint">Choose a transition.</p>;
+    if (!transition) return <p className="hint">Choose a transition</p>;
     return <TransitionPanel key={transition.id} spec={spec} transition={transition} edit={edit} />;
   }
-  if (!spec.states[selection.id]) return <p className="hint">Choose a state.</p>;
+  if (!spec.states[selection.id]) return <p className="hint">Choose a state</p>;
   return <StatePoses key={selection.id} spec={spec} id={selection.id} edit={edit} />;
 }

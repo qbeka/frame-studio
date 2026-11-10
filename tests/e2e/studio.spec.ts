@@ -167,7 +167,7 @@ test('reset goes to a known endpoint', async ({ page }) => {
   await page.getByRole('button', { name: 'Reset to this state' }).click();
   await expect(page.locator('.mode')).toHaveText('Live');
   await expect(live(page).getByLabel('Merchant')).toBeVisible();
-  await expect(page.getByText('Use the component.')).toBeVisible();
+  await expect(page.getByText('Use the component by pressing its first control')).toBeVisible();
 });
 
 test('inspecting blocks input until you choose how to return', async ({ page }) => {
@@ -208,7 +208,7 @@ test('recovers a draft after a reload, and can discard it', async ({ page }) => 
   await expect(page.locator('.marker')).toHaveCount(2);
   await page.getByRole('button', { name: 'Discard it' }).click();
   await expect(stiffness(page)).toHaveValue('420');
-  await expect(page.getByText('Use the component.')).toBeVisible();
+  await expect(page.getByText('Use the component by pressing its first control')).toBeVisible();
 });
 
 test('a take with no recorded layout survives a reload', async ({ page }) => {
@@ -253,7 +253,7 @@ test('a malformed file is refused with reasons and the project stays intact', as
 
   await open('{"format":"frame.project","version":1');
   await expect(page.getByRole('alertdialog')).toContainText('not valid JSON');
-  await expect(page.getByRole('alertdialog')).toContainText('Your current project has not changed.');
+  await expect(page.getByRole('alertdialog')).toContainText('Your current project has not changed');
   await page.getByRole('button', { name: 'Close' }).click();
 
   const project = JSON.parse(readFileSync('fixtures/inspector/inspector.frame.json', 'utf8'));
@@ -367,7 +367,7 @@ test.describe('a first visit, with no draft and no request for an empty take', (
     await expect(page.getByText('Recovered your draft')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Reset to this state' }).click();
-    await expect(page.getByText('Use the component.')).toBeVisible();
+    await expect(page.getByText('Use the component by pressing its first control')).toBeVisible();
     await expect(page.getByTestId('save-status')).toHaveText('Saved');
     await live(page).getByRole('button', { name: 'Edit expense' }).click();
     await expect(live(page).getByLabel('Merchant')).toBeVisible();

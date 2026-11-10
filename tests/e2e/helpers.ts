@@ -25,7 +25,7 @@ export async function openFresh(page: Page) {
   await page.goto(STUDIO);
   await page.evaluate(() => localStorage.clear());
   await page.goto(STUDIO);
-  await expect(page.getByText('Use the component.')).toBeVisible();
+  await expect(page.getByText('Use the component by pressing its first control')).toBeVisible();
 }
 
 /** Opens the inspector and cancels partway through, using the real UI. */

@@ -32,7 +32,7 @@ function ExportDialog({ store, onClose }: { store: ProjectStore; onClose: () => 
   return (
     <dialog className="dialog" open aria-label="Export">
       <h2 className="dialog-title">Export working files</h2>
-      <p>Copy the folder into your source tree. It needs React and a TypeScript bundler, and nothing from Frame.</p>
+      <p>Copy the folder into your source tree, where it needs React and a TypeScript bundler and nothing from Frame</p>
       <pre className="code">{`import { useFrame } from './motion/runtime';
 import { motion } from './motion/motion.config';
 import './motion/frame.css';
@@ -49,7 +49,7 @@ const frame = useFrame(motion);
       <details>
         <summary>Why there is no CSS export</summary>
         <ul className="file-list">
-          {conversions.map((c) => <li key={c.transition}><span>{c.transition}: {c.reasons[0] ?? 'No blockers, but CSS output is not built yet.'}</span></li>)}
+          {conversions.map((c) => <li key={c.transition}><span>{c.transition}: {c.reasons[0] ?? 'No blockers, but CSS output is not built yet'}</span></li>)}
         </ul>
       </details>
       <div className="dialog-actions">
@@ -76,11 +76,11 @@ function ImportErrors({ problems, onClose }: { problems: Problem[]; onClose: () 
   return (
     <dialog className="dialog" open aria-label="This file was not opened" role="alertdialog">
       <h2 className="dialog-title">This file was not opened</h2>
-      <p>Your current project has not changed.</p>
+      <p>Your current project has not changed</p>
       <ul className="problems">
         {problems.slice(0, 12).map((p, i) => <li key={i}><code>{p.path}</code> {p.message}</li>)}
       </ul>
-      {problems.length > 12 ? <p className="hint">And {problems.length - 12} more.</p> : null}
+      {problems.length > 12 ? <p className="hint">And {problems.length - 12} more</p> : null}
       <div className="dialog-actions">
         <button type="button" className="button" onClick={onClose}>Close</button>
       </div>

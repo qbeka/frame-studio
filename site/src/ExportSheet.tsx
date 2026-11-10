@@ -128,9 +128,8 @@ export function ExportSheet({
           {view === 'preview' ? (
             <>
               <Compare session={session} showcase={showcase} stage={stage} />
-              <p className="note">
-                The copy beside the component runs the motion.config.ts from the download, on the same runtime source the zip holds, inside this page. It gets your take as named commands and hand samples, and measures its own layout. A <a href="studio/try/">separate built app</a> uses those files with the default motion.
-              </p>
+              <p className="note">The copy beside the component runs the motion.config.ts from the download on the runtime source the zip holds, fed your take as named commands and hand samples, and measures its own layout</p>
+              <p className="note">A <a href="studio/try/">separate built app</a> uses those files with the default motion</p>
             </>
           ) : (
             <div className="files" tabIndex={0} role="group" aria-label="Exported files">

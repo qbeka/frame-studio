@@ -141,7 +141,7 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
         onWarning(warning) {
           const text =
             warning.code === 'rejected-command'
-              ? `"${warning.command}" has no transition from ${warning.state}.`
+              ? `"${warning.command}" has no transition from ${warning.state}`
               : `${warning.code}: ${warning.targets.join(', ')}`;
           setWarnings((current) => [...current.slice(-2), text]);
         },
