@@ -1,8 +1,8 @@
 {
-  "commit": "4f143993cbe336dcf54190035f4ec8e7e1311ff1",
+  "commit": "e0d45c67b76342d92b954969bf4d2d0439816f67",
   "dirty": false,
-  "measuredAt": "2026-11-09T20:28:09.514Z",
-  "command": "bench/run.ts --only authoring",
+  "measuredAt": "2026-11-10T04:10:31.915Z",
+  "command": "bench/run.ts",
   "node": "v22.16.0",
   "devDependencies": {
     "@axe-core/playwright": "4.11.0",
@@ -37,6 +37,6 @@
   },
   "warmup": 20,
   "samples": 60,
-  "cliExportMs": 165,
+  "cliExportMs": 237,
   "proxy": "editFrame and seekFrame end on a frame callback, which does not prove a displayed frame"
 }

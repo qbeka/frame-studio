@@ -1,7 +1,7 @@
 {
-  "commit": "909eca68bfccaa410da0d1f160668e24f2aa20db",
-  "dirty": true,
-  "measuredAt": "2026-11-06T07:51:38.491Z",
+  "commit": "e0d45c67b76342d92b954969bf4d2d0439816f67",
+  "dirty": false,
+  "measuredAt": "2026-11-10T04:07:13.947Z",
   "command": "bench/run.ts",
   "node": "v22.16.0",
   "devDependencies": {
@@ -17,8 +17,8 @@
     "vitest": "5.1.0"
   },
   "inputs": {
-    "pnpm-lock.yaml": "2b2cf9d3ac8e6dd72bb3f1362d2d4561e111b1fbe27b9b16ab170cf1494b470f",
-    "bench/PROTOCOL.md": "30d9e7136a4060ef1299a0b064819d4a579d462bf3b72efa89f9dbb4d2e72387",
+    "pnpm-lock.yaml": "f92869a75cee5ceb301fdc37299b92551effbaca64789c4f034cd1fa993ff1e0",
+    "bench/PROTOCOL.md": "389002d95075f1a86cae3a1b8d0615406194be6f59841891a6f1356c7b5a2ba6",
     "fixtures/inspector/inspector.frame.json": "261bd179959e6b3472b0c1f1cd686e956095ecc06fd0d37892853787ff7b82e4",
     "tests/support/scripts.ts": "227f34475b6a204ee4aeecb4670d0c00f6df7a5aeaee52e151efd152930eae79"
   },
