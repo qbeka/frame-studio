@@ -83,13 +83,13 @@ async function scrub(page: Page) {
   await page.mouse.up();
 }
 
-async function record(name: string, script: (page: Page) => Promise<void>) {
+async function record(name: string, script: (page: Page) => Promise<void>, url = `${studio}?take=none`) {
   const dir = mkdtempSync(join(tmpdir(), 'frame-capture-'));
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir, size: { width: 1280, height: 720 } } });
   await context.addInitScript(overlay);
   const page = await context.newPage();
-  await page.goto(`${studio}?take=none`);
+  await page.goto(url);
   await page.waitForSelector('[data-frame-root]');
   await page.evaluate(() => document.fonts.ready);
   await script(page);
@@ -98,6 +98,46 @@ async function record(name: string, script: (page: Page) => Promise<void>) {
   const webm = join(dir, readdirSync(dir)[0]!);
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', webm, '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', join(media, `${name}.mp4`)]);
   rmSync(dir, { recursive: true, force: true });
+}
+
+/** Drags from a point straight down or up, through `shape`, which maps time to distance. */
+async function pull(page: Page, from: { x: number; y: number }, dy: number, ms: number, shape: (x: number) => number, release = true) {
+  await page.mouse.move(from.x, from.y, { steps: 12 });
+  await page.mouse.down();
+  const steps = Math.max(4, Math.round(ms / 12));
+  for (let i = 1; i <= steps; i += 1) {
+    await page.mouse.move(from.x, from.y + dy * shape(i / steps));
+    if (i < steps) await wait(12);
+  }
+  if (release) await page.mouse.up();
+}
+
+const middle = async (page: Page, selector: string) => {
+  const box = (await page.locator(selector).boundingBox())!;
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+};
+const ease = (x: number) => x * x * (3 - 2 * x);
+const flick = (x: number) => x * x;
+
+/** The project page, driven by hand: a slow pull, a throw, a catch mid flight and a throw back. */
+async function hand(page: Page, say: (text: string) => Promise<void> = (text) => caption(page, text)) {
+  await page.waitForSelector('.plot .line-take');
+  await wait(1900);
+  await say('Take hold of the real component and pull');
+  await pull(page, await middle(page, '#grab'), 96, 900, ease, false);
+  await wait(450);
+  await page.mouse.up();
+  await wait(1100);
+  await say('Throw it, and the spring starts from your speed');
+  await pull(page, await middle(page, '#grab'), 120, 150, flick);
+  await wait(230);
+  await say('Catch it on the way and throw it back');
+  const card = await middle(page, '.live .fx-summary');
+  await pull(page, card, -110, 190, flick);
+  await wait(1500);
+  await say('Every take prints a plate');
+  await page.mouse.move(card.x + 260, card.y + 440, { steps: 14 });
+  await wait(900);
 }
 
 async function signature(page: Page) {
@@ -179,17 +219,17 @@ async function stills() {
     await page.waitForSelector('.ribbon-ghost');
     await page.waitForTimeout(300);
   };
-  // The project page with the interruption being dragged, which holds the card mid flight.
-  const dragging = async (page: Page) => {
+  // The project page with the card thrown open, caught on the way and held there by hand.
+  const held = async (page: Page) => {
     await page.waitForSelector('.plot .line-take');
     await page.locator('#take-note').click();
-    const box = (await page.locator('.marker').boundingBox())!;
-    await page.mouse.move(box.x + box.width / 2, box.y + 150);
-    await page.mouse.down();
-    await page.mouse.move(box.x + box.width / 2 + 16, box.y + 150, { steps: 8 });
-    await page.waitForTimeout(200);
+    await wait(300);
+    await pull(page, await middle(page, '#grab'), 120, 150, flick);
+    await wait(240);
+    await pull(page, await middle(page, '.live .fx-summary'), -64, 260, ease, false);
+    await wait(120);
   };
-  await shot(base, 1440, 800, 'cover.png', dragging);
+  await shot(base, 1440, 800, 'cover.png', held);
   await shot(studio, 1440, 900, 'studio.png', opened);
   await shot(studio, 390, 844, 'mobile.png', opened);
   await shot(`${studio}?take=none`, 1440, 900, 'empty.png');
@@ -199,6 +239,7 @@ async function stills() {
 const only = process.argv[2];
 try {
   if (!only || only === 'stills') await stills();
+  if (!only || only === 'hand') await record('hand', (page) => hand(page), base);
   if (!only || only === 'signature') await record('signature', signature);
   if (!only || only === 'walkthrough') await record('walkthrough', walkthrough);
 } finally {
