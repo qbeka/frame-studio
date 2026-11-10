@@ -216,14 +216,18 @@ body { margin: 0; background: var(--white); }
   .marker span { left: 16px; }
 }
 
-/* The workspace arrives in order: the bar, the panes, then the component and its ribbon. */
+/*
+ * The workspace arrives in order: the bar, the panes, then the component and its ribbon. Each
+ * animation only fills backwards. One that kept applying after it ended would leave its element a
+ * stacking context for good, and the export dialog, which lives in the bar, would sit under the canvas.
+ */
 @keyframes studio-in { from { opacity: 0; transform: translateY(6px); } }
-.topbar { animation: studio-in .32s cubic-bezier(.2, .7, .2, 1) both; }
-.pane { animation: studio-in .36s cubic-bezier(.2, .7, .2, 1) .06s both; }
+.topbar { animation: studio-in .32s cubic-bezier(.2, .7, .2, 1) backwards; }
+.pane { animation: studio-in .36s cubic-bezier(.2, .7, .2, 1) .06s backwards; }
 /* The canvas only fades, so nothing above the live component is ever transformed. */
 @keyframes studio-fade { from { opacity: 0; } }
-.canvas { animation: studio-fade .4s ease-out .12s both; }
-.transport { animation: studio-in .4s cubic-bezier(.2, .7, .2, 1) .12s both; }
+.canvas { animation: studio-fade .4s ease-out .12s backwards; }
+.transport { animation: studio-in .4s cubic-bezier(.2, .7, .2, 1) .12s backwards; }
 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto; }
