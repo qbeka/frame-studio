@@ -6,14 +6,24 @@
   font-display: swap;
 }
 
+:root {
+  /* The Quiet spring from rest over the expense card's 212 px, as Tune writes it out for CSS. It runs for 485 ms. */
+  --quiet: linear(0, 0.0008 0.412%, 0.005 1.031%, 0.0123 1.649%, 0.0224 2.268%, 0.0351 2.887%, 0.0554 3.711%, 0.0729 4.33%, 0.0987 5.155%, 0.1418 6.392%, 0.1886 7.629%, 0.2462 9.072%, 0.4231 13.402%, 0.4797 14.845%, 0.5263 16.082%, 0.5779 17.526%, 0.6263 18.969%, 0.6713 20.412%, 0.7127 21.856%, 0.7507 23.299%, 0.7851 24.742%, 0.8162 26.186%, 0.8478 27.835%, 0.8722 29.278%, 0.8966 30.928%, 0.9177 32.577%, 0.9356 34.227%, 0.9508 35.876%, 0.9635 37.526%, 0.9753 39.381%, 0.9846 41.237%, 0.9927 43.299%, 0.9987 45.361%, 1.0068 50.309%, 1.0091 54.021%, 1.0093 58.351%, 1.0021 80.825%, 1);
+}
+
+/* The first second: the name, the sentence and the stage arrive in that order, on the page's own spring. */
+@keyframes arrive { from { opacity: 0; transform: translateY(10px); } }
+.title h1 { animation: arrive .485s var(--quiet) both; }
+.title p { animation: arrive .485s var(--quiet) .06s both; }
+.title .control { animation: arrive .485s var(--quiet) .1s both; }
+#stage { animation: arrive .485s var(--quiet) .14s both; }
+
 .stage {
   --canvas-left: 392px;
   --canvas-height: 388px;
   --band-height: 62px;
   --ember: #a8501f;
   --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
-  /* The Quiet spring from rest over the expense card's 212 px, as Tune writes it out for CSS. It runs for 485 ms. */
-  --quiet: linear(0, 0.0008 0.412%, 0.005 1.031%, 0.0123 1.649%, 0.0224 2.268%, 0.0351 2.887%, 0.0554 3.711%, 0.0729 4.33%, 0.0987 5.155%, 0.1418 6.392%, 0.1886 7.629%, 0.2462 9.072%, 0.4231 13.402%, 0.4797 14.845%, 0.5263 16.082%, 0.5779 17.526%, 0.6263 18.969%, 0.6713 20.412%, 0.7127 21.856%, 0.7507 23.299%, 0.7851 24.742%, 0.8162 26.186%, 0.8478 27.835%, 0.8722 29.278%, 0.8966 30.928%, 0.9177 32.577%, 0.9356 34.227%, 0.9508 35.876%, 0.9635 37.526%, 0.9753 39.381%, 0.9846 41.237%, 0.9927 43.299%, 0.9987 45.361%, 1.0068 50.309%, 1.0091 54.021%, 1.0093 58.351%, 1.0021 80.825%, 1);
   height: auto;
 }
 .demo {
