@@ -36,7 +36,7 @@ if (mounts.length > 0 && typeof IntersectionObserver === 'function') {
       near.disconnect();
       void import('./essay').then(({ mountFigure }) => mounts.forEach(mountFigure));
     },
-    { rootMargin: '600px 0px' },
+    { rootMargin: '400px 0px' },
   );
   for (const mount of mounts) near.observe(mount);
 }
