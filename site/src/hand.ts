@@ -113,7 +113,11 @@ export function attachHand({ session, showcase, live, bar, onHold }: HandOptions
     } else {
       event.preventDefault();
       bar.focus({ preventScroll: true });
-      bar.setPointerCapture(event.pointerId);
+      try {
+        bar.setPointerCapture(event.pointerId);
+      } catch {
+        // A pointer the browser no longer knows cannot be captured. The window still hears it move.
+      }
     }
     pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, edge: 0, held: false, fromBar, lastMs: 0 };
     addEventListener('pointermove', move);
