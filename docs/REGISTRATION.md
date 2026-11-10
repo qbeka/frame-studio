@@ -65,7 +65,7 @@ frame.release();           // let go, and carry on into the state entered
 frame.send('fold');        // or let go the other way, with the command that goes back
 ```
 
-`grab` changes the state at once, as `send` does, and from then on every channel follows `drag` between the two measured layouts instead of following its curves. Progress may pass either end, so a pull can stretch. A hand outranks the interruption rules: it can take hold of a transition that is running, and the command it lets go with always leaves from where the hand was.
+`grab` changes the state at once, as `send` does, and from then on every channel follows `drag` between the two measured layouts instead of following its curves. Progress may pass either end, so a pull can stretch. Where one target leaves as another arrives, the first fades out over the first 45% of the way and the second fades in over the rest, so the two are never half shown over each other. A hand outranks the interruption rules: it can take hold of a transition that is running, and the command it lets go with always leaves from where the hand was.
 
 Letting go is an ordinary interruption. The spring starts from the hand's position, at the hand's speed, which is the slope of its last 80 ms of samples. A hand that has sent nothing for 50 ms has stopped, and lets go at rest. Under reduced motion the hand is still followed, and letting go lands at once.
 
