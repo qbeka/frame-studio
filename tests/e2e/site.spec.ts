@@ -68,7 +68,8 @@ async function pull(page: Page, from: { x: number; y: number }, dy: number, step
   await page.mouse.down();
   for (let i = 1; i <= steps; i += 1) {
     await page.mouse.move(from.x, from.y + (dy * i) / steps);
-    await page.waitForTimeout(pauseMs);
+    // No wait after the last move: a hand that lets go while moving lets go at once.
+    if (i < steps) await page.waitForTimeout(pauseMs);
   }
 }
 
