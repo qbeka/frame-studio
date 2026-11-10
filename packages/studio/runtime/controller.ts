@@ -341,6 +341,17 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       dispatch(command, t);
     },
 
+    start() {
+      wanted = true;
+      attach();
+      ensureLoop();
+    },
+    stop() {
+      wanted = false;
+      stopLoop();
+      detach?.();
+    },
+
     /**
      * A hand takes hold of the transition `command` starts. The state changes at once, as it does
      * for `send`, and from then on the motion follows `drag` instead of its curves. `progress` is
@@ -382,17 +393,6 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       ensureLoop();
     },
     isHeld: () => held !== null,
-
-    start() {
-      wanted = true;
-      attach();
-      ensureLoop();
-    },
-    stop() {
-      wanted = false;
-      stopLoop();
-      detach?.();
-    },
 
     /** Studio only: replaces the spec. The caller rebuilds the timeline with `load` or `reset`. */
     setSpec(next: MotionSpec) {
