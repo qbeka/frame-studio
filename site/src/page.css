@@ -25,6 +25,8 @@
   --ember: #a8501f;
   --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
   height: auto;
+  /* About the height the stage settles at, so the page under it barely moves when it arrives. */
+  min-height: 580px;
 }
 .demo {
   position: relative;

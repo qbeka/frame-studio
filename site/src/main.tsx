@@ -39,5 +39,11 @@ if (mounts.length > 0 && typeof IntersectionObserver === 'function') {
     },
     { rootMargin: '400px 0px' },
   );
-  for (const mount of mounts) near.observe(mount);
+  // Not before the stage has taken its place. Until then the essay sits right under the title,
+  // and everything in it would look near.
+  const begin = () => {
+    if (document.querySelector('#stage .plot svg')) for (const mount of mounts) near.observe(mount);
+    else requestAnimationFrame(begin);
+  };
+  begin();
 }

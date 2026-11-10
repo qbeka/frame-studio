@@ -858,14 +858,15 @@ test.describe('the essay under the stage', () => {
     await expect(delay).toHaveValue('150');
     await expect(rules.locator('output')).toHaveText('150 ms into Open');
     expect(await rules.locator('.rule p').first().textContent()).not.toBe(kept);
-    // Each plate is a real drawing.
-    const inked = await rules.locator('.rule canvas').first().evaluate((canvas: HTMLCanvasElement) => {
-      const { data } = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height);
-      let count = 0;
-      for (let i = 3; i < data.length; i += 4) if (data[i]! > 0) count += 1;
-      return count;
-    });
-    expect(inked).toBeGreaterThan(2_000);
+    // Each plate is a real drawing, printed a moment after the figure is asked for it.
+    const inked = () =>
+      rules.locator('.rule canvas').last().evaluate((canvas: HTMLCanvasElement) => {
+        const { data } = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height);
+        let count = 0;
+        for (let i = 3; i < data.length; i += 4) if (data[i]! > 0) count += 1;
+        return count;
+      });
+    await expect.poll(inked).toBeGreaterThan(2_000);
 
     const css = page.locator('.mount[data-figure=css]');
     await css.scrollIntoViewIfNeeded();
