@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Frame</title>
 <meta name="description" content="Tweak the motion in the actual component">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Frame">
+<meta property="og:description" content="Tweak the motion in the actual component">
+<meta property="og:url" content="https://www.qendrimbeka.com/projects/frame/">
+<meta property="og:image" content="https://www.qendrimbeka.com/projects/frame/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Frame, with an expense card thrown open and caught by hand, printed as a long exposure beside the trace of its moving edge">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.qendrimbeka.com/projects/frame/og.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/fonts/GeistSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/Geist-Regular.woff2" as="font" type="font/woff2" crossorigin>
 </head>
@@ -28,42 +39,144 @@
       <p>Tweak the motion in the actual component</p>
     </header>
 
-    <section class="stage" id="stage" aria-label="A working component, its motion drawn in time, and its controls">
-      <noscript><p class="prose">The demo needs JavaScript. The details below still work.</p></noscript>
+    <section class="stage" id="stage" aria-label="A working component you can press, drag or throw, with its motion drawn in time and printed as a long exposure">
+      <noscript><p class="notice">The demo needs JavaScript, and the details below work without it</p></noscript>
     </section>
 
-    <section class="reading" id="details" aria-labelledby="details-title">
-      <h2 id="details-title">Details</h2>
-      <p class="prose">Frame is a motion editor for working React components, built around one question: what should happen when someone changes their mind halfway? You use your real component, interrupt it, and decide what it does at that moment. Export gives you a small runtime that behaves the same way in your app, with no dependency except React.</p>
-      <p class="prose">The stage draws the take at the component's own scale, so the line is the path of its moving edge and each bar is that edge at one 60 Hz frame. The bars and the faint outlines are worked out from the take, they are not measured paints. Drag the round handle to move the interruption, drag the square one to reshape the spring, and the address keeps what you made.</p>
-      <p class="prose">The three components are registered the way any component is, and the <a href="studio/">studio</a> opens the same three with every state, target and command. Race runs a second copy of the component on another spring or rule, from the same commands. The copy under Export runs the downloaded motion config on the runtime source that the zip holds, inside this page, and the <a href="studio/try/">exported build</a> is a separate app made from those files for the expense card with its default motion.</p>
+    <article class="essay" id="details" aria-labelledby="details-title">
+      <section class="lead reveal">
+        <h2 id="details-title">What should a component do when someone changes their mind halfway</h2>
+        <div class="columns">
+          <p class="prose">Frame is a motion editor for working React components, built around that one question. You use your real component, interrupt it, and decide what it does at that moment. Export gives you a small runtime that behaves the same way in your app, with no dependency except React.</p>
+          <p class="prose">The stage above is the core of that editor on three small components. Press one, drag it or throw it, and everything else on the stage is worked out from what you did. The trace is the path of its moving edge at the component's own scale, and the plate behind it is the same take as a long exposure.</p>
+        </div>
+      </section>
 
-      <h3>Results</h3>
-      <dl class="results">
-        <div><dt>Studio and export</dt><dd><b>At most 0.000015 px and 0 opacity</b>120 scripted runs in Chromium, WebKit and Firefox, against a 0.5 px target. Both sides run the same code, so this tests the build, the CSS and the replay path, not the physics.</dd></div>
-        <div><dt>Replay and export</dt><dd><b>At most 0.000015 px and 0 opacity</b>The replay you inspect against the export, 10,932 comparisons per engine, against the same target. It leaves out the resize script.</dd></div>
-        <div><dt>Physics</dt><dd><b>Worst 0.094 px</b>Real browser geometry against an independent RK4 solution, against a 0.11 px target. Most of that is the 0.1 px settle snap.</dd></div>
-        <div><dt>Could the checks fail</dt><dd><b>9 of 9 seeded faults caught</b>0 of 2 clean builds were flagged. The first full run caught 8 of 9, so it was discarded and everything was measured again.</dd></div>
-        <div><dt>Cost to an app</dt><dd><b>6.2 KB of JavaScript, 0.14 KB of CSS</b>Gzipped, over the same UI with no animation, in a Vite build of this one interaction. Motion 14.9.1 added 45.1 KB there, and Motion does far more.</dd></div>
-        <div><dt>Editing at 30 targets</dt><dd><b>Median 1.1 ms, p95 1.3 ms</b>Edit to DOM in a production build of the studio, against a 16.7 ms target.</dd></div>
-        <div><dt>The CSS line</dt><dd><b>Within 0.2% of the distance</b>The copied linear() easing against the same spring from rest, for the four presets and the corners of both sliders. It cannot carry speed through an interruption.</dd></div>
-        <div><dt>Speed at runtime</dt><dd><b>No clear win</b>Main thread per open and reverse cycle: Frame 13.9 ms (10.9 to 18.8), Motion 14.9.1 16.6 ms (14.6 to 20.5). The ranges overlap.</dd></div>
-      </dl>
+      <section class="chapter reveal">
+        <h3>A hand is one more interruption</h3>
+        <div class="columns">
+          <p class="prose">A press that lands mid flight and a hand that lets go mid flight ask the runtime for the same thing: start a new spring from wherever the component is, at whatever speed it has. So the hand needed no physics of its own. While it holds on, every channel follows its progress between the two measured layouts. When it lets go, the speed is the slope of its last 80 ms of pointer samples, and the ordinary interruption code takes over from there.</p>
+          <p class="prose">Nothing in between is eased or guessed, which is why a hard throw overshoots and a slow one does not. What is yours to decide is the rule. Below is one press and the press that undoes it, under each of the three rules Frame can export. Move the second press and all three are worked out again.</p>
+        </div>
+        <figure class="figure wide">
+          <div class="mount" data-figure="rules"></div>
+          <figcaption>The take on the stage's component under each rule, worked out by the runtime in this page from the layout it measured, with the plate on the left of each and the trace of the edge on the right</figcaption>
+        </figure>
+      </section>
 
-      <h3>Limits</h3>
-      <ul class="limits">
-        <li>No person has run the usability task, so there is no usability result.</li>
-        <li>All timings come from one Mac in headless browsers, with other work running. They are lab timings, not field data.</li>
-        <li>No physical phone was tested, and touch was emulated.</li>
-        <li>No one using a screen reader has tried it, and no human has reviewed the code.</li>
-        <li>Only registered components work. Elements outside the registered root do not animate.</li>
-        <li>The results above were measured on the expense card. The menu and the sheet use the same runtime and were not part of those runs.</li>
-        <li>Scrubbing back across a viewport change reflows text to the current width.</li>
-      </ul>
+      <section class="chapter reveal">
+        <h3>What a plate records</h3>
+        <div class="columns">
+          <p class="prose">A plate is a long exposure of a take. The shutter opens at the first event and closes when the motion rests, and the moving target leaves its outline wherever it is, so ink builds up where it lingers. A turning point prints as a dark line, a slow settle as a dense band, and a snap leaves almost nothing. A flash at 60 Hz adds one crisp outline for each display frame.</p>
+          <p class="prose">The lines are moments worked out from the take, they are not measured paints. Save plate gives you the print as an image, with the trace beside it at the same scale, so a dark line on the plate sits level with the turn in the curve that made it. Copy link gives an address that holds the take itself, every pointer sample of it, and replays it.</p>
+        </div>
+      </section>
 
-      <h3>Method</h3>
-      <p class="prose">The <a href="https://github.com/qbeka/frame-studio/blob/main/docs/REPORT.md">report</a> has the tables, raw data and failures. Every number comes from a recorded run.</p>
-    </section>
+      <section class="chapter reveal">
+        <h3>What CSS can hold, and where it stops</h3>
+        <div class="columns">
+          <p class="prose">Tune also writes the opening spring as a CSS linear() easing, for when a stylesheet is all you want. From rest it follows the spring within 0.2% of the distance, which for the expense card is under half a pixel. A unit test reads the written string back and checks that bound for 13 springs at 3 distances.</p>
+          <p class="prose">What an easing cannot hold is a speed. A CSS transition that is reversed starts its easing again from rest, so the edge stops dead and sets off again. The runtime carries the speed through the turn. The right half of the figure works both out for the reversal above. It is computed here from the CSS rule for a reversed transition, and no browser run compares the two.</p>
+        </div>
+        <figure class="figure wide">
+          <div class="mount" data-figure="css"></div>
+          <figcaption>Left, the opening spring on the stage and its copied linear() easing, with the gap between them under it against the 0.2% bound drawn to scale. Right, the same reversal by the runtime and by a CSS transition using that easing, whose speed moves in steps because a linear() easing is made of straight pieces</figcaption>
+        </figure>
+      </section>
+
+      <section class="chapter reveal">
+        <h3>Two builds of one program</h3>
+        <div class="columns">
+          <p class="prose">The studio preview and the exported app are two builds of the same evaluator, so comparing them says nothing about the physics. It tests everything around the physics: the build, the CSS and the replay path. Across 120 scripted runs in Chromium, WebKit and Firefox the two drew within <span data-claim="fidelity">0.000015 px</span> of each other, against a 0.5 px target.</p>
+          <p class="prose">Whether the springs are right is a separate question with a separate answer. Real browser geometry was read against an independent RK4 solution that shares no code with the runtime. The worst case was <span data-claim="reference">0.094 px</span>, against a 0.11 px target, and most of that is the 0.1 px snap when a spring settles.</p>
+        </div>
+        <figure class="figure wide ruler" aria-label="Both results on one logarithmic ruler of pixels">
+          <div class="ruler-row">
+            <p class="ruler-name">The same code, built twice <span>Studio against export, worst of 40,386 comparisons in three engines</span></p>
+            <div class="ruler-track">
+              <i class="ruler-span" style="--from: 8.5; --to: 89.3"></i>
+              <i class="ruler-dot forest" style="--x: 8.5"><b data-claim="fidelity">0.000015 px</b></i>
+              <i class="ruler-mark" style="--x: 89.3" data-side="left"><b>0.5 px target</b></i>
+            </div>
+          </div>
+          <div class="ruler-row">
+            <p class="ruler-name">Different math <span>The exported app against RK4, worst of 5 runs</span></p>
+            <div class="ruler-track">
+              <i class="ruler-span" style="--from: 76.3; --to: 77.5"></i>
+              <i class="ruler-dot" style="--x: 76.3" data-side="left"><b data-claim="reference">0.094 px</b></i>
+              <i class="ruler-mark" style="--x: 77.5"><b>0.11 px target</b></i>
+            </div>
+          </div>
+          <ol class="ruler-axis" aria-hidden="true">
+            <li style="--x: 5.36">0.00001</li>
+            <li style="--x: 23.2">0.0001</li>
+            <li style="--x: 41.1">0.001</li>
+            <li style="--x: 58.9">0.01</li>
+            <li style="--x: 76.8">0.1</li>
+            <li style="--x: 94.6">1 px</li>
+          </ol>
+          <figcaption>One ruler, in pixels, where each step is ten times the last. The first number is agreement between two builds and the second is how far the browser sat from independent physics</figcaption>
+        </figure>
+        <div class="columns">
+          <p class="prose">A check that cannot fail proves nothing, so 9 faults were written into clean builds, from a dropped velocity to damping set 2 percent high. All 9 were caught, and neither of the 2 clean builds was flagged. The first full run caught 8 of 9, so it was thrown out, the fixture was changed so the missing fault could show, and everything was measured again.</p>
+        </div>
+      </section>
+
+      <section class="chapter reveal">
+        <h3>What it costs</h3>
+        <div class="measures">
+          <figure class="measure">
+            <h4>Added to an app</h4>
+            <dl class="bars">
+              <div><dt>Frame export</dt><dd><i style="--w: 13.7"></i><b data-claim="size">6.2 KB</b></dd></div>
+              <div><dt>Motion 14.9.1</dt><dd><i class="plain" style="--w: 99.8"></i><b>45.1 KB</b></dd></div>
+              <div><dt>Motion with LazyMotion</dt><dd><i class="plain" style="--w: 100"></i><b>45.2 KB</b></dd></div>
+            </dl>
+            <figcaption>Gzipped JavaScript over the same UI with no animation, in a Vite build of this one interaction, and Motion does far more than this runtime</figcaption>
+          </figure>
+          <figure class="measure">
+            <h4>No clear win at runtime</h4>
+            <dl class="ranges" data-claim="runtime">
+              <div><dt>Frame</dt><dd><i style="--from: 49.5; --to: 85.5; --at: 63.2"></i><b>13.9 ms</b></dd></div>
+              <div><dt>Motion 14.9.1</dt><dd><i class="plain" style="--from: 66.4; --to: 93.2; --at: 75.5"></i><b>16.6 ms</b></dd></div>
+              <div><dt>Motion with LazyMotion</dt><dd><i class="plain" style="--from: 68.2; --to: 94.1; --at: 77.3"></i><b>17.0 ms</b></dd></div>
+            </dl>
+            <figcaption>Main thread per open and reverse cycle in Chromium, as the median of 5 runs with the range across them on a scale from 0 to 22 ms, and the ranges overlap</figcaption>
+          </figure>
+          <figure class="measure">
+            <h4>Editing inside one frame</h4>
+            <dl class="bars budget">
+              <div><dt>Edit to DOM, 30 targets</dt><dd><i style="--w: 6.6"></i><b data-claim="authoring">1.1 ms</b></dd></div>
+              <div><dt>One 60 Hz frame</dt><dd><i class="plain" style="--w: 100"></i><b>16.7 ms</b></dd></div>
+            </dl>
+            <figcaption>Median in a production build of the studio, with a p95 of <span data-claim="authoring-p95">1.3 ms</span>, against a target of one frame</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="chapter reveal">
+        <h3>Limits</h3>
+        <ul class="limits">
+          <li>No person has run the usability task, so there is no usability result.</li>
+          <li>All timings come from one Mac in headless browsers, with other work running. They are lab timings, not field data.</li>
+          <li>No physical phone was tested, and touch was emulated.</li>
+          <li>No one using a screen reader has tried it, and no human has reviewed the code.</li>
+          <li>Only registered components work. Elements outside the registered root do not animate.</li>
+          <li>Every measured result is for the expense card and for presses. The menu, the sheet and the hand run on the same runtime, covered by unit and browser tests, and were not part of those runs.</li>
+          <li>The example takes that use a hand are written as pointer samples. No person recorded them.</li>
+          <li>Scrubbing back across a viewport change reflows text to the current width.</li>
+        </ul>
+      </section>
+
+      <footer class="ending reveal">
+        <p class="prose">Every number on this page comes from a recorded run, and the report has the tables, the raw data and the failures.</p>
+        <nav aria-label="Where to go next">
+          <a href="studio/"><b>Open the studio</b><span>The same three components with every state, target and command</span></a>
+          <a href="https://github.com/qbeka/frame-studio/blob/main/docs/REPORT.md"><b>Read the report</b><span>What was measured, what failed and what the numbers leave out</span></a>
+          <a href="https://github.com/qbeka/frame-studio"><b>Browse the code</b><span>The runtime is nine files, and the export copies them as they are</span></a>
+        </nav>
+      </footer>
+    </article>
 
     <div class="page-end">
       <a class="quiet back" href="https://www.qendrimbeka.com/">
