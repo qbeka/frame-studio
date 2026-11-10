@@ -35,8 +35,8 @@ function createFollowClock() {
 
 /**
  * A second, separate copy of the component under its own spec, with no history and no seeking.
- * It gets the take's commands at their recorded times and works out everything else for itself,
- * from its own measured layout. The race and the export preview are both this.
+ * It gets the take's commands and hand samples at their recorded times and works out everything
+ * else for itself, from its own measured layout. The race and the export preview are both this.
  */
 export function Follower({
   spec,
@@ -72,13 +72,17 @@ export function Follower({
     const follow = (t: number) => {
       const current = latest.current;
       const sameStart = ran !== null && ran.startMs === current.startMs && ran.initialState === current.initialState;
-      const sameSoFar = sameStart && ran!.events.slice(0, sent).every((event, i) => event.atMs === current.events[i]?.atMs && event.command === current.events[i]?.command);
+      const sameSoFar = sameStart && ran!.events.slice(0, sent).every((event, i) => event === current.events[i] || JSON.stringify(event) === JSON.stringify(current.events[i]));
       if (!sameSoFar || t < last) restart();
       ran = current;
       while (sent < current.events.length && current.events[sent]!.atMs <= t) {
         const event = current.events[sent]!;
         clock.advanceTo(event.atMs);
-        flushSync(() => controller.send(event.command));
+        // A hand goes through the same three calls a component would make for a pointer.
+        if (event.type === 'command') flushSync(() => controller.send(event.command));
+        else if (event.type === 'grab') flushSync(() => controller.grab(event.command, event.progress));
+        else if (event.type === 'drag') controller.drag(event.progress);
+        else controller.release();
         sent += 1;
       }
       clock.advanceTo(t);

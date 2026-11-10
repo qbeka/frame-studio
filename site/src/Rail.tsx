@@ -1,12 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import type { PropValue } from '../../packages/studio/authoring/registration';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import type { MotionSpec, SpringCurve } from '../../packages/studio/runtime/spec';
 import { describeSpring } from '../../packages/studio/runtime/spring';
-import { lastMark } from '../../packages/studio/runtime/timeline';
-import { Follower } from './Follower';
 import { springToLinear } from './linearEasing';
 import { DAMPING, FEELS, RULES, STIFFNESS, curveOf, curvesFor, feelOf, label, policyOf, sameSpec, withCurve, withPolicy, type CurveId, type Policy } from './motion';
-import { LEAD_MS, type Session, type Snapshot } from './session';
+import type { Snapshot } from './session';
 import type { Showcase } from './showcase';
 
 export const announce = (text: string) => {
@@ -193,78 +190,26 @@ export function rivalOf(spec: MotionSpec, showcase: Showcase, choice: RaceChoice
   return withPolicy(withCurve(spec, showcase, 'go', curve), showcase, choice.policy);
 }
 
-const OUTCOME: Record<Policy, string> = { retarget: 'reverses', queue: 'finishes first', ignore: 'ignores it' };
-
-export function Race({
-  snap,
-  showcase,
-  session,
-  props,
-  choice,
-  onChoice,
-}: {
-  snap: Snapshot;
-  showcase: Showcase;
-  session: Session;
-  props: Record<string, PropValue>;
-  choice: RaceChoice;
-  onChoice: (choice: RaceChoice) => void;
-}) {
-  const origin = snap.domain.start + LEAD_MS;
-  const ours = curveOf(snap.spec, showcase, 'go');
-  const settles = (ms: number) => `${Math.max(0, Math.round(ms - origin))} ms`;
-  const a = lastMark(snap.timeline).settleMs;
-  const b = snap.rival ? lastMark(snap.rival).settleMs : a;
-  const gap = Math.round(b - a);
+/** The two choices for side B, small enough to sit under it. */
+export function RaceControls({ showcase, choice, onChoice }: { showcase: Showcase; choice: RaceChoice; onChoice: (choice: RaceChoice) => void }) {
   const go = label(showcase, showcase.go);
   const back = label(showcase, showcase.back);
-  const landed = snap.take.events[1];
-  const version = useRef(0);
-  const rivalSpec = snap.rivalSpec;
-  useMemo(() => {
-    version.current += 1;
-  }, [rivalSpec]);
-
   return (
     <div className="race">
-      <section className="group">
-        <header>
-          <h2>Race the same take</h2>
-        </header>
-        <div className="seg" role="group" aria-label={`Spring for ${go} on side B`}>
-          {FEELS.map((item) => (
-            <button key={item.name} type="button" className="control" aria-pressed={item.name === choice.feel} onClick={() => onChoice({ ...choice, feel: item.name })}>
-              {item.name}
-            </button>
-          ))}
-        </div>
-        <div className="seg" role="group" aria-label={`What ${back} does on side B`}>
-          {RULES.map((item) => (
-            <button key={item.policy} type="button" className="control" aria-pressed={item.policy === choice.policy} onClick={() => onChoice({ ...choice, policy: item.policy })}>
-              {item.short}
-            </button>
-          ))}
-        </div>
-      </section>
-      <div className="lane" id="rival" inert>
-        {rivalSpec ? <Follower key={version.current} spec={rivalSpec} showcase={showcase} session={session} take={snap.take} props={props} /> : null}
+      <div className="seg" role="group" aria-label={`Spring for ${go} on side B`}>
+        {FEELS.map((item) => (
+          <button key={item.name} type="button" className="control" aria-pressed={item.name === choice.feel} onClick={() => onChoice({ ...choice, feel: item.name })}>
+            {item.name}
+          </button>
+        ))}
       </div>
-      <dl className="score">
-        <div data-side="a">
-          <dt><i />A</dt>
-          <dd>{feelOf(ours) ?? `${ours.stiffness} / ${ours.damping}`}, {OUTCOME[policyOf(snap.spec, showcase)]}</dd>
-          <dd className="num" id="settle-a">{settles(a)}</dd>
-        </div>
-        <div data-side="b">
-          <dt><i />B</dt>
-          <dd>{choice.feel}, {OUTCOME[choice.policy]}</dd>
-          <dd className="num" id="settle-b">{settles(b)}</dd>
-        </div>
-      </dl>
-      <p className="note" id="race-note">
-        Both get {go} at 0 ms{landed ? ` and ${back} at ${Math.round(landed.atMs - origin)} ms` : ''}.{' '}
-        {gap === 0 ? 'They come to rest together.' : `B comes to rest ${Math.abs(gap)} ms ${gap > 0 ? 'later' : 'sooner'}.`}
-      </p>
+      <div className="seg" role="group" aria-label={`What ${back} does on side B`}>
+        {RULES.map((item) => (
+          <button key={item.policy} type="button" className="control" aria-pressed={item.policy === choice.policy} onClick={() => onChoice({ ...choice, policy: item.policy })}>
+            {item.short}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

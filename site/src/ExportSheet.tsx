@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import type { PropValue } from '../../packages/studio/authoring/registration';
+import type { MotionSpec } from '../../packages/studio/runtime/spec';
 import type { ExportBundle } from './exportFiles';
-import { Follower } from './Follower';
 import { announce } from './Rail';
 import type { Session, Snapshot } from './session';
 import type { Showcase } from './showcase';
@@ -50,26 +49,28 @@ export function ExportSheet({
   snap,
   session,
   showcase,
-  props,
   stage,
   onReady,
+  onSpec,
 }: {
   snap: Snapshot;
   session: Session;
   showcase: Showcase;
-  props: Record<string, PropValue>;
   stage: RefObject<HTMLElement | null>;
   onReady: () => void;
+  /** The spec read back out of the generated file, for the copy beside the component to run. */
+  onSpec: (spec: MotionSpec | null) => void;
 }) {
   const [make, setMake] = useState<typeof import('./exportFiles').exportFor | null>(null);
   const [view, setView] = useState<'preview' | 'files'>('preview');
   const [saved, setSaved] = useState(false);
-  const version = useRef(0);
   const shown = snap.spec.transitions.find((item) => item.command === showcase.go && item.from === showcase.from)!.id;
-  const bundle: ExportBundle | null = useMemo(() => {
-    version.current += 1;
-    return make?.(snap.spec, showcase.exportName, shown) ?? null;
-  }, [make, snap.spec, showcase, shown]);
+  const bundle: ExportBundle | null = useMemo(() => make?.(snap.spec, showcase.exportName, shown) ?? null, [make, snap.spec, showcase, shown]);
+  const exported = bundle?.spec ?? null;
+  useEffect(() => {
+    onSpec(exported);
+    return () => onSpec(null);
+  }, [exported, onSpec]);
 
   useEffect(() => {
     let live = true;
@@ -124,14 +125,11 @@ export function ExportSheet({
       </section>
       {bundle ? (
         <>
-          <div className="lane" id="exported" inert hidden={view !== 'preview'}>
-            <Follower key={version.current} spec={bundle.spec} showcase={showcase} session={session} take={snap.take} props={props} />
-          </div>
           {view === 'preview' ? (
             <>
               <Compare session={session} showcase={showcase} stage={stage} />
               <p className="note">
-                This copy runs the motion.config.ts from the download, on the same runtime source the zip holds, inside this page. It gets your take as named commands and measures its own layout. A <a href="studio/try/">separate built app</a> uses those files with the default motion.
+                The copy beside the component runs the motion.config.ts from the download, on the same runtime source the zip holds, inside this page. It gets your take as named commands and hand samples, and measures its own layout. A <a href="studio/try/">separate built app</a> uses those files with the default motion.
               </p>
             </>
           ) : (
@@ -148,7 +146,7 @@ export function ExportSheet({
           )}
         </>
       ) : (
-        <p className="note">Building the files.</p>
+        <p className="note">Building the files</p>
       )}
     </div>
   );
