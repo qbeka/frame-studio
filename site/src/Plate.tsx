@@ -32,12 +32,20 @@ export const Plate = memo(function Plate({ session, snap, showcase, left, top }:
       state.current = { ...state.current, width, height, epoch: -1 };
     };
     size();
+    // On the next frame, so resizing the canvas is never done inside the observer's own pass.
+    let frame = 0;
     const observer = new ResizeObserver(() => {
-      size();
-      draw(session.time());
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        size();
+        draw(session.time());
+      });
     });
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
