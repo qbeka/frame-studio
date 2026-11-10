@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { MotionSpec } from '../../packages/studio/runtime/spec';
 import type { ExportBundle } from './exportFiles';
 import { announce } from './Rail';
@@ -65,7 +65,13 @@ export function ExportSheet({
   const [view, setView] = useState<'preview' | 'files'>('preview');
   const [saved, setSaved] = useState(false);
   const shown = snap.spec.transitions.find((item) => item.command === showcase.go && item.from === showcase.from)!.id;
-  const bundle: ExportBundle | null = useMemo(() => make?.(snap.spec, showcase.exportName, shown) ?? null, [make, snap.spec, showcase, shown]);
+  // The files are written in a task of their own, after the panel that asked for them has opened.
+  const [bundle, setBundle] = useState<ExportBundle | null>(null);
+  useEffect(() => {
+    if (!make) return undefined;
+    const timer = setTimeout(() => setBundle(make(snap.spec, showcase.exportName, shown)));
+    return () => clearTimeout(timer);
+  }, [make, snap.spec, showcase, shown]);
   const exported = bundle?.spec ?? null;
   useEffect(() => {
     onSpec(exported);
