@@ -22,7 +22,7 @@ if (calm || typeof IntersectionObserver !== 'function') {
         seen.unobserve(entry.target);
       }
     },
-    { rootMargin: '0px 0px -12% 0px' },
+    { rootMargin: '0px 0px -4% 0px' },
   );
   for (const section of sections) seen.observe(section);
 }
