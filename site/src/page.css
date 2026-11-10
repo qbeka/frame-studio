@@ -13,10 +13,10 @@
 
 /* The first second: the name, the sentence and the stage arrive in that order, on the page's own spring. */
 @keyframes arrive { from { opacity: 0; transform: translateY(10px); } }
-.title h1 { animation: arrive .485s var(--quiet) both; }
-.title p { animation: arrive .485s var(--quiet) .06s both; }
-.title .control { animation: arrive .485s var(--quiet) .1s both; }
-#stage { animation: arrive .485s var(--quiet) .14s both; }
+.title h1 { animation: arrive .485s var(--quiet) backwards; }
+.title p { animation: arrive .485s var(--quiet) .06s backwards; }
+.title .control { animation: arrive .485s var(--quiet) .1s backwards; }
+#stage { animation: arrive .485s var(--quiet) .14s backwards; }
 
 .stage {
   --canvas-left: 392px;
@@ -229,7 +229,7 @@
 .rail {
   grid-area: rail; min-width: 0; height: 0; min-height: 100%; padding: 0 12px 4px;
   border-left: 1px solid var(--line); overflow: hidden; background: var(--paper);
-  animation: rail-in .485s var(--quiet) both;
+  animation: rail-in .485s var(--quiet) backwards;
 }
 @keyframes rail-in { from { opacity: 0; transform: translateX(10px); } }
 .group { min-width: 0; padding: 4px 0 6px; border-bottom: 1px solid var(--line); }
@@ -358,7 +358,7 @@
 .help {
   position: absolute; z-index: 5; top: 50px; right: 8px; width: min(340px, calc(100% - 16px)); padding: 6px 14px 10px;
   border: 1px solid var(--line-strong); border-radius: 10px; background: var(--paper); box-shadow: var(--float-shadow);
-  animation: help-in .485s var(--quiet) both;
+  animation: help-in .485s var(--quiet) backwards;
 }
 @keyframes help-in { from { opacity: 0; transform: translateY(-6px); } }
 .help:focus-visible { outline-offset: 1px; }
