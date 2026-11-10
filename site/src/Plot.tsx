@@ -124,7 +124,8 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
     const cut = marker === null ? null : take.events[marker]!.atMs;
     // While a hand holds on, nothing is known past its last sample.
     const end = held ? Math.min(domain.end, lastEvent) : domain.end;
-    const floor = y(levels.low);
+    // The fill runs from wherever the take began, which is the far level when it began open.
+    const floor = y(edgeAt(timeline, showcase, domain.start, levels).position);
     const point = (t: number) => `${round(x(t))} ${round(y(edgeAt(timeline, showcase, t, levels).position))}`;
     // Under a hand the edge only moves when a sample arrives, so the line joins the samples.
     const through = (hand: (typeof hands)[number]) => {
