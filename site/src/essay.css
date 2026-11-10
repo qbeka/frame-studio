@@ -92,6 +92,9 @@
 .ranges dd i { position: absolute; top: 6px; left: calc(var(--from) * 1% - var(--from) * 0.66px); width: calc((var(--to) - var(--from)) * 1% - (var(--to) - var(--from)) * 0.66px); height: 8px; border-radius: 4px; background: #1d3a2a3d; }
 .ranges dd i::after { content: ''; position: absolute; top: -2px; left: calc((var(--at) - var(--from)) / (var(--to) - var(--from)) * 100% - 1px); width: 3px; height: 12px; border-radius: 1.5px; background: var(--forest); }
 .ranges dd i.plain::after { background: var(--muted); }
+/* The same test on an earlier day, as an outline behind this run. */
+.ranges dd i.earlier { top: 4px; height: 12px; border: 1px solid #11151133; border-radius: 6px; background: none; }
+.ranges dd i.earlier::after { content: none; }
 
 /* Limits, kept in plain sight */
 .essay .limits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; max-width: 1000px; border-top: 1px solid var(--line-strong); }

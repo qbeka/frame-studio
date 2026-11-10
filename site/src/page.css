@@ -317,7 +317,7 @@
 .swap span.on { visibility: visible; }
 
 /* The contact strip: every take printed small */
-.strip { grid-area: strip; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 8px; border-top: 1px solid var(--line); background: var(--paper); }
+.strip { grid-area: strip; display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 49px; padding: 4px 8px; border-top: 1px solid var(--line); background: var(--paper); }
 .frames { flex: 1 1 auto; display: flex; gap: 4px; min-width: 0; margin: -4px; padding: 4px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
 .frames::-webkit-scrollbar { display: none; }
 .frame {
@@ -333,7 +333,10 @@
 .frame[aria-disabled='true'], .frame[aria-disabled='true']:active { background: transparent; color: var(--faint); cursor: default; }
 /* An empty frame at the end of the strip, waiting for a take of the visitor's own. */
 .frame[aria-disabled='true'] .thumb { border-style: dashed; border-color: var(--line-strong); background: none; }
-@media (pointer: coarse) { .frame { height: 44px; } }
+@media (pointer: coarse) {
+  .frame { height: 44px; }
+  .strip { min-height: 53px; }
+}
 @media (hover: hover) {
   .frame:hover { background: var(--wash); color: var(--ink); }
   .frame:hover .thumb { border-color: var(--line-strong); }
@@ -406,7 +409,7 @@
 .demo[data-layout='narrow'] .transport .control { padding: 0 8px; }
 .demo[data-layout='narrow'] #go, .demo[data-layout='narrow'] #back { min-width: 0; }
 .demo[data-layout='narrow'] .readouts dd { font-size: 14px; }
-.demo[data-layout='narrow'] .strip { flex-wrap: wrap; }
+.demo[data-layout='narrow'] .strip { flex-wrap: wrap; min-height: 102px; }
 .demo[data-layout='narrow'] .frames { flex-basis: 100%; }
 .demo[data-layout='narrow'] #save-plate { margin-left: auto; }
 /* A small screen inside a small screen, so the component and its trace still fit one view. */
