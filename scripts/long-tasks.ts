@@ -67,10 +67,10 @@ try {
   };
 
   await step('dragging the card open by hand and letting go', () => drag(page, '#grab', 0, 150));
-  await step('catching it mid flight and throwing it back', async () => {
-    await page.locator('#go').click();
+  await step('pressing Cancel, catching the card mid flight and throwing it open again', async () => {
+    await page.locator('#back').click();
     await wait(120);
-    await drag(page, '.live .fx-summary', 0, -90, 14);
+    await drag(page, '.live .fx-summary', 0, 90, 14);
   });
   await step('dragging the interruption', async () => {
     await page.locator('[data-take=reverse]').click();
