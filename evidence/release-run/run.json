@@ -3,7 +3,7 @@
   "log": [
     {
       "step": "clean app created with the tarball",
-      "at": "2026-11-09T20:36:44.080Z",
+      "at": "2026-11-10T04:24:56.448Z",
       "detail": {
         "packages": [
           "@types/react",
@@ -17,26 +17,26 @@
     },
     {
       "step": "component registered from the clean app is live in the studio",
-      "at": "2026-11-09T20:36:45.455Z"
+      "at": "2026-11-10T04:24:57.808Z"
     },
     {
       "step": "authored three states and an interruption rule",
-      "at": "2026-11-09T20:36:45.811Z"
+      "at": "2026-11-10T04:24:58.566Z"
     },
     {
       "step": "interrupted a transition and inspected the take",
-      "at": "2026-11-09T20:36:46.995Z"
+      "at": "2026-11-10T04:24:59.748Z"
     },
     {
       "step": "saved the project file, cleared storage and reopened it",
-      "at": "2026-11-09T20:36:47.156Z",
+      "at": "2026-11-10T04:25:00.786Z",
       "detail": {
-        "sha256": "d37c49f61e10189ca95cd3a251b2b96e86e804d441920dd1fb8c7a0e127ae7f7"
+        "sha256": "efc514dc86c94ea4327ab8e21a63f7d1d49ab9b33e037e269d605bf845c44831"
       }
     },
     {
       "step": "exported from the UI, built in the clean app, and found no editor code in the bundle",
-      "at": "2026-11-09T20:36:48.982Z",
+      "at": "2026-11-10T04:25:02.452Z",
       "detail": {
         "files": [
           "README.md",
@@ -50,11 +50,11 @@
     },
     {
       "step": "used the export: unfolded, disputed, typed, withdrew and came back with the text and focus intact",
-      "at": "2026-11-09T20:36:51.160Z"
+      "at": "2026-11-10T04:25:04.492Z"
     },
     {
       "step": "compared studio and export at synchronized samples",
-      "at": "2026-11-09T20:36:52.115Z",
+      "at": "2026-11-10T04:25:05.470Z",
       "detail": {
         "geometryPx": 0.0000152587890625,
         "opacity": 0,

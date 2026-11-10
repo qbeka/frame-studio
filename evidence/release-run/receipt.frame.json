@@ -350,7 +350,7 @@
     "resize": "retarget"
   },
   "take": {
-    "startMs": 540,
+    "startMs": 915,
     "initialState": "folded",
     "initialRects": {
       "paper": {
@@ -379,8 +379,7 @@
     },
     "events": [
       {
-        "atMs": 568.6000000238419,
-        "type": "command",
+        "atMs": 941.5,
         "command": "unfold",
         "reduced": false,
         "rects": {
@@ -408,11 +407,11 @@
             "width": 340,
             "height": 151
           }
-        }
+        },
+        "type": "command"
       },
       {
-        "atMs": 719.3000000715256,
-        "type": "command",
+        "atMs": 1092,
         "command": "fold",
         "reduced": false,
         "rects": {
@@ -434,7 +433,8 @@
             "width": 340,
             "height": 53
           }
-        }
+        },
+        "type": "command"
       }
     ]
   }
