@@ -10,12 +10,12 @@ Use your real component. Interrupt it. Frame records that as a take, and you can
 
 | | |
 |---|---|
-| **Studio and export agree** | Within 0.000015 px and 0 opacity, in 120 scripted runs across Chromium, WebKit and Firefox |
+| **Studio and export agree** | Within 0.000023 px and 0 opacity, in 120 scripted runs across Chromium, WebKit and Firefox |
 | **What you inspect matches what ships** | The same limits, comparing the replayed take to the export |
 | **Those checks can fail** | 9 of 9 seeded faults caught, and clean builds not flagged |
 | **Physics** | Real browser geometry within 0.094 px of an independent numerical solution |
-| **Editing at 30 targets** | Median 1.1 ms, p95 1.3 ms to update the DOM |
-| **Cost to your app** | 6.2 KB of gzipped JavaScript and 0.14 KB of CSS, with no dependency except React |
+| **Editing at 30 targets** | Median 1.4 ms, p95 1.6 ms to update the DOM |
+| **Cost to your app** | 7.1 KB of gzipped JavaScript and 0.14 KB of CSS, with no dependency except React |
 
 Measured on one Apple M5 Pro Mac in headless browsers, with other work running. The fidelity check compares two builds of the same code, so it tests everything around the physics, and a separate check tests the physics. No person has run the usability task, and no physical phone was tested. [What the numbers leave out](docs/REPORT.md#what-the-numbers-leave-out) has the details.
 
@@ -128,7 +128,7 @@ pnpm test
 pnpm test:e2e
 ```
 
-`pnpm check` runs the type checker and the writing rules. `pnpm test` runs 123 unit tests, including 50 digit reference values. `pnpm test:e2e` runs 104 browser tests against the project page, the studio, clean Vite and Next.js apps, and a full release run, which needs consumers built outside this folder and takes a few minutes.
+`pnpm check` runs the type checker and the writing rules. `pnpm test` runs 175 unit tests, including 50 digit reference values. `pnpm test:e2e` runs 120 browser tests against the project page, the studio, clean Vite and Next.js apps, and a full release run, which needs consumers built outside this folder and takes a few minutes.
 
 To run the suites in another engine:
 
