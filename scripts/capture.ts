@@ -144,7 +144,7 @@ async function hand(page: Page, say: (text: string) => Promise<void> = (text) =>
   await page.mouse.down();
   await say('Catch it on the way and throw it back');
   await drive(page, card, -30, 260, ease);
-  await drive(page, { x: card.x, y: card.y - 30 }, -28, 110, flick);
+  await drive(page, { x: card.x, y: card.y - 30 }, -64, 120, flick);
   await page.mouse.up();
   await wait(1500);
   await say('Every take prints a plate');
