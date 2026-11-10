@@ -13,8 +13,11 @@ export interface Segment {
   to: number;
   curve: Curve | null;
   settleMs: number;
-  /** Set while a hand drives this leg. `from` and `to` are where it sits at progress 0 and 1. */
-  hand?: { track: Hand; offset: number };
+  /**
+   * Set while a hand drives this leg. `from` and `to` are where it sits at progress 0 and 1, or at
+   * the two ends of `span` when the leg only moves over part of the hand's travel.
+   */
+  hand?: { track: Hand; offset: number; span: HandSpan | null };
 }
 
 export type Channel = Segment[];
@@ -28,6 +31,9 @@ export interface Hand {
   times: number[];
   progress: number[];
 }
+
+/** The stretch of a hand's progress that a leg moves over. It rests at its ends outside it. */
+export type HandSpan = readonly [number, number];
 
 /** Speed is read from the samples of the last this many milliseconds. */
 const HAND_WINDOW_MS = 80;
@@ -89,11 +95,11 @@ function evaluate(segment: Segment, t: number): Motion {
   if (t >= segment.settleMs) return { position: segment.to, velocity: 0 };
   const { curve, from, to, velocity, startMs } = segment;
   if (segment.hand) {
-    const { progress, perSecond } = handAt(segment.hand.track, t);
+    const along = alongSpan(handAt(segment.hand.track, t), segment.hand.span);
     const blend = segment.hand.offset * Math.exp((startMs - t) / HAND_BLEND_MS);
     return {
-      position: from + (to - from) * progress + blend,
-      velocity: (to - from) * perSecond - (blend * 1000) / HAND_BLEND_MS,
+      position: from + (to - from) * along.progress + blend,
+      velocity: (to - from) * along.perSecond - (blend * 1000) / HAND_BLEND_MS,
     };
   }
   if (curve === null) return { position: to, velocity: 0 };
@@ -159,10 +165,19 @@ export function retarget(
  * way, eases onto the hand's line instead of jumping. When the hand lets go, `retarget` reads this
  * leg's position and speed like any other, so a throw is an ordinary interruption.
  */
-export function hold(channel: Channel, atMs: number, from: number, to: number, track: Hand): void {
+export function hold(channel: Channel, atMs: number, from: number, to: number, track: Hand, span: HandSpan | null = null): void {
   while (channel.length > 1 && channel[channel.length - 1]!.startMs > atMs) channel.pop();
-  const offset = readChannel(channel, atMs).position - (from + (to - from) * handAt(track, atMs).progress);
-  channel.push({ startMs: atMs, from, velocity: 0, to, curve: null, settleMs: Number.POSITIVE_INFINITY, hand: { track, offset } });
+  const offset = readChannel(channel, atMs).position - (from + (to - from) * alongSpan(handAt(track, atMs), span).progress);
+  channel.push({ startMs: atMs, from, velocity: 0, to, curve: null, settleMs: Number.POSITIVE_INFINITY, hand: { track, offset, span } });
+}
+
+/** A hand's progress as one leg sees it. With no span that is the hand itself, past both ends. */
+function alongSpan(hand: { progress: number; perSecond: number }, span: HandSpan | null) {
+  if (!span) return hand;
+  const [a, b] = span;
+  if (hand.progress <= a) return { progress: 0, perSecond: 0 };
+  if (hand.progress >= b) return { progress: 1, perSecond: 0 };
+  return { progress: (hand.progress - a) / (b - a), perSecond: hand.perSecond / (b - a) };
 }
 
 function settleDurationMs(

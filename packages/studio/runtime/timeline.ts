@@ -18,6 +18,7 @@ import {
   type ChannelName,
   type ChannelReading,
   type Hand,
+  type HandSpan,
 } from './channel';
 
 /**
@@ -122,6 +123,14 @@ function poseChannels(atMs: number, rect: Rect, pose: StateTargetValue): Record<
 }
 
 const NOWHERE: Rect = { x: 0, y: 0, width: 0, height: 0 };
+
+/**
+ * When one target leaves as another arrives, a hand fades the first out before it fades the
+ * second in. Both following the hand at once would leave the two half shown over each other for
+ * as long as the hand cared to wait there.
+ */
+const HAND_LEAVES: HandSpan = [0, 0.45];
+const HAND_ARRIVES: HandSpan = [0.45, 1];
 
 export function createTimeline(spec: MotionSpec, atMs: number, rects: Rects): Timeline {
   const channels: Timeline['channels'] = {};
@@ -284,6 +293,11 @@ export function applyDecision(
   const fromState = spec.states[transition.from]!;
   const toState = spec.states[transition.to]!;
   const missing: string[] = [];
+  const ids = Object.keys(spec.targets);
+  const crossing =
+    decision.hand !== undefined &&
+    ids.some((id) => fromState.targets[id]!.present && !toState.targets[id]!.present) &&
+    ids.some((id) => !fromState.targets[id]!.present && toState.targets[id]!.present);
 
   for (const id of Object.keys(spec.targets)) {
     const start = fromState.targets[id]!;
@@ -314,7 +328,8 @@ export function applyDecision(
     for (const name of CHANNELS) {
       const sized = GROUP[name] === 'size';
       if (decision.hand && !(sized && !animatesSize(spec, id))) {
-        hold(timeline.channels[id]![name], atMs, rest[name], goal[name], decision.hand);
+        const span = crossing && name === 'opacity' && start.present !== end.present ? (end.present ? HAND_ARRIVES : HAND_LEAVES) : null;
+        hold(timeline.channels[id]![name], atMs, rest[name], goal[name], decision.hand, span);
         continue;
       }
       const { curve, delayMs } =
@@ -379,7 +394,7 @@ export function applyRemeasure(
       // A leg still waiting on its delay keeps its start. A layout change is not a new command.
       const startMs = curve !== null && last.startMs > atMs ? last.startMs : atMs;
       // A hand keeps hold through a layout change, and now leads to the new endpoint.
-      if (last.hand) hold(channel, atMs, last.from, goal[name]!, last.hand.track);
+      if (last.hand) hold(channel, atMs, last.from, goal[name]!, last.hand.track, last.hand.span);
       else retarget(channel, atMs, startMs, goal[name]!, curve, name, spec.settle);
     }
   }
