@@ -14,6 +14,9 @@ const out = resolve(args.includes('--out') ? args[args.indexOf('--out') + 1] : '
 const consumer = mkdtempSync(join(tmpdir(), 'frame-site-'));
 const run = (command, commandArgs) => execFileSync(command, commandArgs, { stdio: 'inherit' });
 
+// A status line or a hint that ends with a period stops the build here.
+run('node', ['scripts/check-copy.mjs']);
+
 const studio = join(out, 'studio');
 run('pnpm', ['--filter', '@frame-studio/site', 'exec', 'vite', 'build', '--outDir', out, '--emptyOutDir']);
 // The studio opens the same three components as the page. The built export at ./try/ is the expense card.
