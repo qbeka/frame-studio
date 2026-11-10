@@ -18,6 +18,9 @@ const FOREST = '#1d3a2a';
 const LINE = 'rgba(17, 21, 17, 0.18)';
 const HAIR = 'rgba(17, 21, 17, 0.09)';
 
+/** What the art is drawn from. A snapshot of the stage has all of it, and a figure can make its own. */
+export type ArtSource = Pick<Snapshot, 'timeline' | 'ghost' | 'levels' | 'domain' | 'hands' | 'take' | 'marker' | 'takeEnd'>;
+
 export interface ArtBox {
   x: number;
   y: number;
@@ -26,7 +29,7 @@ export interface ArtBox {
 }
 
 /** Draws the plate and the trace into a box. `unit` is the size of one hairline, in canvas pixels. */
-export function drawArt(ctx: CanvasRenderingContext2D, snap: Snapshot, showcase: Showcase, box: ArtBox, unit: number): void {
+export function drawArt(ctx: CanvasRenderingContext2D, snap: ArtSource, showcase: Showcase, box: ArtBox, unit: number, plateShare = 0.4): void {
   const { timeline, ghost, levels, domain, hands, take, marker } = snap;
   const source: PlateSource = { timeline, showcase, levels };
   const first = domain.start + LEAD_MS;
@@ -36,7 +39,6 @@ export function drawArt(ctx: CanvasRenderingContext2D, snap: Snapshot, showcase:
   const swept = sweptBox(source, domain.start, snap.takeEnd) ?? { left: 0, top: 0, width: showcase.width, height: hi };
   const top = Math.min(swept.top, lo) - 6;
   const bottom = Math.max(swept.top + swept.height, hi) + 6;
-  const plateShare = 0.4;
   const gapPx = box.width * 0.06;
   const scale = Math.min((box.width * plateShare) / swept.width, box.height / (bottom - top));
   const plateWidth = swept.width * scale;
