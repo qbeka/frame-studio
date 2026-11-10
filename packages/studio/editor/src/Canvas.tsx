@@ -23,6 +23,9 @@ function useProbe(spec: MotionSpec) {
   const frame: FrameHandle | null = probe && {
     state: probe.state,
     send() {},
+    grab: () => false,
+    drag() {},
+    release() {},
     remeasure() {},
     root: () => ({ ref: (element) => void (root.current = element), 'data-frame-root': '' }),
     target(id) {

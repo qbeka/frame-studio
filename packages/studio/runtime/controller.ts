@@ -1,12 +1,15 @@
 import { drawSample, findBadNesting, focusTarget, measureTargets } from './dom';
 import type { MotionSpec, Rects } from './spec';
+import type { Hand } from './channel';
 import {
   applyDecision,
+  applyRelease,
   applyRemeasure,
   clearQueue,
   createTimeline,
   decideCommand,
   isAnimating,
+  moveHand,
   pendingQueue,
   pruneTimeline,
   sampleTimeline,
@@ -87,6 +90,8 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
   let detach: (() => void) | null = null;
   /** Commands sent before the first commit, such as from a child's layout effect. */
   const early: string[] = [];
+  /** The hand on the component, from `grab` until it lets go. */
+  let held: Hand | null = null;
 
   const now = () => frozenAt ?? clock.now() + offsetMs;
 
@@ -148,7 +153,9 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
   function record(item: Pending, rects: Rects) {
     if (item.fromQueue || item.decision.kind !== 'start') return;
     const { command } = item.decision.transition;
-    options.onEvent?.({ atMs: item.atMs, type: 'command', command, reduced: item.reduced, rects }, startMs);
+    const { hand } = item.decision;
+    const event = { atMs: item.atMs, command, reduced: item.reduced, rects };
+    options.onEvent?.(hand ? { ...event, type: 'grab', progress: hand.progress[0]! } : { ...event, type: 'command' }, startMs);
   }
 
   /**
@@ -170,10 +177,10 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     }
   }
 
-  function dispatch(command: string, atMs: number, fromQueue = false) {
+  function dispatch(command: string, atMs: number, fromQueue = false, hand?: Hand) {
     if (!timeline) return;
     applyUncommitted();
-    const decision = decideCommand(timeline, atMs, command);
+    const decision = decideCommand(timeline, atMs, command, hand);
     const reduced = reducedNow();
     // Refused and ignored commands stay in the take, because an edit could change their fate.
     if (decision.kind === 'reject' || decision.kind === 'ignore') {
@@ -200,6 +207,8 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     const focused = document.activeElement;
     const active = focused && focused !== document.body ? focused : pressed;
     pending.push({ atMs, decision, reduced, active, fromQueue, applied: false });
+    // Whatever starts either belongs to the hand that grabbed it or has taken over from one.
+    held = hand ?? null;
     state = decision.transition.to;
     notify();
   }
@@ -332,6 +341,48 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       dispatch(command, t);
     },
 
+    /**
+     * A hand takes hold of the transition `command` starts. The state changes at once, as it does
+     * for `send`, and from then on the motion follows `drag` instead of its curves. `progress` is
+     * 0 at the state being left and 1 at the state being entered, and may pass either end. A hand
+     * outranks the interruption rules, so this also catches a transition that is running.
+     * Returns false when there is nothing to take hold of.
+     */
+    grab(command: string, progress: number) {
+      if (frozenAt !== null || !timeline || held) return false;
+      const t = now();
+      drainDue(t);
+      const hand: Hand = { times: [t], progress: [progress] };
+      dispatch(command, t, false, hand);
+      return held === hand;
+    },
+    /** Moves the hand. Does nothing unless one is holding on. */
+    drag(progress: number) {
+      if (!held || !timeline) return;
+      const t = now();
+      moveHand(held, t, progress);
+      options.onEvent?.({ atMs: t, type: 'drag', progress }, startMs);
+      if (pending.length === 0) render();
+    },
+    /**
+     * The hand lets go and the transition carries on into the state it entered, on its own curves,
+     * from the hand's position and speed. To let go the other way, `send` the command that goes
+     * back: it leaves from the hand's position and speed in the same way.
+     */
+    release() {
+      if (!held || !timeline) return;
+      const t = now();
+      held = null;
+      // A grab let go of before its commit is applied against the last known layout first.
+      applyUncommitted();
+      const reduced = reducedNow();
+      applyRelease(timeline, t, { reduced });
+      options.onEvent?.({ atMs: t, type: 'release', reduced }, startMs);
+      if (pending.length === 0) render();
+      ensureLoop();
+    },
+    isHeld: () => held !== null,
+
     start() {
       wanted = true;
       attach();
@@ -352,6 +403,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
     load(next: Timeline, t: number) {
       stopLoop();
       pending.length = 0;
+      held = null;
       timeline = next;
       frozenAt = t;
       const sampled = sampleTimeline(next, t).state;
@@ -384,6 +436,7 @@ export function createController(initialSpec: MotionSpec, options: FrameOptions 
       stopLoop();
       pending.length = 0;
       early.length = 0;
+      held = null;
       frozenAt = null;
       offsetMs = 0;
       timeline = null;

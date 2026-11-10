@@ -34,6 +34,9 @@ function Probe({ showcase, state, props, onMount }: { showcase: Showcase; state:
   const frame: FrameHandle = {
     state,
     send: noop,
+    grab: () => false,
+    drag: noop,
+    release: noop,
     remeasure: noop,
     root: () => ({ ref: (element) => onMount(element, elements.current), 'data-frame-root': '' }),
     target(id) {

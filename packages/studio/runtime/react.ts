@@ -21,6 +21,10 @@ export interface FrameHandle {
   /** The semantic state. Render your native layout from this. */
   state: string;
   send(command: string): void;
+  /** A hand takes hold of the transition `command` starts. See the controller for the three. */
+  grab(command: string, progress: number): boolean;
+  drag(progress: number): void;
+  release(): void;
   root(): FrameRootProps;
   target(id: string): FrameTargetProps;
   /** Tell Frame the layout changed outside a React render of this component. */
@@ -52,6 +56,9 @@ export function useFrameController(controller: FrameController, spec: MotionSpec
   return {
     state,
     send: controller.send,
+    grab: controller.grab,
+    drag: controller.drag,
+    release: controller.release,
     remeasure: controller.remeasure,
     root: () => ({ ref: controller.setRoot, 'data-frame-root': '' }),
     target(id) {
