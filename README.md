@@ -2,7 +2,7 @@
 
 A local motion editor for working React components, built around one question: what should happen when someone changes their mind halfway?
 
-![The Frame project page. An expense card is held partway open, and beside it the card's height is drawn over time at the card's own scale, solid where it was interrupted and dotted where it would have gone.](docs/media/cover.png)
+![The Frame project page. An expense card has been thrown open, caught on its way and is held there by hand. Beside it the card's moving edge is traced over time at the card's own scale, in ink where a hand held it and in green where a spring did.](docs/media/cover.png)
 
 Use your real component. Interrupt it. Frame records that as a take, and you can scrub it, drag the interruption to a new moment, and change what happens there. Export a small runtime that behaves the same way in your app.
 
@@ -95,13 +95,16 @@ The export is readable TypeScript. It needs React 18.3 or 19 and a bundler that 
 - **Real DOM.** Your component stays a working interface throughout, so typed text and focus survive a reversal. Layout endpoints come from native document flow. Text is never scaled.
 - **Inspection.** Read position, velocity and target at any moment. Scrubbing gives a defined sample, and you choose whether to continue from there or reset.
 - **Files.** Undo, automatic drafts, and a portable project file. A bad file changes nothing and tells you why.
+- **A hand.** `frame.grab`, `frame.drag` and `frame.release` let a pointer take hold of a transition, even one that is running. Letting go is an ordinary interruption, so the spring starts from the hand's position and speed. [The guide](docs/REGISTRATION.md#let-a-hand-drive-it) has the three calls.
 
-The [project page](https://www.qendrimbeka.com/projects/frame/) is a smaller instrument built on the same runtime, with three registered components: an expense card, a status menu and a bottom sheet.
+The [project page](https://www.qendrimbeka.com/projects/frame/) is a smaller stage built on the same runtime, with three registered components: an expense card, a status menu and a bottom sheet.
 
-- **A long exposure.** The take is drawn at the component's own scale, one bar for each 60 Hz frame, so the line beside the component is the path of its moving edge. These are computed moments of the take, not measured paints.
-- **Handles.** Drag the interruption along the take, or drag the spring itself: sideways for stiffness, up and down for damping.
-- **A race.** A second copy of the component gets the same commands under another spring or another rule.
-- **Something to take.** The spring copies as a Frame curve, or from rest as a CSS `linear()` easing. The address keeps the motion, so a link restores it.
+- **Your hand.** Take hold of the component itself, or the bar on its moving edge, and drag it, throw it, or catch it mid flight. The trace beside it draws under your hand, at the component's own scale, and the spring takes over from the speed you let go at.
+- **A plate.** Every take prints behind the component as a long exposure. Ink builds where the moving edge lingers, so a turn is a dark line and a slow settle is a dense band. These are moments worked out from the take, not measured paints. Save plate gives you the print as an image.
+- **Takes.** Five examples sit on a strip, each printed small, with yours beside them. Three are presses and two are a hand, written as pointer samples. The address holds the take, every sample of it, so a link replays it.
+- **Handles.** Drag a press along the take, or drag the spring itself: sideways for stiffness, up and down for damping.
+- **A race.** A second copy of the component gets the same take under another spring or another rule.
+- **Something to take.** The spring copies as a Frame curve, or from rest as a CSS `linear()` easing.
 
 ## Limits
 
@@ -157,6 +160,22 @@ pnpm bench
 
 The smoke run checks the harness, and its numbers are not results. The full run follows [the protocol](bench/PROTOCOL.md). Raw samples and manifests are in [`results/`](results). The [report](docs/REPORT.md) has every table, what failed, and what changed because of it.
 
+To look for long tasks on the built project page with the main thread slowed four times:
+
+```bash
+pnpm build
+```
+
+```bash
+pnpm longtasks
+```
+
+To draw the page's share card again from its own art, build, run this, then build once more:
+
+```bash
+pnpm og
+```
+
 ## How it works
 
 ```
@@ -164,7 +183,7 @@ packages/studio/
   runtime/     The part that ships. No DOM or React in the first five files.
     spring.ts      Closed-form damped springs in all three regimes
     tween.ts       CSS cubic-bezier, with a true derivative
-    channel.ts     One value over time, as legs that can be replaced
+    channel.ts     One value over time, as legs that can be replaced, or held by a hand
     timeline.ts    Semantic state, interruption rules and take replay. Pure.
     dom.ts         Measures layout and draws samples. All DOM access is here.
     controller.ts  Clock, commands, focus and resize
