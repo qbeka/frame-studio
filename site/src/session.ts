@@ -9,26 +9,43 @@ import {
   type TakeEvent,
   type Timeline,
 } from '../../packages/studio/runtime/timeline';
+import type { TakeContext } from './library';
 import type { Showcase } from './showcase';
 import { edgeAt, type Levels } from './trace';
+import type { TakeSource } from './urlState';
 
 export type Geometry = Record<string, Rects>;
+/** What a take on this page is made of: presses, and a hand taking hold, moving and letting go. */
+export type TakeItem = Extract<TakeEvent, { type: 'command' | 'grab' | 'drag' | 'release' }>;
 export type Command = Extract<TakeEvent, { type: 'command' }>;
 
 export interface Take {
   startMs: number;
   initialState: string;
-  events: Command[];
-  /** The example on the page, as opposed to something this visitor did. */
+  events: TakeItem[];
+  /** An example on the page, as opposed to something this visitor did. */
   scripted: boolean;
+  /** Which example, when it is one. */
+  name: string | null;
+}
+
+/** One stretch of a take where a hand held the component. */
+export interface HandSpan {
+  fromMs: number;
+  /** Null while the hand is still holding on. */
+  toMs: number | null;
+  /** The speed of the followed edge at the moment the hand let go, in pixels per second. */
+  speed: number;
+  /** Where the samples fall, for the dots under the hand. */
+  samples: number[];
 }
 
 /**
  * live: time runs and the panel takes input, recording a take.
  * paused: the panel is held at one moment of the take.
  * playing: the take runs back, at the current speed.
- * Input never waits for a mode. Pressing anything while paused or playing continues from that
- * moment, so a button in the panel always does what it says.
+ * Input never waits for a mode. Pressing or grabbing while paused or playing continues from that
+ * moment, so the component always does what the hand on it says.
  */
 export type Phase = 'live' | 'paused' | 'playing';
 
@@ -42,28 +59,42 @@ export interface Snapshot {
   rival: Timeline | null;
   rivalSpec: MotionSpec | null;
   levels: Levels;
+  geometry: Geometry;
   steps: ReplayStep[];
   domain: { start: number; end: number };
   /** When the take has finished, with a little air. */
   takeEnd: number;
   phase: Phase;
   moving: boolean;
+  /** A hand is on the component right now. */
+  held: boolean;
+  hands: HandSpan[];
   state: string;
   slow: boolean;
-  /** Index into take.events of the interruption being shown. */
+  /** Index into take.events of the interruption being shown. Only takes made of presses have one. */
   marker: number | null;
+  /** Moves whenever the past of the take changes, as opposed to the take growing at its end. */
+  epoch: number;
 }
 
 /** Time before the first command, on the curve. */
 export const LEAD_MS = 60;
-const TAIL_MS = 60;
+export const TAIL_MS = 60;
 /** The curve keeps this width unless a take needs more, so its axis does not jump. */
 const WINDOW_MS = 700;
 const WINDOW_STEP_MS = 100;
+/** While a hand holds on nobody knows how long the take will be, so the axis grows in strides. */
+const HELD_STEP_MS = 400;
 export const SLOW_RATE = 0.25;
 const MARKER_GAP_MS = 10;
+/** Recorded times sit on a quarter millisecond grid and progress on 1/4096, which a link can hold exactly. */
+export const TIME_GRID = 4;
+export const PROGRESS_GRID = 4096;
+/** How far ahead of the hand a let-go is judged: a flick past the middle carries on. */
+const THROW_LOOKAHEAD_S = 0.14;
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+export const onGrid = (progress: number) => Math.round(progress * PROGRESS_GRID) / PROGRESS_GRID;
 
 /** A clock whose rate can change mid flight, so slow motion also slows the live component. */
 function createRateClock() {
@@ -89,8 +120,15 @@ export type Session = ReturnType<typeof createSession>;
 
 export interface SessionStart {
   spec: MotionSpec;
-  /** When the interruption lands in the example take, after the first command. */
-  delayMs: number;
+  /** The take the page opens on. */
+  take: TakeSource;
+}
+
+/** A take as a strip can show it: worked out under the current motion, without touching the stage. */
+export interface Preview {
+  timeline: Timeline;
+  startMs: number;
+  endMs: number;
 }
 
 export function createSession(showcase: Showcase, start: SessionStart) {
@@ -103,15 +141,7 @@ export function createSession(showcase: Showcase, start: SessionStart) {
   let levels: Levels = { low: 0, high: 0, clip: Number.POSITIVE_INFINITY };
   let geometry: Geometry | null = null;
   let snapshot: Snapshot | null = null;
-  let take: Take = {
-    startMs: 0,
-    initialState: showcase.spec.initialState,
-    scripted: true,
-    events: [
-      { atMs: LEAD_MS, type: 'command', command: showcase.go },
-      { atMs: LEAD_MS + start.delayMs, type: 'command', command: showcase.back },
-    ],
-  };
+  let take: Take = { startMs: 0, initialState: start.take.initialState, events: [], scripted: start.take.scripted, name: start.take.name };
   let phase: Phase = 'paused';
   let moving = false;
   let slow = false;
@@ -121,21 +151,33 @@ export function createSession(showcase: Showcase, start: SessionStart) {
   let dragging: number | null = null;
   let lockedDomain: Snapshot['domain'] | null = null;
   let cancelPending: (() => void) | null = null;
+  let epoch = 0;
+  /** Events have arrived since the page last worked the take out. */
+  let stale = false;
+  /** The command the hand took hold of, while it holds on. */
+  let holding: string | null = null;
 
   const controller = createController(start.spec, {
     clock,
     history: true,
     onEvent(event) {
-      if (event.type !== 'command') return;
-      take = { ...take, events: [...take.events, event].sort((a, b) => a.atMs - b.atMs) };
+      if (event.type === 'measure' || event.type === 'props') return;
+      // The page and a link agree on every moment, because both only ever see the grid.
+      const atMs = take.startMs + Math.round((event.atMs - take.startMs) * TIME_GRID) / TIME_GRID;
+      const kept = { ...event, atMs } as TakeItem & { rects?: Rects };
+      // The page measures every state itself, so a take does not carry layout around.
+      delete kept.rects;
+      take = { ...take, events: [...take.events, kept].sort((a, b) => a.atMs - b.atMs) };
       phase = 'live';
       moving = true;
-      derive();
+      // A hand sends many of these between two frames. The next frame works them all out at once.
+      if (event.type === 'drag') stale = true;
+      else derive();
       ensureLoop();
     },
   });
 
-  function replay(events: Command[], initialState: string, startMs: number, endMs?: number, using: MotionSpec = spec) {
+  function replay(events: TakeItem[], initialState: string, startMs: number, endMs?: number, using: MotionSpec = spec) {
     return replayTake(
       { ...using, initialState },
       startMs,
@@ -146,19 +188,66 @@ export function createSession(showcase: Showcase, start: SessionStart) {
     );
   }
 
+  const span = () => levels.high - levels.low;
+  /** How far through `command` the followed edge is when it sits at `edge`. */
+  const progressOf = (command: string, edge: number) => {
+    const forward = span() === 0 ? 0 : (edge - levels.low) / span();
+    return command === showcase.go ? forward : 1 - forward;
+  };
+
+  /** Lays a take out from time zero, with its first event one lead in. */
+  function placeTake(source: TakeSource): Take {
+    const lay = (events: TakeItem[]) => events.map((event) => ({ ...event, atMs: LEAD_MS + event.atMs - (events[0]?.atMs ?? 0) }));
+    const context: TakeContext = {
+      progressAt(events, atMs, command) {
+        const { timeline } = replay(lay(events), source.initialState, 0);
+        return onGrid(progressOf(command, edgeAt(timeline, showcase, LEAD_MS + atMs - (events[0]?.atMs ?? 0), levels).position));
+      },
+    };
+    return { startMs: 0, initialState: source.initialState, scripted: source.scripted, name: source.name, events: lay(source.build(context)) };
+  }
+
+  /** When a timeline comes to rest. A hand that is still holding on has not let it. */
+  const restOf = (timeline: Timeline, fallback: number) => {
+    const settle = lastMark(timeline).settleMs;
+    return Number.isFinite(settle) ? settle : fallback;
+  };
+
+  function handsOf(timeline: Timeline): HandSpan[] {
+    const spans: HandSpan[] = [];
+    let open: HandSpan | null = null;
+    for (const event of take.events) {
+      if (event.type === 'grab') {
+        open = { fromMs: event.atMs, toMs: null, speed: 0, samples: [event.atMs] };
+        spans.push(open);
+      } else if (event.type === 'drag') {
+        open?.samples.push(event.atMs);
+      } else if (open) {
+        open.toMs = event.atMs;
+        open.speed = edgeAt(timeline, showcase, event.atMs, levels).velocity;
+        open = null;
+      }
+    }
+    return spans;
+  }
+
   /** Everything the page shows follows from the take and the spec, and is rebuilt here. */
   function derive() {
     if (!geometry) return;
+    stale = false;
     const { timeline, steps } = replay(take.events, take.initialState, take.startMs);
-    const interruptions = take.events.length - 1;
-    const marker = dragging ?? (interruptions > 0 ? interruptions : null);
+    const pressesOnly = take.events.every((event) => event.type === 'command');
+    const marker = dragging ?? (pressesOnly && take.events.length > 1 ? take.events.length - 1 : null);
     const ghost = marker === null ? null : replay(take.events.filter((_, i) => i !== marker), take.initialState, take.startMs).timeline;
     const first = take.events[0]?.atMs ?? take.startMs;
     const last = take.events[take.events.length - 1]?.atMs ?? first;
     const rival = rivalSpec ? replay(take.events, take.initialState, take.startMs, undefined, rivalSpec).timeline : null;
-    const settled = Math.max(lastMark(timeline).settleMs, ghost ? lastMark(ghost).settleMs : 0, rival ? lastMark(rival).settleMs : 0, last);
+    const held = lastMark(timeline).hand !== null;
+    const rest = Math.max(restOf(timeline, last), ghost ? restOf(ghost, last) : 0, rival ? restOf(rival, last) : 0, last);
     const start = first - LEAD_MS;
-    const needed = Math.ceil((settled + TAIL_MS - start) / WINDOW_STEP_MS) * WINDOW_STEP_MS;
+    const needed = held
+      ? Math.ceil((rest + TAIL_MS - start) / HELD_STEP_MS + 0.35) * HELD_STEP_MS
+      : Math.ceil((rest + TAIL_MS - start) / WINDOW_STEP_MS) * WINDOW_STEP_MS;
     const domain = lockedDomain ?? { start, end: start + Math.max(WINDOW_MS, needed) };
     snapshot = {
       spec,
@@ -168,14 +257,18 @@ export function createSession(showcase: Showcase, start: SessionStart) {
       rival,
       rivalSpec,
       levels,
+      geometry,
       steps,
       domain,
-      takeEnd: lastMark(timeline).settleMs + TAIL_MS,
+      takeEnd: restOf(timeline, last) + TAIL_MS,
       phase,
       moving,
+      held,
+      hands: handsOf(timeline),
       state: controller.getState(),
       slow,
       marker,
+      epoch,
     };
     for (const listener of listeners) listener();
   }
@@ -214,6 +307,7 @@ export function createSession(showcase: Showcase, start: SessionStart) {
       return;
     }
     if (phase !== 'live') return;
+    if (stale) derive();
     time = controller.now();
     emit();
     const live = controller.getTimeline();
@@ -229,6 +323,7 @@ export function createSession(showcase: Showcase, start: SessionStart) {
   function hold(t: number) {
     controller.setSpec({ ...spec, initialState: take.initialState });
     controller.load(snapshot!.timeline, t);
+    holding = null;
     time = t;
     moving = false;
     phase = 'paused';
@@ -237,7 +332,8 @@ export function createSession(showcase: Showcase, start: SessionStart) {
   /** Starts a new take from whatever the panel is doing now. */
   function freshTake(t: number) {
     const initialState = controller.getState();
-    take = { startMs: t - 2 * LEAD_MS, initialState, events: [], scripted: false };
+    take = { startMs: t - 2 * LEAD_MS, initialState, events: [], scripted: false, name: null };
+    epoch += 1;
     const { timeline } = replay([], initialState, take.startMs);
     controller.setSpec({ ...spec, initialState });
     controller.load(timeline, t);
@@ -246,7 +342,12 @@ export function createSession(showcase: Showcase, start: SessionStart) {
 
   /** Keeps the take up to t and lets time run on from exactly there, speed intact. */
   function continueFrom(t: number) {
-    take = { ...take, scripted: false, events: take.events.filter((event) => event.atMs <= t) };
+    const events = take.events.filter((event) => event.atMs <= t);
+    // A hand that was on the component at t in the take is nobody's hand now, so it lets go there.
+    const last = events[events.length - 1];
+    if (last && (last.type === 'grab' || last.type === 'drag')) events.push({ atMs: t, type: 'release' });
+    take = { ...take, scripted: false, name: null, events };
+    epoch += 1;
     const { timeline } = replay(take.events, take.initialState, take.startMs, t);
     controller.setSpec({ ...spec, initialState: take.initialState });
     controller.load(timeline, t);
@@ -258,19 +359,27 @@ export function createSession(showcase: Showcase, start: SessionStart) {
     cancelPending = null;
   }
 
-  /** The one path for every command, from the panel's own buttons and from the toolbar. */
-  function send(command: string) {
+  /** Brings the panel to life at the moment being shown, so that input lands there. */
+  function wake() {
     dismissPending();
     if (controller.isFrozen()) {
       const timeline = snapshot!.timeline;
-      if (time >= lastMark(timeline).settleMs && !pendingQueue(timeline)) freshTake(time);
+      if (time >= restOf(timeline, Number.POSITIVE_INFINITY) && !pendingQueue(timeline)) freshTake(time);
       else continueFrom(time);
     } else if (!moving) {
       freshTake(controller.now());
     }
     phase = 'live';
+  }
+
+  /** The one path for every command, from the panel's own buttons and from the toolbar. */
+  function send(command: string) {
+    wake();
+    holding = null;
     controller.send(command);
   }
+
+  const other = (command: string) => (command === showcase.go ? showcase.back : showcase.go);
 
   function pause() {
     if (phase === 'playing') {
@@ -358,10 +467,55 @@ export function createSession(showcase: Showcase, start: SessionStart) {
     seek,
     pause,
 
+    /**
+     * A hand takes hold of the component, wherever it is and whatever it is doing. Which command
+     * it takes hold of follows from the state: the one that leaves it. Returns false when the
+     * component is somewhere a hand has no say, such as a third state.
+     */
+    grab() {
+      if (!snapshot || holding) return false;
+      // Held at a moment of a take, the controller is in the state of that moment.
+      const state = controller.getState();
+      const command = state === showcase.from ? showcase.go : state === showcase.to ? showcase.back : null;
+      if (!command || span() === 0) return false;
+      wake();
+      const edge = edgeAt(controller.getTimeline()!, showcase, controller.now(), levels).position;
+      if (!controller.grab(command, onGrid(progressOf(command, edge)))) return false;
+      holding = command;
+      return true;
+    },
+    /** Where the followed edge is right now, for a hand that is about to take hold of it. */
+    edge() {
+      const timeline = controller.isFrozen() ? snapshot?.timeline : controller.getTimeline();
+      return timeline ? edgeAt(timeline, showcase, controller.isFrozen() ? time : controller.now(), levels).position : levels.low;
+    },
+    /** Moves the hand to put the followed edge at `edge`, in pixels from the top of the component. */
+    drag(edge: number) {
+      if (holding) controller.drag(onGrid(progressOf(holding, edge)));
+    },
+    /**
+     * The hand lets go. A hand moving fast enough to pass the middle shortly carries on that way,
+     * and anything else settles toward the nearer end. Either way the spring starts from the
+     * hand's position and speed.
+     */
+    release() {
+      if (!holding) return;
+      const command = holding;
+      holding = null;
+      const reading = edgeAt(controller.getTimeline()!, showcase, controller.now(), levels);
+      const sign = command === showcase.go ? 1 : -1;
+      const ahead = progressOf(command, reading.position) + ((reading.velocity * sign) / (span() || 1)) * THROW_LOOKAHEAD_S;
+      if (ahead >= 0.5) controller.release();
+      else controller.send(other(command));
+    },
+    holding: () => holding !== null,
+
     setGeometry(next: Geometry, nextLevels: Levels) {
       const first = geometry === null;
       geometry = next;
       levels = nextLevels;
+      epoch += 1;
+      if (first) take = placeTake(start.take);
       derive();
       if (first) {
         hold(snapshot!.takeEnd);
@@ -399,7 +553,7 @@ export function createSession(showcase: Showcase, start: SessionStart) {
       whenInView(view, () => startPlaying(snapshot!.domain.start));
     },
 
-    /** Runs the whole take again, for the export preview to follow. */
+    /** Runs the whole take again, for a second copy of the component to follow. */
     replayFromStart(view: Element) {
       if (!snapshot || reducedMotion()) return;
       whenInView(view, () => startPlaying(snapshot!.domain.start));
@@ -418,10 +572,30 @@ export function createSession(showcase: Showcase, start: SessionStart) {
     },
     dismissIntro: dismissPending,
 
+    /** Puts another take on the stage, as one of the page's examples or from a link, and plays it. */
+    loadTake(given: TakeSource, play: boolean) {
+      if (!geometry) return;
+      dismissPending();
+      take = placeTake(given);
+      epoch += 1;
+      dragging = null;
+      lockedDomain = null;
+      derive();
+      if (!snapshot) return;
+      if (play && !reducedMotion()) {
+        startPlaying(snapshot.domain.start);
+      } else {
+        hold(snapshot.takeEnd);
+        publish();
+        emit();
+      }
+    },
+
     setSpec(next: MotionSpec, replayAfter: boolean, view: Element | null) {
       dismissPending();
       const wasAtEnd = snapshot !== null && atEnd();
       spec = next;
+      epoch += 1;
       derive();
       if (!snapshot) return;
       const t = wasAtEnd ? snapshot.takeEnd : Math.min(time, snapshot.takeEnd);
@@ -468,13 +642,23 @@ export function createSession(showcase: Showcase, start: SessionStart) {
       const before = events[index - 1]!.atMs + MARKER_GAP_MS;
       const after = (events[index + 1]?.atMs ?? snapshot!.domain.end - TAIL_MS) - MARKER_GAP_MS;
       const next = Math.round(Math.max(before, Math.min(after, atMs)));
-      take = { ...take, events: events.map((event, i) => (i === index ? { ...event, atMs: next } : event)) };
+      take = { ...take, name: take.name === 'reverse' ? take.name : null, events: events.map((event, i) => (i === index ? { ...event, atMs: next } : event)) };
+      epoch += 1;
       phase = 'paused';
       moving = false;
       derive();
       hold(next);
       publish();
       emit();
+    },
+
+    /** Works a take out under the motion as it stands, for a strip to draw. */
+    preview(given: TakeSource): Preview | null {
+      if (!geometry) return null;
+      const placed = placeTake(given);
+      const { timeline } = replay(placed.events, placed.initialState, 0);
+      const last = placed.events[placed.events.length - 1]?.atMs ?? LEAD_MS;
+      return { timeline, startMs: LEAD_MS, endMs: restOf(timeline, last) };
     },
 
     /** Races the take under a second spec, or stops when given null. Nothing else changes. */
@@ -484,9 +668,6 @@ export function createSession(showcase: Showcase, start: SessionStart) {
       derive();
       queueMicrotask(emit);
     },
-
-    /** Moves the example's interruption without touching the panel, for restoring a link. */
-    exampleDelay: () => (take.events.length > 1 ? take.events[1]!.atMs - take.events[0]!.atMs : null),
 
     /** The followed edge at a moment of the take shown. */
     reading(t: number, of: 'take' | 'rival' = 'take'): { position: number; velocity: number } {
