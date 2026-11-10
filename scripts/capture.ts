@@ -104,14 +104,18 @@ async function record(name: string, script: (page: Page) => Promise<void>, url =
 async function pull(page: Page, from: { x: number; y: number }, dy: number, ms: number, shape: (x: number) => number, release = true) {
   await page.mouse.move(from.x, from.y, { steps: 12 });
   await page.mouse.down();
-  // By the clock, not by a count of moves: a browser that is recording answers each move slowly.
+  await drive(page, from, dy, ms, shape);
+  if (release) await page.mouse.up();
+}
+
+/** Moves a pointer that is already down. By the clock, not by a count of moves: a browser that is recording answers each move slowly. */
+async function drive(page: Page, from: { x: number; y: number }, dy: number, ms: number, shape: (x: number) => number) {
   const started = Date.now();
   for (;;) {
     const x = Math.min(1, (Date.now() - started) / ms);
     await page.mouse.move(from.x, from.y + dy * shape(x));
     if (x >= 1) break;
   }
-  if (release) await page.mouse.up();
 }
 
 const middle = async (page: Page, selector: string) => {
@@ -131,11 +135,17 @@ async function hand(page: Page, say: (text: string) => Promise<void> = (text) =>
   await page.mouse.up();
   await wait(1100);
   await say('Throw it, and the spring starts from your speed');
+  const summary = await middle(page, '.live .fx-summary');
+  const card = { x: summary.x - 60, y: summary.y + 16 };
   await pull(page, await middle(page, '#grab'), 120, 150, flick);
-  await wait(230);
+  await wait(60);
+  // The pointer jumps to the catch: the card is only in the air for a moment.
+  await page.mouse.move(card.x, card.y);
+  await page.mouse.down();
   await say('Catch it on the way and throw it back');
-  const card = await middle(page, '.live .fx-summary');
-  await pull(page, card, -110, 190, flick);
+  await drive(page, card, -30, 260, ease);
+  await drive(page, { x: card.x, y: card.y - 30 }, -28, 110, flick);
+  await page.mouse.up();
   await wait(1500);
   await say('Every take prints a plate');
   await page.mouse.move(card.x + 260, card.y + 440, { steps: 14 });
@@ -226,9 +236,13 @@ async function stills() {
     await page.waitForSelector('.plot .line-take');
     await page.locator('#take-note').click();
     await wait(300);
+    const summary = await middle(page, '.live .fx-summary');
+    const card = { x: summary.x - 60, y: summary.y + 16 };
     await pull(page, await middle(page, '#grab'), 120, 150, flick);
-    await wait(240);
-    await pull(page, await middle(page, '.live .fx-summary'), -64, 260, ease, false);
+    await wait(60);
+    await page.mouse.move(card.x, card.y);
+    await page.mouse.down();
+    await drive(page, card, -34, 260, ease);
     await wait(120);
   };
   await shot(base, 1440, 800, 'cover.png', held);
