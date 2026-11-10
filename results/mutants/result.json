@@ -1,7 +1,7 @@
 {
-  "baselineTests": 118,
-  "mutants": 46,
-  "caught": 46,
+  "baselineTests": 160,
+  "mutants": 64,
+  "caught": 64,
   "restoredSuitePasses": true,
   "rows": [
     {
@@ -88,11 +88,11 @@
       "file": "packages/studio/runtime/channel.ts",
       "status": "caught",
       "killedBy": [
-        "closed form against the matrix exponential reference keeps position and speed through: reversal halfway",
-        "closed form against the matrix exponential reference keeps position and speed through: reversal into a stiffer spring",
-        "closed form against the matrix exponential reference keeps position and speed through: repeated retargeting across regimes"
+        "letting go carries on from the hand position and speed, on the transition curve",
+        "letting go a harder throw from the same place overshoots further",
+        "letting go with a command, leaves the other way from the same position and speed"
       ],
-      "kills": 6
+      "kills": 10
     },
     {
       "name": "delayed retarget reads the wrong moment",
@@ -119,9 +119,9 @@
       "killedBy": [
         "live and replay agree when a command lands after a queued one came due but before the frame ran it",
         "queue edge cases finishes drawing when a queued command is refused",
-        "settling lands exactly on target with zero velocity at the settle time"
+        "letting go carries on from the hand position and speed, on the transition curve"
       ],
-      "kills": 3
+      "kills": 5
     },
     {
       "name": "a channel moves before its first leg",
@@ -146,9 +146,10 @@
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
+        "taking hold outranks a rule that would ignore or queue the command",
         "interruption ignores a command when the rule says so"
       ],
-      "kills": 1
+      "kills": 2
     },
     {
       "name": "queue rule has no effect",
@@ -159,16 +160,17 @@
         "queue edge cases does not hang replaying a queued command with nowhere to go",
         "queue edge cases keeps a queued command waiting when replay stops before it is due"
       ],
-      "kills": 4
+      "kills": 5
     },
     {
       "name": "interruption curve ignored",
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
+        "letting go uses the curve of a rule that retargets, and ignores rules that queue or ignore",
         "interruption applies the rule on the running transition, not the one being started"
       ],
-      "kills": 1
+      "kills": 2
     },
     {
       "name": "reduced motion fades the wrong channel",
@@ -184,9 +186,10 @@
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
+        "taking hold brings every channel along, so a target that enters fades with the hand",
         "presence an entering target starts from the pose of the state it came from"
       ],
-      "kills": 1
+      "kills": 2
     },
     {
       "name": "resize always snaps",
@@ -226,16 +229,18 @@
         "live and replay agree when a command lands after a queued one came due but before the frame ran it",
         "live and replay agree keeps reduced motion for a queued command"
       ],
-      "kills": 8
+      "kills": 10
     },
     {
       "name": "unchanged layout still retargets",
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
+        "the controller records a grab, each drag and the release, in order",
+        "the controller handles a grab that is let go of before its commit",
         "layout changes does nothing when the layout has not moved"
       ],
-      "kills": 1
+      "kills": 3
     },
     {
       "name": "replay leaves a refused command queued",
@@ -344,6 +349,180 @@
       "status": "caught",
       "killedBy": [
         "lifecycle does not grow without limit when transitions are instant"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a stopped hand keeps its speed",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "reading a hand reads no speed once the hand has stopped, however fast it was",
+        "letting go a hand that stopped lets go at rest"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "hand speed read from the whole gesture",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "reading a hand forgets movement older than its window"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "hand speed in the wrong unit",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "reading a hand reads a steady drag as exactly its speed",
+        "reading a hand reads no speed once the hand has stopped, however fast it was",
+        "reading a hand is not swung by one late sample"
+      ],
+      "kills": 5
+    },
+    {
+      "name": "a hand reports no speed",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "taking hold reports the hand speed as the channel speed",
+        "letting go a harder throw from the same place overshoots further",
+        "letting go with a command, leaves the other way from the same position and speed"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "a caught channel jumps to the hand",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "catching a transition in flight eases a channel that was somewhere else onto the hand, with no jump",
+        "catching a transition in flight eases a target that has to come back, starting from nothing",
+        "a layout change under a hand leads the hand to the new endpoint without letting go"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "a hand cannot pass either end",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "taking hold changes state at once and follows the hand exactly"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a second hand takes over",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "taking hold refuses a second hand, and a command with nowhere to go, and keeps hold through both"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a hand lets go on the curve of a rule that does not retarget",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "letting go uses the curve of a rule that retargets, and ignores rules that queue or ignore"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a release waits for a delay",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "letting go does not wait for a delay"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a layout change shakes the hand off",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "a layout change under a hand leads the hand to the new endpoint without letting go"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a hand starts from the new layout",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "taking hold changes state at once and follows the hand exactly",
+        "taking hold reports the hand speed as the channel speed",
+        "taking hold refuses a second hand, and a command with nowhere to go, and keeps hold through both"
+      ],
+      "kills": 9
+    },
+    {
+      "name": "a grab is not remembered",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "taking hold refuses a second hand, and a command with nowhere to go, and keeps hold through both",
+        "letting go carries on from the hand position and speed, on the transition curve",
+        "letting go a harder throw from the same place overshoots further"
+      ],
+      "kills": 9
+    },
+    {
+      "name": "hand samples can go back in time",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "reading a hand moves the last sample when time has not advanced"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "replay ignores drags",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "the controller replays a throw to exactly what happened live"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "a command leaves the hand holding on",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "the controller lets a command take over from the hand, and then ignores the hand"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "drags are not recorded",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "the controller records a grab, each drag and the release, in order",
+        "the controller replays a throw to exactly what happened live"
+      ],
+      "kills": 2
+    },
+    {
+      "name": "a release before the commit is lost",
+      "file": "packages/studio/runtime/controller.ts",
+      "status": "caught",
+      "killedBy": [
+        "the controller handles a grab that is let go of before its commit"
+      ],
+      "kills": 1
+    },
+    {
+      "name": "any hand progress accepted",
+      "file": "packages/studio/authoring/project.ts",
+      "status": "caught",
+      "killedBy": [
+        "a take with a hand in a project file refuses a hand that is nowhere near the transition"
       ],
       "kills": 1
     },
