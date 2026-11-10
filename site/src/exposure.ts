@@ -29,7 +29,10 @@ export interface PlateInk {
   dwell: number;
   /** Darkness of one flash. */
   flash: number;
-  /** Darkness one shutter step adds to everything the target covers, on a layer of its own. */
+  /**
+   * Darkness one flash adds to everything the target covers, on a layer of its own. It is laid
+   * down a flash at a time, because a canvas holds 255 levels and a step smaller than one is lost.
+   */
   wash: number;
   /** The darkest that layer is ever shown, so a hand that waits a long time does not black the plate out. */
   washCeiling: number;
@@ -41,7 +44,7 @@ export interface PlateInk {
 export const SHUTTER_MS = 2;
 export const FLASH_MS = 1000 / 60;
 
-export const PLATE_INK: PlateInk = { color: '#1d3a2a', dwell: 0.04, flash: 0.2, wash: 0.004, washCeiling: 0.2, line: 1 };
+export const PLATE_INK: PlateInk = { color: '#1d3a2a', dwell: 0.04, flash: 0.2, wash: 0.035, washCeiling: 0.16, line: 1 };
 
 function outline(ctx: CanvasRenderingContext2D, source: PlateSource, t: number, map: PlateMap): boolean {
   const { timeline, showcase, levels } = source;
@@ -93,15 +96,15 @@ export function expose(
   wash.globalAlpha = ink.wash;
   for (let k = Math.floor((fromMs - originMs) / SHUTTER_MS) + 1; originMs + k * SHUTTER_MS <= toMs; k += 1) {
     if (k < 0) continue;
-    const t = originMs + k * SHUTTER_MS;
-    if (!outline(ctx, source, t, map)) continue;
-    ctx.stroke();
-    if (outline(wash, source, t, map)) wash.fill();
+    if (outline(ctx, source, originMs + k * SHUTTER_MS, map)) ctx.stroke();
   }
   ctx.globalAlpha = ink.flash;
   for (let k = Math.floor((fromMs - originMs) / FLASH_MS) + 1; originMs + k * FLASH_MS <= toMs; k += 1) {
     if (k < 0) continue;
-    if (outline(ctx, source, originMs + k * FLASH_MS, map)) ctx.stroke();
+    const t = originMs + k * FLASH_MS;
+    if (!outline(ctx, source, t, map)) continue;
+    ctx.stroke();
+    if (outline(wash, source, t, map)) wash.fill();
   }
   wash.restore();
   ctx.restore();
