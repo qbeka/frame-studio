@@ -42,6 +42,9 @@ function isRects(value: unknown): value is Rects {
   );
 }
 
+/** A hand may pass either end of a transition, but not by more than the transition itself. */
+const isProgress = (value: unknown): value is number => typeof value === 'number' && value >= -1 && value <= 2;
+
 function readTake(value: unknown, problems: Problem[]): Take | null {
   if (value === null) return null;
   if (
@@ -74,8 +77,15 @@ function readTake(value: unknown, problems: Problem[]): Take | null {
       events.push(event as TakeEvent);
     } else if (event.type === 'props' && isRecord(event.patch)) {
       events.push(event as TakeEvent);
+    } else if (event.type === 'grab' && typeof event.command === 'string' && isProgress(event.progress)) {
+      if (event.rects !== undefined && !isRects(event.rects)) problems.push({ path: `${path}.rects`, message: 'are not valid boxes.' });
+      events.push(event as TakeEvent);
+    } else if (event.type === 'drag' && isProgress(event.progress)) {
+      events.push(event as TakeEvent);
+    } else if (event.type === 'release') {
+      events.push(event as TakeEvent);
     } else {
-      problems.push({ path, message: 'must be a command, measure or props event.' });
+      problems.push({ path, message: 'must be a command, measure, props, grab, drag or release event.' });
     }
   });
   return {
