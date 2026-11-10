@@ -104,10 +104,12 @@ async function record(name: string, script: (page: Page) => Promise<void>, url =
 async function pull(page: Page, from: { x: number; y: number }, dy: number, ms: number, shape: (x: number) => number, release = true) {
   await page.mouse.move(from.x, from.y, { steps: 12 });
   await page.mouse.down();
-  const steps = Math.max(4, Math.round(ms / 12));
-  for (let i = 1; i <= steps; i += 1) {
-    await page.mouse.move(from.x, from.y + dy * shape(i / steps));
-    if (i < steps) await wait(12);
+  // By the clock, not by a count of moves: a browser that is recording answers each move slowly.
+  const started = Date.now();
+  for (;;) {
+    const x = Math.min(1, (Date.now() - started) / ms);
+    await page.mouse.move(from.x, from.y + dy * shape(x));
+    if (x >= 1) break;
   }
   if (release) await page.mouse.up();
 }
