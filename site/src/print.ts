@@ -127,6 +127,9 @@ export function drawArt(ctx: CanvasRenderingContext2D, snap: ArtSource, showcase
   ctx.restore();
 }
 
+/** Lets the browser take a breath, so a print is several short tasks and not one long one. */
+const breath = () => new Promise<void>((resolve) => setTimeout(resolve));
+
 async function fonts(sizes: string[]) {
   try {
     await Promise.all(sizes.map((font) => document.fonts.load(font)));
@@ -162,7 +165,9 @@ export async function renderPrint(snap: Snapshot, showcase: Showcase, address: s
   ctx.fillText(showcase.name, 1540, 104);
   ctx.textAlign = 'left';
 
+  await breath();
   drawArt(ctx, snap, showcase, { x: 112, y: 196, width: 1376, height: 564 }, 2);
+  await breath();
 
   // Time along the bottom of the trace.
   const curve = curveOf(snap.spec, showcase, 'go');
@@ -185,6 +190,7 @@ export async function renderPrint(snap: Snapshot, showcase: Showcase, address: s
 export async function savePrint(snap: Snapshot, showcase: Showcase, address: string): Promise<boolean> {
   try {
     const canvas = await renderPrint(snap, showcase, address);
+    await breath();
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) return false;
     const url = URL.createObjectURL(blob);

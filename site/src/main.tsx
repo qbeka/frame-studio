@@ -34,7 +34,8 @@ if (mounts.length > 0 && typeof IntersectionObserver === 'function') {
     (entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return;
       near.disconnect();
-      void import('./essay').then(({ mountFigure }) => mounts.forEach(mountFigure));
+      // One figure to a task, so reading on is never held up by drawing them.
+      void import('./essay').then(({ mountFigure }) => mounts.forEach((mount, i) => setTimeout(() => mountFigure(mount), i * 60)));
     },
     { rootMargin: '400px 0px' },
   );

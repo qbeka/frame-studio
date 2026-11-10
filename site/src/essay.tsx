@@ -56,7 +56,7 @@ function Delay({ stage, delay, onDelay, id }: { stage: StageView; delay: number;
   );
 }
 
-function RulePlate({ stage, source }: { stage: StageView; source: ArtSource }) {
+function RulePlate({ stage, source, order }: { stage: StageView; source: ArtSource; order: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [width, setWidth] = useState(0);
   useEffect(() => {
@@ -67,13 +67,17 @@ function RulePlate({ stage, source }: { stage: StageView; source: ArtSource }) {
   }, []);
   useEffect(() => {
     const element = canvas.current!;
-    if (width === 0) return;
-    const scale = ratio();
-    element.width = Math.round(width * scale);
-    element.height = Math.round(element.clientHeight * scale);
-    const ctx = element.getContext('2d')!;
-    drawArt(ctx, source, stage.showcase, { x: 10 * scale, y: 8 * scale, width: element.width - 20 * scale, height: element.height - 16 * scale }, scale * 0.75, 0.42);
-  }, [stage, source, width]);
+    if (width === 0) return undefined;
+    // Each plate is printed in a task of its own, a moment after the one before it.
+    const timer = setTimeout(() => {
+      const scale = ratio();
+      element.width = Math.round(width * scale);
+      element.height = Math.round(element.clientHeight * scale);
+      const ctx = element.getContext('2d')!;
+      drawArt(ctx, source, stage.showcase, { x: 10 * scale, y: 8 * scale, width: element.width - 20 * scale, height: element.height - 16 * scale }, scale * 0.75, 0.42);
+    }, order * 12);
+    return () => clearTimeout(timer);
+  }, [stage, source, width, order]);
   return <canvas ref={canvas} aria-hidden="true" />;
 }
 
@@ -89,7 +93,7 @@ function Rules({ stage, delay, onDelay }: { stage: StageView; delay: number; onD
   return (
     <>
       <div className="rules">
-        {runs.map(({ rule, timeline, steps, events }) => {
+        {runs.map(({ rule, timeline, steps, events }, order) => {
           const source: ArtSource = { timeline, ghost: null, levels, domain, hands: [], take: { startMs: 0, initialState: showcase.spec.initialState, events, scripted: true, name: null }, marker: null, takeEnd: lastMark(timeline).settleMs + TAIL_MS };
           const speed = edgeAt(timeline, showcase, cut, levels).velocity;
           const later = steps.find((step, i) => i > 1 && step.command === showcase.back);
@@ -101,7 +105,7 @@ function Rules({ stage, delay, onDelay }: { stage: StageView; delay: number; onD
                 : `${back} is dropped, and ${go} carries on to the end`;
           return (
             <div className="rule" key={rule.policy} data-rule={rule.policy}>
-              <RulePlate stage={stage} source={source} />
+              <RulePlate stage={stage} source={source} order={order} />
               <h4>{rule.label}</h4>
               <p>{what}</p>
             </div>
