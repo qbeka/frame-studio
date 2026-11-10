@@ -2,15 +2,15 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'rea
 import type { KeyboardEvent, PointerEvent, RefObject } from 'react';
 import type { SpringCurve } from '../../packages/studio/runtime/spec';
 import { springAt } from '../../packages/studio/runtime/spring';
-import { lastMark, type Timeline } from '../../packages/studio/runtime/timeline';
+import type { Timeline } from '../../packages/studio/runtime/timeline';
 import { DAMPING, STIFFNESS, curveOf, label, tidy } from './motion';
 import { LEAD_MS, type Session, type Snapshot } from './session';
 import type { Showcase } from './showcase';
-import { edgeAt, extentAt } from './trace';
+import { edgeAt } from './trace';
 
-/** One ghost frame per 60 Hz frame. These are computed moments of the take, not measured paints. */
-export const FRAME_MS = 1000 / 60;
 const AXIS = 22;
+/** At most this many of a hand's samples are dotted, however long it held on. */
+const MAX_DOTS = 90;
 /** The spring handle sits where the natural frequency times the time is this many radians. */
 const HANDLE_PHASE = 1.4;
 
@@ -65,8 +65,9 @@ export interface PlotProps {
 }
 
 /**
- * The instrument. Time runs left to right and the followed edge is drawn in real pixels, so the
- * line is what the edge of the component does. Each bar is the edge at one frame.
+ * The trace. Time runs left to right and the followed edge is drawn in real pixels, so the line
+ * is what the edge of the component does. Where a hand held it the line is ink, with a dot for
+ * each pointer sample, and where a spring had it the line is green.
  */
 export const Plot = memo(function Plot({ session, snap, showcase, attached, originY, reach, onSpring }: PlotProps) {
   const plot = useRef<HTMLDivElement>(null);
@@ -77,12 +78,15 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
   const rivalDot = useRef<SVGCircleElement>(null);
   const seekHandle = useRef<HTMLDivElement>(null);
   const { width, height } = useSize(plot);
-  const { domain, timeline, ghost, rival, take, steps, marker, levels, spec } = snap;
+  const { domain, timeline, ghost, rival, take, steps, marker, levels, spec, hands, held } = snap;
   const span = domain.end - domain.start;
   const origin = domain.start + LEAD_MS;
   const direction = Math.sign(levels.high - levels.low) || 1;
   const go = label(showcase, showcase.go);
   const back = label(showcase, showcase.back);
+  /** Only a take made of presses can have its presses moved. A hand's samples stay where they fell. */
+  const editable = take.events.every((event) => event.type === 'command');
+  const lastEvent = take.events[take.events.length - 1]?.atMs ?? origin;
 
   const scale = useMemo(() => {
     const x = (t: number) => ((t - domain.start) / span) * width;
@@ -109,30 +113,39 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
       }
       return d;
     };
-    const base = y(levels.low);
-    const bars = (source: Timeline, from: number, to: number) => {
-      let d = '';
-      const step = x(origin + FRAME_MS) - x(origin);
-      const gap = step > 3.5 ? 1 : 0;
-      for (let i = Math.ceil((from - origin) / FRAME_MS - 1e-6); origin + i * FRAME_MS < to; i += 1) {
-        const t = origin + i * FRAME_MS;
-        const edge = y(edgeAt(source, showcase, t, levels).position);
-        if (Math.abs(edge - base) < 0.75) continue;
-        const x1 = round(x(t) + gap / 2);
-        const x2 = round(x(t + FRAME_MS) - gap / 2);
-        const r = Math.min(1.5, (x2 - x1) / 2, Math.abs(edge - base) / 2) * Math.sign(edge - base);
-        d += `M${x1} ${round(base)}H${x2}V${round(edge - r)}Q${x2} ${round(edge)} ${round(x2 - Math.abs(r))} ${round(edge)}H${round(x1 + Math.abs(r))}Q${x1} ${round(edge)} ${x1} ${round(edge - r)}Z`;
-      }
-      return d;
-    };
     const cut = marker === null ? null : take.events[marker]!.atMs;
+    // While a hand holds on, nothing is known past its last sample.
+    const end = held ? Math.min(domain.end, lastEvent) : domain.end;
+    const floor = y(levels.low);
+    const point = (t: number) => `${round(x(t))} ${round(y(edgeAt(timeline, showcase, t, levels).position))}`;
+    // Under a hand the edge only moves when a sample arrives, so the line joins the samples.
+    const through = (hand: (typeof hands)[number]) => {
+      const until = Math.min(hand.toMs ?? lastEvent, domain.end);
+      return [...hand.samples.filter((t) => t <= until), until].map(point).join('L');
+    };
+    let whole = '';
+    let at = domain.start;
+    for (const hand of hands) {
+      if (hand.fromMs >= end) break;
+      if (hand.fromMs > at) whole += `${whole ? 'L' : 'M'}${line(timeline, at, hand.fromMs).slice(1)}`;
+      whole += `${whole ? 'L' : 'M'}${through(hand)}`;
+      at = Math.min(hand.toMs ?? end, end);
+    }
+    if (end > at) whole += `${whole ? 'L' : 'M'}${line(timeline, at, end).slice(1)}`;
     return {
-      take: line(timeline, domain.start, domain.end),
-      bars: bars(timeline, origin, lastMark(timeline).settleMs),
+      take: whole,
+      under: `${whole}L${round(x(end))} ${round(floor)}L${round(x(domain.start))} ${round(floor)}Z`,
       ghost: ghost && cut !== null ? line(ghost, cut, domain.end) : null,
       rival: rival ? line(rival, domain.start, domain.end) : null,
+      hands: hands.map((hand) => {
+        const every = Math.max(1, Math.ceil(hand.samples.length / MAX_DOTS));
+        return {
+          d: `M${through(hand)}`,
+          dots: hand.samples.filter((_, i) => i % every === 0).map((t) => ({ x: round(x(t)), y: round(y(edgeAt(timeline, showcase, t, levels).position)) })),
+        };
+      }),
     };
-  }, [scale, width, timeline, ghost, rival, domain, span, origin, levels, marker, take, showcase]);
+  }, [scale, width, timeline, ghost, rival, domain, span, origin, levels, marker, take, showcase, hands, held, lastEvent]);
 
   const timeAt = (clientX: number) => {
     const box = plot.current!.getBoundingClientRect();
@@ -163,7 +176,7 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
   // The spring handle rides the first command's own curve, wherever the take goes afterwards.
   const first = take.events[0];
   const curve = curveOf(spec, showcase, 'go');
-  const tunable = first?.command === showcase.go && take.initialState === showcase.from && levels.high !== levels.low;
+  const tunable = first?.type === 'command' && first.command === showcase.go && take.initialState === showcase.from && levels.high !== levels.low;
   const frequency = Math.sqrt(curve.stiffness / curve.mass);
   const handleMs = (HANDLE_PHASE / frequency) * 1000;
   const handleValue = springAt(curve, levels.low, 0, levels.high, HANDLE_PHASE / frequency).position;
@@ -255,16 +268,26 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
         ))}
         {paths ? (
           <>
-            <path className="bars" d={paths.bars} />
+            <path className="under" d={paths.under} clipPath="url(#curve-reveal)" />
             {paths.ghost ? <path className="line-ghost" d={paths.ghost} /> : null}
             {paths.rival ? <path className="line-rival" d={paths.rival} /> : null}
-            <path className="line-ahead" d={paths.take} />
+            {held ? null : <path className="line-ahead" d={paths.take} />}
             <path className="line-take" d={paths.take} clipPath="url(#curve-reveal)" />
+            {paths.hands.map((hand, i) => (
+              <g key={i} clipPath="url(#curve-reveal)">
+                <path className="line-hand" d={hand.d} />
+                {hand.dots.map((dot, j) => (
+                  <circle key={j} className="hand-dot" cx={dot.x} cy={dot.y} r={1.6} />
+                ))}
+              </g>
+            ))}
           </>
         ) : null}
         {take.events.slice(1).map((event, i) => {
+          // Where a spring starts from a speed it did not make: a press mid flight, or a hand letting go.
+          if (event.type === 'drag' || event.type === 'grab') return null;
           const reading = edgeAt(timeline, showcase, event.atMs, levels);
-          const outcome = steps.find((item) => item.atMs === event.atMs && item.command === event.command)?.outcome;
+          const outcome = event.type === 'release' ? 'start' : steps.find((item) => item.atMs === event.atMs && item.command === event.command)?.outcome;
           if (outcome !== 'start' || Math.abs(reading.velocity) < 20) return null;
           // The slope of the line at this moment, which is the speed the new spring starts with.
           const dx = (x(origin + 1000) - x(origin)) / 1000;
@@ -298,15 +321,37 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
       />
 
       <p className="legend" aria-hidden="true">
-        <span><i className="key" />What happened</span>
+        <span><i className="key" />{hands.length > 0 ? 'The spring' : 'What happened'}</span>
+        {hands.length > 0 ? <span><i className="key hand" />A hand</span> : null}
         {paths?.ghost ? <span><i className="key dotted" />With no interruption</span> : null}
         {rival ? <span><i className="key rival" />Side B</span> : null}
       </p>
 
-      {first ? <span className="first" style={{ left: x(first.atMs), height: floor }}>{label(showcase, first.command)}</span> : null}
+      {first ? <span className="first" style={{ left: x(first.atMs), height: floor }}>{first.type === 'command' ? label(showcase, first.command) : 'Hand'}</span> : null}
 
-      {take.events.slice(1).map((event, i) => {
-        const index = i + 1;
+      {hands.map((hand, i) => {
+        if (hand.toMs === null) return null;
+        const reading = edgeAt(timeline, showcase, hand.toMs, levels);
+        const last = i === hands.length - 1;
+        return (
+          <div key={`hand-${i}`} className="let-go" data-flip={x(hand.toMs) > width - 136 || undefined} style={{ left: x(hand.toMs), top: y(reading.position) }}>
+            <i />
+            {last ? (
+              <span>
+                <b>Let go</b> {Math.max(0, Math.round(hand.toMs - origin))} ms
+                <em>{Math.abs(hand.speed) >= 20 ? `${Math.round(Math.abs(hand.speed)).toLocaleString('en-US')} px/s handed on` : 'At rest'}</em>
+              </span>
+            ) : null}
+          </div>
+        );
+      })}
+
+      {take.events.map((event, index) => {
+        if (index === 0 || event.type !== 'command') return null;
+        if (!editable) {
+          // A press in a take that also has a hand in it is shown where it fell, and stays there.
+          return hands.some((hand) => hand.toMs === event.atMs) ? null : <span key={index} className="pressed" style={{ left: x(event.atMs), height: floor }}>{label(showcase, event.command)}</span>;
+        }
         const outcome = steps.find((item) => item.atMs === event.atMs && item.command === event.command)?.outcome;
         const ms = Math.round(event.atMs - origin);
         const reading = edgeAt(timeline, showcase, event.atMs, levels);
@@ -321,7 +366,7 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
             data-outcome={outcome}
             data-flip={x(event.atMs) > width - 128 || undefined}
             style={{ left: x(event.atMs), height: floor }}
-            aria-label={`When ${name} lands, after ${label(showcase, first!.command)}`}
+            aria-label={`When ${name} lands, after ${first?.type === 'command' ? label(showcase, first.command) : 'the hand'}`}
             aria-valuemin={0}
             aria-valuemax={Math.round(span)}
             aria-valuenow={ms}
@@ -357,7 +402,7 @@ export const Plot = memo(function Plot({ session, snap, showcase, attached, orig
           <i />
         </div>
       ) : null}
-      <span className="sr-only">{`${back} can be moved along the take, and the spring handle reshapes ${go}`}</span>
+      <span className="sr-only">{editable ? `${back} can be moved along the take, and the spring handle reshapes ${go}` : `The take has ${hands.length} stretch${hands.length === 1 ? '' : 'es'} held by hand`}</span>
     </div>
   );
 });
@@ -368,23 +413,24 @@ export const Velocity = memo(function Velocity({ session, snap, showcase }: { se
   const head = useRef<SVGGElement>(null);
   const dot = useRef<SVGCircleElement>(null);
   const { width, height } = useSize(box);
-  const { domain, timeline, ghost, rival, take, marker, levels } = snap;
+  const { domain, timeline, ghost, rival, take, marker, levels, hands, held } = snap;
   const span = domain.end - domain.start;
   const direction = Math.sign(levels.high - levels.low) || 1;
+  const lastEvent = take.events[take.events.length - 1]?.atMs ?? domain.start;
 
   const drawn = useMemo(() => {
     if (width === 0) return null;
     const count = Math.max(60, Math.round(width / 2));
     const x = (t: number) => ((t - domain.start) / span) * width;
-    const read = (source: Timeline, from: number) => {
-      const n = Math.max(2, Math.round((count * (domain.end - from)) / span));
+    const read = (source: Timeline, from: number, to = domain.end) => {
+      const n = Math.max(2, Math.round((count * (to - from)) / span));
       return Array.from({ length: n + 1 }, (_, i) => {
-        const t = from + ((domain.end - from) * i) / n;
+        const t = from + ((to - from) * i) / n;
         return { t, v: edgeAt(source, showcase, t, levels).velocity * direction };
       });
     };
     const cut = marker === null ? null : take.events[marker]!.atMs;
-    const main = read(timeline, domain.start);
+    const main = read(timeline, domain.start, held ? Math.min(domain.end, lastEvent) : domain.end);
     const other = ghost && cut !== null ? read(ghost, cut) : null;
     const second = rival ? read(rival, domain.start) : null;
     const all = [...main, ...(other ?? []), ...(second ?? [])];
@@ -400,13 +446,14 @@ export const Velocity = memo(function Velocity({ session, snap, showcase }: { se
       y,
       zero,
       peak: Math.max(...main.map((point) => Math.abs(point.v))),
-      area: `${line(main)}L${round(x(domain.end))} ${zero}L${round(x(domain.start))} ${zero}Z`,
+      area: `${line(main)}L${round(x(main[main.length - 1]!.t))} ${zero}L${round(x(domain.start))} ${zero}Z`,
       main: line(main),
+      hands: hands.map((hand) => line(read(timeline, hand.fromMs, Math.max(hand.fromMs + 1, Math.min(hand.toMs ?? lastEvent, domain.end))))),
       ghost: other ? line(other) : null,
       rival: second ? line(second) : null,
       cut: cut === null ? null : round(x(cut)),
     };
-  }, [width, height, timeline, ghost, rival, domain, span, marker, take, levels, direction, showcase]);
+  }, [width, height, timeline, ghost, rival, domain, span, marker, take, levels, direction, showcase, hands, held, lastEvent]);
 
   useEffect(() => {
     if (!drawn) return undefined;
@@ -429,6 +476,9 @@ export const Velocity = memo(function Velocity({ session, snap, showcase }: { se
             {drawn.ghost ? <path className="line-ghost" d={drawn.ghost} /> : null}
             {drawn.rival ? <path className="line-rival" d={drawn.rival} /> : null}
             <path className="line-take thin" d={drawn.main} />
+            {drawn.hands.map((d, i) => (
+              <path key={i} className="line-hand thin" d={d} />
+            ))}
             <g ref={head}>
               <line className="playhead" x1={0} x2={0} y1={0} y2={height} />
               <circle ref={dot} className="playhead-dot" cx={0} cy={0} r={3} />
@@ -438,63 +488,5 @@ export const Velocity = memo(function Velocity({ session, snap, showcase }: { se
       </svg>
       <span className="velocity-name">Speed{drawn ? `, peak ${Math.round(drawn.peak).toLocaleString('en-US')} px/s` : ''}</span>
     </div>
-  );
-});
-
-/**
- * The take as a long exposure, in place. One outline for every other frame, so the lines crowd
- * where the edge slows and spread where it is fast, with the uninterrupted end dashed.
- */
-export const Onion = memo(function Onion({ session, snap, showcase, left, top }: { session: Session; snap: Snapshot; showcase: Showcase; left: number; top: number }) {
-  const { domain, timeline, ghost, rival, take, marker, levels } = snap;
-  const origin = domain.start + LEAD_MS;
-  const above = useRef<SVGRectElement>(null);
-  const inside = showcase.track.edge === 'top';
-
-  // A target that moves inside its component is drawn over it, but never over the target itself.
-  useEffect(() => {
-    if (!inside) return undefined;
-    const draw = (t: number) => above.current!.setAttribute('height', Math.max(0, top + edgeAt(timeline, showcase, t, levels).position - 1).toFixed(1));
-    draw(session.time());
-    return session.onFrame(draw);
-  }, [session, inside, timeline, levels, top, showcase]);
-  const frames = useMemo(() => {
-    const list: { key: number; x: number; y: number; width: number; height: number }[] = [];
-    const end = lastMark(timeline).settleMs;
-    for (let i = 0; origin + i * FRAME_MS * 2 < end; i += 1) {
-      const extent = extentAt(timeline, showcase, origin + i * FRAME_MS * 2, levels);
-      if (!extent.drawn || extent.bottom - extent.top < 1) continue;
-      list.push({ key: i, x: extent.x, y: extent.top, width: extent.width, height: extent.bottom - extent.top });
-    }
-    return list;
-  }, [timeline, origin, levels, showcase]);
-
-  const box = (source: Timeline, t: number) => {
-    const extent = extentAt(source, showcase, t, levels);
-    return extent.drawn && extent.bottom - extent.top >= 1 ? extent : null;
-  };
-  const cut = marker === null ? null : box(timeline, take.events[marker]!.atMs);
-  const end = ghost ? box(ghost, domain.end) : null;
-  const other = rival ? box(rival, domain.end) : null;
-  const rect = (extent: NonNullable<ReturnType<typeof box>>, className: string) => (
-    <rect className={className} x={round(left + extent.x) + 0.5} y={round(top + extent.top) + 0.5} width={Math.max(0, round(extent.width) - 1)} height={Math.max(0, round(extent.bottom - extent.top) - 1)} rx={showcase.radius} />
-  );
-
-  return (
-    <svg className="onion" aria-hidden="true" clipPath={inside ? 'url(#onion-above)' : undefined}>
-      {inside ? (
-        <defs>
-          <clipPath id="onion-above" clipPathUnits="userSpaceOnUse">
-            <rect ref={above} x={0} y={0} width={4000} height={0} />
-          </clipPath>
-        </defs>
-      ) : null}
-      {end ? rect(end, 'onion-end') : null}
-      {frames.map((frame) => (
-        <rect key={frame.key} className="onion-frame" x={round(left + frame.x) + 0.5} y={round(top + frame.y) + 0.5} width={Math.max(0, round(frame.width) - 1)} height={Math.max(0, round(frame.height) - 1)} rx={showcase.radius} />
-      ))}
-      {cut ? rect(cut, 'onion-cut') : null}
-      {other && !end ? rect(other, 'onion-end') : null}
-    </svg>
   );
 });
