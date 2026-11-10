@@ -10,12 +10,14 @@ import type {
   TransitionSpec,
 } from './spec';
 import {
+  hold,
   readChannel,
   restingChannel,
   retarget,
   type Channel,
   type ChannelName,
   type ChannelReading,
+  type Hand,
 } from './channel';
 
 /**
@@ -50,6 +52,8 @@ export interface Mark {
   targetSettleMs: Record<string, number>;
   /** A command waiting for settleMs. */
   queued: string | null;
+  /** The hand driving the transition, until it lets go. */
+  hand: Hand | null;
 }
 
 export interface Timeline {
@@ -61,7 +65,7 @@ export interface Timeline {
 }
 
 export type Decision =
-  | { kind: 'start'; transition: TransitionSpec; rule: InterruptionRule | null }
+  | { kind: 'start'; transition: TransitionSpec; rule: InterruptionRule | null; hand?: Hand }
   | { kind: 'queue'; command: string; atMs: number }
   | { kind: 'ignore'; command: string }
   | { kind: 'reject'; command: string; reason: 'no-transition' };
@@ -134,6 +138,7 @@ export function createTimeline(spec: MotionSpec, atMs: number, rects: Rects): Ti
     settleMs: atMs,
     targetSettleMs: {},
     queued: null,
+    hand: null,
   };
   return { spec, channels, lastRects: { ...rects }, marks: [mark] };
 }
@@ -153,11 +158,26 @@ export function isAnimating(timeline: Timeline, t: number): boolean {
   return t < markAt(timeline, t).settleMs;
 }
 
-/** Pure: says what a command means at atMs. Nothing changes until `applyDecision`. */
-export function decideCommand(timeline: Timeline, atMs: number, command: string): Decision {
+/**
+ * Pure: says what a command means at atMs. Nothing changes until `applyDecision`.
+ *
+ * With `hand`, the command is a hand taking hold: its transition starts whatever is running, and
+ * follows the hand instead of its curves. A hand outranks the interruption rules both ways. While
+ * one holds on, the next command is the hand letting go with it, so it always leaves from where
+ * the hand was, at the hand's speed.
+ */
+export function decideCommand(timeline: Timeline, atMs: number, command: string, hand?: Hand): Decision {
   const { spec } = timeline;
   const mark = markAt(timeline, atMs);
   const transition = spec.transitions.find((t) => t.from === mark.state && t.command === command);
+  if (hand || mark.hand) {
+    if (!transition || (hand && mark.hand)) return { kind: 'reject', command, reason: 'no-transition' };
+    if (hand) return { kind: 'start', transition, rule: null, hand };
+    const held = spec.transitions.find((t) => t.id === mark.transitionId);
+    // Only a rule that retargets has a curve to give. Queue and ignore do not apply to a hand.
+    const rule = held?.interruptions.find((r) => r.command === command) ?? held?.interruptions.find((r) => r.command === '*');
+    return { kind: 'start', transition, rule: rule?.policy === 'retarget' ? rule : null };
+  }
   const running =
     atMs < mark.settleMs && mark.transitionId !== null
       ? spec.transitions.find((t) => t.id === mark.transitionId)
@@ -227,6 +247,7 @@ function pushMark(
   transitionId: string | null,
   rects: Rects,
   queued: string | null,
+  hand: Hand | null = null,
 ) {
   const targetSettleMs: Record<string, number> = {};
   let settleMs = atMs;
@@ -235,7 +256,7 @@ function pushMark(
     targetSettleMs[id] = settle;
     settleMs = Math.max(settleMs, settle);
   }
-  timeline.marks.push({ atMs, state, transitionId, rects: { ...rects }, known: { ...timeline.lastRects }, settleMs, targetSettleMs, queued });
+  timeline.marks.push({ atMs, state, transitionId, rects: { ...rects }, known: { ...timeline.lastRects }, settleMs, targetSettleMs, queued, hand });
 }
 
 /**
@@ -258,6 +279,8 @@ export function applyDecision(
 
   const { spec } = timeline;
   const { transition, rule } = decision;
+  // A hand that lets go does not wait: the delays belong to a transition started from rest.
+  const released = mark.hand !== null && !decision.hand;
   const fromState = spec.states[transition.from]!;
   const toState = spec.states[transition.to]!;
   const missing: string[] = [];
@@ -270,6 +293,7 @@ export function applyDecision(
       missing.push(id);
       continue;
     }
+    const before = timeline.lastRects[id];
     if (rect) timeline.lastRects[id] = rect;
     const box = timeline.lastRects[id] ?? NOWHERE;
     if (!end.present && !drawnAt(timeline, id, atMs)) continue;
@@ -285,18 +309,37 @@ export function applyDecision(
     }
 
     const goal = poseValues(box, end);
+    // Under a hand, progress 0 is this target at rest in the state being left.
+    const rest = decision.hand ? poseValues(start.present ? (before ?? box) : box, start) : goal;
     for (const name of CHANNELS) {
       const sized = GROUP[name] === 'size';
+      if (decision.hand && !(sized && !animatesSize(spec, id))) {
+        hold(timeline.channels[id]![name], atMs, rest[name], goal[name], decision.hand);
+        continue;
+      }
       const { curve, delayMs } =
         sized && !animatesSize(spec, id)
           ? { curve: null, delayMs: 0 }
           : curveFor(transition, rule, id, name, options);
-      retarget(timeline.channels[id]![name], atMs, atMs + delayMs, goal[name], curve, name, spec.settle);
+      retarget(timeline.channels[id]![name], atMs, released ? atMs : atMs + delayMs, goal[name], curve, name, spec.settle);
     }
   }
 
-  pushMark(timeline, atMs, transition.to, transition.id, rects, null);
+  pushMark(timeline, atMs, transition.to, transition.id, rects, null, decision.hand ?? null);
   return missing;
+}
+
+/**
+ * The hand lets go without a command, so the transition it was holding carries on into the state
+ * already entered, on its own curves, from the hand's position and speed. Returns false when no
+ * hand was holding on.
+ */
+export function applyRelease(timeline: Timeline, atMs: number, options: ApplyOptions): boolean {
+  const mark = markAt(timeline, atMs);
+  const transition = mark.hand && timeline.spec.transitions.find((t) => t.id === mark.transitionId);
+  if (!transition) return false;
+  applyDecision(timeline, atMs, { kind: 'start', transition, rule: null }, mark.rects, options);
+  return true;
 }
 
 /**
@@ -335,10 +378,12 @@ export function applyRemeasure(
       const curve = running && policy === 'retarget' ? last.curve : null;
       // A leg still waiting on its delay keeps its start. A layout change is not a new command.
       const startMs = curve !== null && last.startMs > atMs ? last.startMs : atMs;
-      retarget(channel, atMs, startMs, goal[name]!, curve, name, spec.settle);
+      // A hand keeps hold through a layout change, and now leads to the new endpoint.
+      if (last.hand) hold(channel, atMs, last.from, goal[name]!, last.hand.track);
+      else retarget(channel, atMs, startMs, goal[name]!, curve, name, spec.settle);
     }
   }
-  if (changed) pushMark(timeline, atMs, mark.state, mark.transitionId, rects, mark.queued);
+  if (changed) pushMark(timeline, atMs, mark.state, mark.transitionId, rects, mark.queued, mark.hand);
 }
 
 function sameBox(a: Rect, b: Rect) {
@@ -388,6 +433,17 @@ export function sampleTimeline(timeline: Timeline, t: number): Sample {
   };
 }
 
+/** Adds where the hand is now. Time cannot go back, so a sample at an old moment moves the last one. */
+export function moveHand(hand: Hand, atMs: number, progress: number): void {
+  const last = hand.times.length - 1;
+  if (atMs > hand.times[last]!) {
+    hand.times.push(atMs);
+    hand.progress.push(progress);
+  } else {
+    hand.progress[last] = progress;
+  }
+}
+
 /** Position, velocity and target of one channel at t, for the inspector and the tests. */
 export function inspectChannel(
   timeline: Timeline,
@@ -419,7 +475,12 @@ export function pruneTimeline(timeline: Timeline, t: number): void {
 export type TakeEvent =
   | { atMs: number; type: 'command'; command: string; reduced?: boolean; rects?: Rects }
   | { atMs: number; type: 'measure'; rects: Rects }
-  | { atMs: number; type: 'props'; patch: Record<string, unknown> };
+  | { atMs: number; type: 'props'; patch: Record<string, unknown> }
+  /** A hand takes hold of the transition `command` starts, at this progress through it. */
+  | { atMs: number; type: 'grab'; command: string; progress: number; reduced?: boolean; rects?: Rects }
+  | { atMs: number; type: 'drag'; progress: number }
+  /** The hand lets go and the transition carries on. Letting go with a command is a `command`. */
+  | { atMs: number; type: 'release'; reduced?: boolean };
 
 /** How a replay learns the layout of a state. `at` is a moment in the take. */
 export type Geometry = (state: string, at: number) => Rects;
@@ -446,13 +507,15 @@ export function replayTake(
   const timeline = createTimeline(spec, startMs, initialRects);
   const steps: ReplayStep[] = [];
   let queuedReduced = options.reduced ?? false;
-  const run = (atMs: number, command: string, reduced: boolean) => {
-    const decision = decideCommand(timeline, atMs, command);
+  let hand: Hand | null = null;
+  const run = (atMs: number, command: string, reduced: boolean, grabbed?: Hand) => {
+    const decision = decideCommand(timeline, atMs, command, grabbed);
     const state = decision.kind === 'start' ? decision.transition.to : markAt(timeline, atMs).state;
     const rects = decision.kind === 'start' ? geometry(state, atMs) : {};
     if (decision.kind === 'queue') queuedReduced = reduced;
     applyDecision(timeline, atMs, decision, rects, { reduced });
     steps.push({ atMs, command, outcome: decision.kind });
+    hand = lastMark(timeline).hand;
   };
   // A queued command leaves the queue before it runs, so one that is refused cannot loop.
   const drainQueue = (isDue: (atMs: number) => boolean) => {
@@ -470,7 +533,11 @@ export function replayTake(
       applyRemeasure(timeline, event.atMs, event.rects, spec.resize);
     } else {
       drainQueue((atMs) => atMs <= event.atMs);
+      const reduced = ('reduced' in event ? event.reduced : undefined) ?? options.reduced ?? false;
       if (event.type === 'command') run(event.atMs, event.command, event.reduced ?? options.reduced ?? false);
+      else if (event.type === 'grab') run(event.atMs, event.command, reduced, { times: [event.atMs], progress: [event.progress] });
+      else if (event.type === 'drag' && hand) moveHand(hand, event.atMs, event.progress);
+      else if (event.type === 'release' && applyRelease(timeline, event.atMs, { reduced })) hand = null;
     }
   }
   const endMs = options.endMs ?? Number.POSITIVE_INFINITY;
