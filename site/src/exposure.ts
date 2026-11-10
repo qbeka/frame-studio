@@ -29,8 +29,10 @@ export interface PlateInk {
   dwell: number;
   /** Darkness of one flash. */
   flash: number;
-  /** Darkness one shutter step adds to everything the target covers. */
+  /** Darkness one shutter step adds to everything the target covers, on a layer of its own. */
   wash: number;
+  /** The darkest that layer is ever shown, so a hand that waits a long time does not black the plate out. */
+  washCeiling: number;
   /** Line width in canvas pixels. */
   line: number;
 }
@@ -39,7 +41,7 @@ export interface PlateInk {
 export const SHUTTER_MS = 2;
 export const FLASH_MS = 1000 / 60;
 
-export const PLATE_INK: PlateInk = { color: '#1d3a2a', dwell: 0.04, flash: 0.2, wash: 0.0016, line: 1 };
+export const PLATE_INK: PlateInk = { color: '#1d3a2a', dwell: 0.04, flash: 0.2, wash: 0.004, washCeiling: 0.2, line: 1 };
 
 function outline(ctx: CanvasRenderingContext2D, source: PlateSource, t: number, map: PlateMap): boolean {
   const { timeline, showcase, levels } = source;
@@ -68,9 +70,12 @@ function outline(ctx: CanvasRenderingContext2D, source: PlateSource, t: number, 
 /**
  * Exposes the plate for the moments after `fromMs` up to and including `toMs`. Steps sit on a
  * fixed grid from `originMs`, so exposing a take in pieces prints exactly what one pass would.
+ * The outlines go on `ctx`. The wash, which is everything the target covers, goes on `wash`, and
+ * whoever shows the plate lays it under the outlines at `washCeiling`.
  */
 export function expose(
   ctx: CanvasRenderingContext2D,
+  wash: CanvasRenderingContext2D,
   source: PlateSource,
   originMs: number,
   fromMs: number,
@@ -79,25 +84,43 @@ export function expose(
   ink: PlateInk = PLATE_INK,
 ): void {
   ctx.save();
+  wash.save();
   ctx.strokeStyle = ink.color;
   ctx.lineWidth = ink.line;
   ctx.lineJoin = 'round';
-  ctx.fillStyle = ink.color;
+  ctx.globalAlpha = ink.dwell;
+  wash.fillStyle = ink.color;
+  wash.globalAlpha = ink.wash;
   for (let k = Math.floor((fromMs - originMs) / SHUTTER_MS) + 1; originMs + k * SHUTTER_MS <= toMs; k += 1) {
     if (k < 0) continue;
-    if (!outline(ctx, source, originMs + k * SHUTTER_MS, map)) continue;
-    if (ink.wash > 0) {
-      ctx.globalAlpha = ink.wash;
-      ctx.fill();
-    }
-    ctx.globalAlpha = ink.dwell;
+    const t = originMs + k * SHUTTER_MS;
+    if (!outline(ctx, source, t, map)) continue;
     ctx.stroke();
+    if (outline(wash, source, t, map)) wash.fill();
   }
   ctx.globalAlpha = ink.flash;
   for (let k = Math.floor((fromMs - originMs) / FLASH_MS) + 1; originMs + k * FLASH_MS <= toMs; k += 1) {
     if (k < 0) continue;
     if (outline(ctx, source, originMs + k * FLASH_MS, map)) ctx.stroke();
   }
+  wash.restore();
+  ctx.restore();
+}
+
+/** Exposes a whole take onto one canvas in a single pass, for a print or a small frame. */
+export function print(ctx: CanvasRenderingContext2D, source: PlateSource, originMs: number, toMs: number, map: PlateMap, ink: PlateInk = PLATE_INK): void {
+  const { width, height } = ctx.canvas;
+  const lines = document.createElement('canvas');
+  const wash = document.createElement('canvas');
+  lines.width = wash.width = width;
+  lines.height = wash.height = height;
+  expose(lines.getContext('2d')!, wash.getContext('2d')!, source, originMs, originMs - 1, toMs, map, ink);
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = ink.washCeiling;
+  ctx.drawImage(wash, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.drawImage(lines, 0, 0);
   ctx.restore();
 }
 

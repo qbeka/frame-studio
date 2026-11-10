@@ -1,5 +1,5 @@
 import { RULES, curveOf, feelOf, policyOf } from './motion';
-import { PLATE_INK, expose, stamp, sweptBox, type PlateMap, type PlateSource } from './exposure';
+import { PLATE_INK, print, stamp, sweptBox, type PlateMap, type PlateSource } from './exposure';
 import { LEAD_MS, TAIL_MS, type Snapshot } from './session';
 import type { Showcase } from './showcase';
 import { edgeAt } from './trace';
@@ -46,7 +46,7 @@ export function drawArt(ctx: CanvasRenderingContext2D, snap: ArtSource, showcase
   const yOf = (value: number) => map.top + value * scale;
 
   // The plate.
-  expose(ctx, source, first, first - 1, rest, map, { ...PLATE_INK, dwell: Math.min(0.6, PLATE_INK.dwell * 1.25), flash: PLATE_INK.flash * 1.1, line: unit * 1.25 });
+  print(ctx, source, first, rest, map, { ...PLATE_INK, dwell: Math.min(0.6, PLATE_INK.dwell * 1.25), flash: PLATE_INK.flash * 1.1, line: unit * 1.25 });
   stamp(ctx, source, domain.start, map, { color: INK, width: unit * 1.5 });
 
   // The trace, on the same vertical scale.

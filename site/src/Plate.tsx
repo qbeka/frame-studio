@@ -1,5 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useRef } from 'react';
-import { PLATE_INK, expose, sweptBox, type PlateMap, type PlateSource } from './exposure';
+import { PLATE_INK, expose, print, sweptBox, type PlateMap, type PlateSource } from './exposure';
 import { LEAD_MS, TAIL_MS, type Preview, type Session, type Snapshot } from './session';
 import type { Showcase } from './showcase';
 import { edgeAt, type Levels } from './trace';
@@ -14,6 +14,7 @@ const ratio = () => Math.min(2, window.devicePixelRatio || 1);
 export const Plate = memo(function Plate({ session, snap, showcase, left, top }: { session: Session; snap: Snapshot; showcase: Showcase; left: number; top: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const film = useRef<HTMLCanvasElement | null>(null);
+  const washFilm = useRef<HTMLCanvasElement | null>(null);
   const state = useRef({ epoch: -1, until: 0, width: 0, height: 0, left: NaN, top: NaN });
   const inside = showcase.track.edge === 'top';
 
@@ -27,8 +28,9 @@ export const Plate = memo(function Plate({ session, snap, showcase, left, top }:
       element.width = width;
       element.height = height;
       film.current ??= document.createElement('canvas');
-      film.current.width = width;
-      film.current.height = height;
+      washFilm.current ??= document.createElement('canvas');
+      film.current.width = washFilm.current.width = width;
+      film.current.height = washFilm.current.height = height;
       state.current = { ...state.current, width, height, epoch: -1 };
     };
     size();
@@ -55,7 +57,8 @@ export const Plate = memo(function Plate({ session, snap, showcase, left, top }:
   function draw(t: number) {
     const element = canvas.current;
     const sheet = film.current;
-    if (!element || !sheet || state.current.width === 0) return;
+    const under = washFilm.current;
+    if (!element || !sheet || !under || state.current.width === 0) return;
     const { snap: now, left: x, top: y } = latest.current;
     const scale = ratio();
     const first = now.domain.start + LEAD_MS;
@@ -64,8 +67,10 @@ export const Plate = memo(function Plate({ session, snap, showcase, left, top }:
     const until = now.phase === 'paused' ? rest : Math.min(t, rest);
     const s = state.current;
     const ctx = sheet.getContext('2d')!;
+    const wash = under.getContext('2d')!;
     if (s.epoch !== now.epoch || until < s.until || s.left !== x || s.top !== y) {
       ctx.clearRect(0, 0, s.width, s.height);
+      wash.clearRect(0, 0, s.width, s.height);
       s.epoch = now.epoch;
       s.until = first - 1;
       s.left = x;
@@ -74,11 +79,14 @@ export const Plate = memo(function Plate({ session, snap, showcase, left, top }:
     if (until > s.until) {
       const source: PlateSource = { timeline: now.timeline, showcase, levels: now.levels };
       const map: PlateMap = { scale, left: x * scale + 0.5, top: y * scale + 0.5 };
-      expose(ctx, source, first, s.until, until, map, { ...PLATE_INK, line: scale });
+      expose(ctx, wash, source, first, s.until, until, map, { ...PLATE_INK, line: scale });
       s.until = until;
     }
     const out = element.getContext('2d')!;
     out.clearRect(0, 0, s.width, s.height);
+    out.globalAlpha = PLATE_INK.washCeiling;
+    out.drawImage(under, 0, 0);
+    out.globalAlpha = 1;
     out.drawImage(sheet, 0, 0);
     if (inside) {
       // A target that moves inside its component is printed over it, but never over itself.
@@ -122,7 +130,7 @@ export const PlateThumb = memo(function PlateThumb({ preview, showcase, levels }
     const fit = height / (hi - lo + 2 * air);
     const box = sweptBox(source, preview.startMs, preview.endMs) ?? { left: 0, top: 0, width: showcase.width, height: hi };
     const map: PlateMap = { scale: fit, left: (width - box.width * fit) / 2 - box.left * fit, top: -(lo - air) * fit };
-    expose(ctx, source, preview.startMs, preview.startMs - 1, preview.endMs, map, { ...PLATE_INK, dwell: Math.min(0.4, PLATE_INK.dwell * fit * 2), flash: PLATE_INK.flash * 0.6, wash: PLATE_INK.wash * 0.6, line: Math.max(1, scale * 0.75) });
+    print(ctx, source, preview.startMs, preview.endMs, map, { ...PLATE_INK, dwell: Math.min(0.4, PLATE_INK.dwell * fit * 2), flash: PLATE_INK.flash * 0.6, line: Math.max(1, scale * 0.75) });
     const from = preview.startMs - LEAD_MS * 0.6;
     const to = preview.endMs + LEAD_MS * 0.6;
     ctx.beginPath();
