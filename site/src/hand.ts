@@ -83,8 +83,12 @@ export function attachHand({ session, showcase, live, bar, onHold }: HandOptions
       }
       // The edge is taken from where it is now, so nothing jumps when the hand lands.
       pointer = { ...pointer, held: true, y: event.clientY, edge };
-      getSelection()?.removeAllRanges();
-      onHold(true);
+      // How the stage looks while held can wait a frame. Taking hold has enough to do in this one.
+      requestAnimationFrame(() => {
+        if (!pointer?.held) return;
+        getSelection()?.removeAllRanges();
+        onHold(true);
+      });
       return;
     }
     if (event.timeStamp - pointer.lastMs < SAMPLE_GAP_MS) return;

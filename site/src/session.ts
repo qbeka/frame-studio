@@ -140,6 +140,7 @@ export function createSession(showcase: Showcase, start: SessionStart) {
   let rivalSpec: MotionSpec | null = null;
   let levels: Levels = { low: 0, high: 0, clip: Number.POSITIVE_INFINITY };
   let geometry: Geometry | null = null;
+  let geometryKey = '';
   let snapshot: Snapshot | null = null;
   let take: Take = { startMs: 0, initialState: start.take.initialState, events: [], scripted: start.take.scripted, name: start.take.name };
   let phase: Phase = 'paused';
@@ -170,8 +171,9 @@ export function createSession(showcase: Showcase, start: SessionStart) {
       take = { ...take, events: [...take.events, kept].sort((a, b) => a.atMs - b.atMs) };
       phase = 'live';
       moving = true;
-      // A hand sends many of these between two frames. The next frame works them all out at once.
-      if (event.type === 'drag') stale = true;
+      // A hand sends many of these between two frames, so the next frame works them all out at once.
+      // Taking hold waits for that frame too: the press that takes hold has enough to do already.
+      if (event.type === 'drag' || event.type === 'grab') stale = true;
       else derive();
       ensureLoop();
     },
@@ -512,6 +514,10 @@ export function createSession(showcase: Showcase, start: SessionStart) {
 
     setGeometry(next: Geometry, nextLevels: Levels) {
       const first = geometry === null;
+      // Measuring again and finding the same layout changes nothing, so nothing is worked out again.
+      const key = JSON.stringify([next, nextLevels]);
+      if (key === geometryKey) return;
+      geometryKey = key;
       geometry = next;
       levels = nextLevels;
       epoch += 1;
