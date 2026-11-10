@@ -66,11 +66,13 @@ for (const file of files.filter((f) => INTERFACE.test(f) && !CONTENT.test(f))) {
 /** In HTML only a prose paragraph or an item in the list of limits may end with a period. */
 const HTML_CLOSING = /[A-Za-z0-9)%]\.\s*<\/(h[1-6]|figcaption|button|label|dt|dd|span|b|a|output|summary|title)>/g;
 const HTML_PARAGRAPH = /<p(?![^>]*class="prose")[^>]*>(?:(?!<\/p>)[\s\S])*?[A-Za-z0-9)%]\.\s*<\/p>/g;
+/** A caption is one sentence, so it has no full stop inside it either. */
+const HTML_CAPTION = /<figcaption>(?:(?!<\/figcaption>)[\s\S])*?[a-z0-9)%]\.\s+[A-Z](?:(?!<\/figcaption>)[\s\S])*?<\/figcaption>/g;
 const HTML_META = /<meta[^>]+(?:name="description"|property="og:(?:title|description)")[^>]+content="[^"]*\."/g;
 for (const file of files.filter((f) => /^(site|packages\/studio\/editor)\/index\.html$/.test(f))) {
   const text = read(file);
   if (text === null) continue;
-  for (const pattern of [HTML_CLOSING, HTML_PARAGRAPH, HTML_META]) {
+  for (const pattern of [HTML_CLOSING, HTML_PARAGRAPH, HTML_CAPTION, HTML_META]) {
     for (const match of text.matchAll(pattern)) failures.push(`${file}:${lineOf(text, match.index + match[0].length)}: closing period: ${show(match[0])}`);
   }
 }
