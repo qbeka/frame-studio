@@ -3,22 +3,30 @@ import type { PropValue } from '../../packages/studio/authoring/registration';
 import { measureTargets } from '../../packages/studio/runtime/dom';
 import { useFrameController, type FrameHandle } from '../../packages/studio/runtime/react';
 import type { MotionSpec, SpringCurve } from '../../packages/studio/runtime/spec';
-import { isAnimating } from '../../packages/studio/runtime/timeline';
+import { lastMark } from '../../packages/studio/runtime/timeline';
 import { ExportSheet } from './ExportSheet';
-import { FEELS, curveOf, feelOf, label, policyOf, withCurve } from './motion';
-import { Onion, Plot, Velocity } from './Plot';
-import { CopyButton, Race, Tune, announce, rivalOf, type RaceChoice } from './Rail';
-import { LEAD_MS, createSession, type Geometry, type Session, type Snapshot } from './session';
+import { Follower } from './Follower';
+import { attachHand } from './hand';
+import { Help } from './Help';
+import { LIBRARY } from './library';
+import { curveOf, feelOf, label, policyOf, withCurve } from './motion';
+import { Plate, PlateThumb } from './Plate';
+import { Plot, Velocity } from './Plot';
+import { CopyButton, RaceControls, Tune, announce, rivalOf, type RaceChoice } from './Rail';
+import { LEAD_MS, createSession, type Geometry, type Preview, type Session, type Snapshot, type TakeItem } from './session';
 import { SHOWCASES, type Showcase } from './showcase';
-import { levelsOf } from './trace';
-import { readLink, writeLink, type Link } from './urlState';
+import { publishStage } from './stageStore';
+import { edgeAt, levelsOf } from './trace';
+import { defaultTake, fromLibrary, readLink, writeLink, type Link, type TakeSource } from './urlState';
+import { describe } from './words';
 
-type Mode = 'tune' | 'race' | 'export';
+type Mode = 'tune' | 'race' | 'export' | null;
 type Layout = 'wide' | 'mid' | 'narrow';
 type Props = Record<string, PropValue>;
 
-/** Where the instrument starts, in pixels from the left of the stage. The stylesheet agrees. */
+/** Where the trace starts, in pixels from the left of the stage. The stylesheet agrees. */
 const PLOT_LEFT = 392;
+const LANE_PAD = 32;
 const noop = () => {};
 
 function defaultProps(showcase: Showcase): Props {
@@ -60,32 +68,6 @@ const Panel = memo(function Panel({ session, showcase, props, setProps }: { sess
   return <>{showcase.registration.render({ frame: { ...base, send: session.send }, props, setProps })}</>;
 });
 
-function describe(snap: Snapshot, showcase: Showcase): string {
-  const { take, steps, ghost, phase, moving } = snap;
-  const origin = snap.domain.start + LEAD_MS;
-  const go = label(showcase, showcase.go);
-  const back = label(showcase, showcase.back);
-  if (take.scripted && steps[1]) return `An example take, with ${back} landing ${Math.round(steps[1].atMs - origin)} ms into ${go}`;
-  // A queued command adds a step when it finally runs. This describes the press itself.
-  const pressed = take.events[take.events.length - 1];
-  const last = steps.find((step) => step.atMs === pressed?.atMs && step.command === pressed?.command);
-  if (take.events.length > 1 && last) {
-    const name = label(showcase, last.command);
-    const ms = Math.round(last.atMs - origin);
-    if (last.outcome === 'queue') return `${name} landed ${ms} ms in and waited for the motion to finish`;
-    if (last.outcome === 'ignore') return `${name} landed ${ms} ms in and was ignored`;
-    if (last.outcome === 'reject') return `${name} landed ${ms} ms in and had nothing to do`;
-    if (ghost && isAnimating(ghost, last.atMs)) return `${name} landed ${ms} ms in and took over from the current position and speed`;
-    return `${name} landed ${ms} ms in, after the motion had settled`;
-  }
-  if (last?.command === showcase.go) {
-    if (moving && phase === 'live') return `${go} is running, so press ${back} before it settles`;
-    return `${go} ran to the end, so press ${back} sooner or turn on Slow motion`;
-  }
-  if (last?.command === showcase.back) return `${back} landed after ${go} had settled, so there was nothing to interrupt`;
-  return 'This take ran without an interruption';
-}
-
 /** Time, place and speed under the playhead. Written directly, once a frame. */
 function Readouts({ session, snap, showcase }: { session: Session; snap: Snapshot; showcase: Showcase }) {
   const clock = useRef<HTMLElement>(null);
@@ -112,15 +94,118 @@ function Readouts({ session, snap, showcase }: { session: Session; snap: Snapsho
   );
 }
 
+/** The bar a hand takes hold of. It rides the followed edge, wherever the take has put it. */
+function GrabBar({ session, snap, showcase, left, top, barRef }: { session: Session; snap: Snapshot; showcase: Showcase; left: number; top: number; barRef: React.RefObject<HTMLDivElement | null> }) {
+  const { timeline, levels, state } = snap;
+  const usable = state === showcase.from || state === showcase.to;
+  const from = showcase.registration.states[showcase.from]!.label;
+  const to = showcase.registration.states[showcase.to]!.label;
+  useEffect(() => {
+    const bar = barRef.current!;
+    const draw = (t: number) => {
+      const edge = edgeAt(timeline, showcase, t, levels).position;
+      const width = showcase.width;
+      bar.style.transform = `translate(${(left + width / 2).toFixed(1)}px, ${(top + edge).toFixed(1)}px)`;
+      const progress = levels.high === levels.low ? 0 : (edge - levels.low) / (levels.high - levels.low);
+      const percent = Math.round(Math.max(0, Math.min(1, progress)) * 100);
+      bar.setAttribute('aria-valuenow', String(percent));
+      bar.setAttribute('aria-valuetext', percent === 0 ? from : percent === 100 ? to : `${percent} percent of the way to ${to}`);
+    };
+    draw(session.time());
+    return session.onFrame(draw);
+  }, [session, timeline, levels, showcase, left, top, barRef, from, to]);
+  return (
+    <div
+      ref={barRef}
+      className="grab"
+      id="grab"
+      role="slider"
+      tabIndex={0}
+      hidden={!usable}
+      aria-label={`${showcase.name}, by hand`}
+      aria-orientation="vertical"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={0}
+    >
+      <i />
+    </div>
+  );
+}
+
+/** The takes as a contact strip: each one printed small, under the motion as it stands. */
+function Strip({ session, snap, showcase, own, onOwn, onSave }: { session: Session; snap: Snapshot; showcase: Showcase; own: TakeSource | null; onOwn: () => void; onSave: () => Promise<boolean> }) {
+  const { spec, levels, geometry, take } = snap;
+  const previews = useMemo(() => {
+    const map = new Map<string, Preview | null>();
+    for (const item of LIBRARY) map.set(item.id, session.preview(fromLibrary(showcase, item)));
+    return map;
+    // The geometry and the spec are what a preview is worked out from.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, showcase, spec, levels, geometry]);
+  const mine = useMemo(() => (own ? session.preview(own) : null), [session, own, spec, levels, geometry]);
+  const yours = take.name === null;
+  const [saved, setSaved] = useState<'idle' | 'saved' | 'failed'>('idle');
+  useEffect(() => {
+    if (saved === 'idle') return undefined;
+    const id = setTimeout(() => setSaved('idle'), 1600);
+    return () => clearTimeout(id);
+  }, [saved]);
+
+  return (
+    <div className="strip" role="group" aria-label="Takes">
+      <div className="frames">
+        {LIBRARY.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className="frame"
+            data-take={item.id}
+            title={item.about}
+            aria-pressed={take.name === item.id}
+            onClick={() => session.loadTake(fromLibrary(showcase, item), true)}
+          >
+            <PlateThumb preview={previews.get(item.id) ?? null} showcase={showcase} levels={levels} />
+            <span>{item.name}</span>
+          </button>
+        ))}
+        <button type="button" className="frame" data-take="yours" title="The last take you made on this component" aria-pressed={yours} aria-disabled={!own || undefined} onClick={() => { if (own && !yours) onOwn(); }}>
+          <PlateThumb preview={mine} showcase={showcase} levels={levels} />
+          <span>Yours</span>
+        </button>
+      </div>
+      <button
+        type="button"
+        className="control outline swap"
+        id="save-plate"
+        aria-label="Save this take as an image"
+        onClick={async () => {
+          const done = await onSave();
+          setSaved(done ? 'saved' : 'failed');
+        }}
+      >
+        <span className={saved === 'idle' ? 'on' : ''}>Save plate</span>
+        <span className={saved === 'saved' ? 'on' : ''}>Saved</span>
+        <span className={saved === 'failed' ? 'on' : ''}>Blocked</span>
+      </button>
+    </div>
+  );
+}
+
+const OUTCOME = { retarget: 'reverses', queue: 'finishes first', ignore: 'ignores it' } as const;
+
 function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; onPick: (id: string) => void }) {
-  const session = useMemo(() => createSession(showcase, { spec: start.spec, delayMs: start.delayMs }), [showcase, start]);
+  const session = useMemo(() => createSession(showcase, { spec: start.spec, take: start.take }), [showcase, start]);
   const snap = useSyncExternalStore(session.subscribe, session.get);
-  const [mode, setMode] = useState<Mode>('tune');
+  const [mode, setMode] = useState<Mode>(null);
   const [props, setPropsState] = useState<Props>(() => defaultProps(showcase));
   const [layout, setLayout] = useState<Layout>('wide');
   const [place, setPlace] = useState({ left: 0, top: 0 });
   const [reserve, setReserve] = useState(0);
   const [stillNote, setStillNote] = useState(false);
+  const [hand, setHand] = useState(false);
+  const [help, setHelp] = useState(false);
+  const [own, setOwn] = useState<TakeSource | null>(() => (start.take.name === null ? start.take : null));
   const [choice, setChoice] = useState<RaceChoice>(() => ({
     feel: feelOf(curveOf(start.spec, showcase, 'go')) === 'Lively' ? 'Soft' : 'Lively',
     policy: policyOf(start.spec, showcase),
@@ -128,6 +213,7 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
   const demo = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
   const live = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
   const probes = useRef(new Map<string, { root: HTMLElement; elements: Map<string, HTMLElement> }>());
   const states = useMemo(() => Object.keys(showcase.spec.states), [showcase]);
 
@@ -161,7 +247,7 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
     });
   }, [session, showcase, states]);
 
-  useLayoutEffect(measure, [measure, props, layout]);
+  useLayoutEffect(measure, [measure, props, layout, mode]);
 
   useLayoutEffect(() => {
     const element = demo.current!;
@@ -180,7 +266,7 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
   }, [measure]);
 
   useEffect(() => {
-    void document.fonts?.ready.then(() => session.introduce(canvas.current!, 500));
+    void document.fonts?.ready.then(() => session.introduce(canvas.current!, 700));
     return () => session.dismissIntro();
   }, [session]);
 
@@ -192,22 +278,29 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
     return () => observer.disconnect();
   }, []);
 
+  // The grab bar only exists once the layout is known, so the hand is attached then.
+  const ready = snap !== null;
+  useEffect(() => (ready ? attachHand({ session, showcase, live: live.current!, bar: bar.current!, onHold: setHand }) : undefined), [session, showcase, ready]);
+
   const rivalSpec = useMemo(() => (mode === 'race' && snap ? rivalOf(snap.spec, showcase, choice) : null), [mode, snap?.spec, showcase, choice]);
   useEffect(() => {
     session.setRival(rivalSpec);
     if (rivalSpec) session.replayFromStart(canvas.current!);
   }, [session, rivalSpec]);
 
+  // The figures further down the page draw from whatever the stage is showing.
   useEffect(() => {
-    if (mode !== 'export') return undefined;
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || canvas.current!.contains(event.target as Node)) return;
-      setMode('tune');
-      document.getElementById('export')?.focus();
-    };
-    document.addEventListener('keydown', key);
-    return () => document.removeEventListener('keydown', key);
-  }, [mode]);
+    if (snap) publishStage({ showcase, spec: snap.spec, geometry: snap.geometry, levels: snap.levels });
+  }, [showcase, snap?.spec, snap?.geometry, snap?.levels]);
+
+  // The visitor's own take is kept, so choosing an example does not lose it.
+  const settledTake = snap && !snap.moving && !snap.held && snap.take.name === null && snap.take.events.length > 0 ? snap.take : null;
+  useEffect(() => {
+    if (!settledTake) return;
+    const first = settledTake.events[0]!.atMs;
+    const events: TakeItem[] = settledTake.events.map((event) => ({ ...event, atMs: event.atMs - first }));
+    setOwn({ initialState: settledTake.initialState, scripted: false, name: null, build: () => events });
+  }, [settledTake]);
 
   const status = !snap ? '' : stillNote ? 'Reduced motion is on, so Replay shows the end of the take and you can drag along the curve to step through it' : describe(snap, showcase);
   useEffect(() => announce(status), [status]);
@@ -215,16 +308,17 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
 
   // The address always holds what is on screen, so the page can be shared as it stands.
   const spec = snap?.spec;
-  const events = snap?.take.events;
+  const take = snap?.take;
+  const busy = snap ? snap.held || (snap.moving && snap.phase === 'live') : true;
+  const link = useMemo(() => (spec && take ? writeLink(showcase, spec, take) : null), [showcase, spec, take]);
   useEffect(() => {
-    if (!spec || !events) return undefined;
-    const delay = events[0]?.command === showcase.go && events[1]?.command === showcase.back ? events[1].atMs - events[0].atMs : null;
+    if (!link || busy) return undefined;
     const id = setTimeout(() => {
-      const next = `${location.pathname}${writeLink(showcase, spec, delay)}${location.hash}`;
+      const next = `${location.pathname}${link.query}${location.hash}`;
       if (next !== `${location.pathname}${location.search}${location.hash}`) history.replaceState(null, '', next);
     }, 150);
     return () => clearTimeout(id);
-  }, [showcase, spec, events]);
+  }, [link, busy]);
 
   const changeSpec = useCallback((next: MotionSpec, replay: boolean) => session.setSpec(next, replay, canvas.current), [session]);
   const changeSpring = useCallback(
@@ -235,12 +329,61 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
     [session, showcase],
   );
   const exportReady = useCallback(() => session.replayFromStart(canvas.current!), [session]);
+  const [exported, setExported] = useState<MotionSpec | null>(null);
+
+  const savePlate = useCallback(async () => {
+    const now = session.get();
+    if (!now) return false;
+    const { savePrint } = await import('./print');
+    const done = await savePrint(now, showcase, `${location.origin}${location.pathname}${writeLink(showcase, now.spec, now.take).query}`);
+    announce(done ? 'Saved the plate as an image' : 'Saving was blocked by the browser');
+    return done;
+  }, [session, showcase]);
+
+  // Shortcuts work from anywhere on the page except a field, and never with a modifier held.
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement;
+      if (target.closest('input, textarea, select, [contenteditable=""], [role=slider], [role=menu]')) return;
+      const k = event.key.toLowerCase();
+      if (event.key === '?') setHelp((now) => !now);
+      else if (event.key === 'Escape' && help) setHelp(false);
+      else if (event.key === 'Escape' && mode) {
+        if (canvas.current!.contains(target)) return;
+        const id = mode;
+        setMode(null);
+        document.getElementById(id)?.focus();
+      } else if (help) return;
+      else if (k === 'r') session.toggle(canvas.current!);
+      else if (k === 's') session.setSlow(!session.get()?.slow);
+      else if (k === 't') setMode((now) => (now === 'tune' ? null : 'tune'));
+      else if (k === 'a') setMode((now) => (now === 'race' ? null : 'race'));
+      else if (k === 'e') setMode((now) => (now === 'export' ? null : 'export'));
+      else if (k === 'p') void savePlate();
+      else if (k >= '1' && k <= String(LIBRARY.length) && !target.closest('.sc')) session.loadTake(fromLibrary(showcase, LIBRARY[Number(k) - 1]!), true);
+      else return;
+      event.preventDefault();
+    };
+    document.addEventListener('keydown', key);
+    return () => document.removeEventListener('keydown', key);
+  }, [session, showcase, mode, help, savePlate]);
 
   const state = snap?.state;
   const playing = snap?.phase === 'playing';
   const attached = layout !== 'narrow';
   const go = label(showcase, showcase.go);
   const back = label(showcase, showcase.back);
+  const second = mode === 'race' ? rivalSpec : mode === 'export' ? exported : null;
+  const laneWidth = showcase.width + LANE_PAD;
+  const beside = layout === 'wide' && (mode === 'race' || mode === 'export');
+  const plotLeft = PLOT_LEFT + (beside ? laneWidth : 0);
+  const origin = snap ? snap.domain.start + LEAD_MS : 0;
+  const restA = snap ? lastMark(snap.timeline).settleMs : 0;
+  const restB = snap?.rival ? lastMark(snap.rival).settleMs : restA;
+  const gap = Math.round(restB - restA);
+  const ours = snap ? curveOf(snap.spec, showcase, 'go') : null;
+  const toggleMode = (next: Exclude<Mode, null>) => setMode((now) => (now === next ? null : next));
 
   return (
     <div
@@ -248,8 +391,10 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
       ref={demo}
       data-layout={layout}
       data-component={showcase.id}
+      data-mode={mode ?? undefined}
       data-rest={snap && snap.phase === 'paused' ? '' : undefined}
-      style={{ '--reserve': `${reserve}px`, '--component-width': `${showcase.width}px` } as React.CSSProperties}
+      data-hand={hand || undefined}
+      style={{ '--reserve': `${reserve}px`, '--component-width': `${showcase.width}px`, '--lane-width': `${laneWidth}px`, '--plot-left': `${plotLeft}px` } as React.CSSProperties}
       onPointerDownCapture={() => session.dismissIntro()}
       onKeyDownCapture={() => session.dismissIntro()}
     >
@@ -260,18 +405,20 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
           </button>
         ))}
       </div>
-      <div className="modes" role="group" aria-label="Panel">
-        <button type="button" className="control" id="tune" aria-pressed={mode === 'tune'} onClick={() => setMode('tune')}>Tune</button>
-        <button type="button" className="control" id="race" aria-pressed={mode === 'race'} onClick={() => setMode('race')}>Race</button>
-        <button type="button" className="control" id="export" aria-pressed={mode === 'export'} onClick={() => setMode('export')}>Export</button>
+      <div className="modes" role="group" aria-label="Tools">
+        <button type="button" className="control" id="tune" aria-pressed={mode === 'tune'} aria-expanded={mode === 'tune'} onClick={() => toggleMode('tune')}>Tune</button>
+        <button type="button" className="control" id="race" aria-pressed={mode === 'race'} aria-expanded={mode === 'race'} onClick={() => toggleMode('race')}>Race</button>
+        <button type="button" className="control" id="export" aria-pressed={mode === 'export'} aria-expanded={mode === 'export'} onClick={() => toggleMode('export')}>Export</button>
+        <button type="button" className="control keys" id="keys" aria-label="Keyboard shortcuts" aria-expanded={help} onClick={() => setHelp((now) => !now)}>?</button>
       </div>
 
       <div className="scope">
         <div className="canvas" ref={canvas}>
-          {snap ? <Onion session={session} snap={snap} showcase={showcase} left={place.left} top={place.top} /> : null}
+          {snap ? <Plate session={session} snap={snap} showcase={showcase} left={place.left} top={place.top} /> : null}
           <div className="live" ref={live}>
             <Panel session={session} showcase={showcase} props={props} setProps={setProps} />
           </div>
+          {snap ? <GrabBar session={session} snap={snap} showcase={showcase} left={place.left} top={place.top} barRef={bar} /> : null}
           <div className="probes" aria-hidden="true" inert>
             {states.map((item) => (
               <div key={item}>
@@ -285,26 +432,35 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
             ) : null}
           </div>
         </div>
+        {mode === 'race' || mode === 'export' ? (
+          <div className="lane" id={mode === 'race' ? 'rival' : 'exported'} inert>
+            <span className="lane-name">{mode === 'race' ? 'Side B' : 'The exported files'}</span>
+            {snap && second ? <Follower key={`${mode}-${JSON.stringify(second.transitions)}`} spec={second} showcase={showcase} session={session} take={snap.take} props={props} /> : null}
+          </div>
+        ) : null}
         {snap ? (
-          <Plot session={session} snap={snap} showcase={showcase} attached={attached} originY={place.top} reach={attached ? PLOT_LEFT - place.left - showcase.width : 0} onSpring={changeSpring} />
+          <Plot session={session} snap={snap} showcase={showcase} attached={attached} originY={place.top} reach={attached ? plotLeft - place.left - showcase.width : 0} onSpring={changeSpring} />
         ) : (
           <div className="plot" />
         )}
         <div className="band">
           {snap ? <Readouts session={session} snap={snap} showcase={showcase} /> : <dl className="readouts" />}
+          {snap && mode === 'race' ? <RaceControls showcase={showcase} choice={choice} onChoice={setChoice} /> : null}
           {snap ? <Velocity session={session} snap={snap} showcase={showcase} /> : <div className="velocity" />}
         </div>
       </div>
 
-      <div className="rail" role="group" aria-label={mode === 'tune' ? 'Motion settings' : mode === 'race' ? 'Race' : 'Export'}>
-        {!snap ? null : mode === 'tune' ? (
-          <Tune snap={snap} showcase={showcase} onChange={changeSpec} />
-        ) : mode === 'race' ? (
-          <Race snap={snap} showcase={showcase} session={session} props={props} choice={choice} onChoice={setChoice} />
-        ) : (
-          <ExportSheet snap={snap} session={session} showcase={showcase} props={props} stage={demo} onReady={exportReady} />
-        )}
-      </div>
+      {mode === 'tune' || mode === 'export' ? (
+        <div className="rail" role="group" aria-label={mode === 'tune' ? 'Motion settings' : 'Export'}>
+          {!snap ? null : mode === 'tune' ? (
+            <Tune snap={snap} showcase={showcase} onChange={changeSpec} />
+          ) : (
+            <ExportSheet snap={snap} session={session} showcase={showcase} stage={demo} onReady={exportReady} onSpec={setExported} />
+          )}
+        </div>
+      ) : null}
+
+      {snap ? <Strip session={session} snap={snap} showcase={showcase} own={own} onOwn={() => own && session.loadTake(own, true)} onSave={savePlate} /> : <div className="strip" />}
 
       <div className="transport" role="group" aria-label="Actions">
         <button type="button" className="control" id="go" aria-disabled={state !== showcase.from || undefined} onClick={() => { if (state === showcase.from) session.send(showcase.go); }}>{go}</button>
@@ -323,9 +479,24 @@ function Stage({ showcase, start, onPick }: { showcase: Showcase; start: Link; o
           <span className={playing ? 'on' : ''}>Pause</span>
         </button>
         <button type="button" className="control" id="slow" aria-pressed={snap?.slow ?? false} onClick={() => session.setSlow(!snap?.slow)}>Slow motion</button>
-        <p id="take-note">{status}</p>
-        <CopyButton text={() => location.href} name="Copy a link to this motion" className="control outline">Copy link</CopyButton>
+        {mode === 'race' && snap && ours ? (
+          <p id="take-note" className="race-note">
+            <span data-side="a"><i />A, {feelOf(ours) ?? `${ours.stiffness} / ${ours.damping}`}, {OUTCOME[policyOf(snap.spec, showcase)]}, rests at <b id="settle-a">{Math.max(0, Math.round(restA - origin))} ms</b></span>
+            <span data-side="b"><i />B, {choice.feel}, {OUTCOME[choice.policy]}, rests at <b id="settle-b">{Math.max(0, Math.round(restB - origin))} ms</b></span>
+            <span id="race-note">{gap === 0 ? 'They come to rest together' : `B comes to rest ${Math.abs(gap)} ms ${gap > 0 ? 'later' : 'sooner'}`}</span>
+          </p>
+        ) : (
+          <p id="take-note">{status}</p>
+        )}
+        <CopyButton
+          text={() => `${location.origin}${location.pathname}${link?.query ?? ''}`}
+          name={link && !link.held ? 'Copy a link to this motion, without the take, which is too long for a link' : 'Copy a link to this motion and this take'}
+          className="control outline"
+        >
+          Copy link
+        </CopyButton>
       </div>
+      {help ? <Help onClose={() => setHelp(false)} go={go} back={back} /> : null}
     </div>
   );
 }
@@ -335,7 +506,7 @@ export function Demo() {
   const [link, setLink] = useState(first);
   const pick = useCallback((id: string) => {
     const showcase = SHOWCASES.find((item) => item.id === id)!;
-    setLink((now) => (now.showcase === showcase ? now : { showcase, spec: showcase.spec, delayMs: showcase.exampleDelayMs }));
+    setLink((now) => (now.showcase === showcase ? now : { showcase, spec: showcase.spec, take: defaultTake(showcase) }));
   }, []);
   return <Stage key={link.showcase.id} showcase={link.showcase} start={link} onPick={pick} />;
 }
