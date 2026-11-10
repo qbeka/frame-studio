@@ -528,7 +528,7 @@ test.describe('by hand', () => {
     await expect(note(page)).toContainText('Your hand has it now');
     // The hand took hold on the first move, 10 px in, so the edge has followed the other 110.
     await expect.poll(async () => Math.abs((await drawnHeight(page)) - (closed + 110))).toBeLessThan(1.5);
-    expect(Math.abs((await edgePx(page)) - (closed + 110))).toBeLessThan(1.5);
+    await expect.poll(async () => Math.abs((await edgePx(page)) - (closed + 110))).toBeLessThan(1.5);
     await expect(page.locator('.plot .line-ahead')).toHaveCount(0);
 
     await page.mouse.up();

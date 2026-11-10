@@ -4,9 +4,11 @@ import { useEffect, useRef } from 'react';
 export function Help({ onClose, go, back }: { onClose: () => void; go: string; back: string }) {
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const before = document.activeElement as HTMLElement | null;
+    // Safari does not focus a button when it is clicked, so the opener is found by name there.
+    const active = document.activeElement;
+    const before = active instanceof HTMLElement && active !== document.body ? active : document.getElementById('keys');
     panel.current!.focus({ preventScroll: true });
-    return () => before?.focus?.({ preventScroll: true });
+    return () => before?.focus({ preventScroll: true });
   }, []);
   /** Keys, what they do, and the word between two keys that name a run of them. */
   const rows: [string[], string, string?][] = [
