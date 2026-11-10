@@ -524,7 +524,7 @@ test.describe('by hand', () => {
     await pull(page, from, 120, 12);
     // The hand has it. The state changed when it took hold, and the edge is where the pointer put it.
     await expect(page.locator('#read-state')).toHaveText('Editing');
-    await expect(page.locator('.demo')).toHaveAttribute('data-hand', 'true');
+    await expect(page.locator('.demo')).toHaveAttribute('data-hand', '');
     await expect(note(page)).toContainText('Your hand has it now');
     // The hand took hold on the first move, 10 px in, so the edge has followed the other 110.
     await expect.poll(async () => Math.abs((await drawnHeight(page)) - (closed + 110))).toBeLessThan(1.5);
@@ -532,7 +532,7 @@ test.describe('by hand', () => {
     await expect(page.locator('.plot .line-ahead')).toHaveCount(0);
 
     await page.mouse.up();
-    await expect(page.locator('.demo')).not.toHaveAttribute('data-hand', 'true');
+    await expect(page.locator('.demo')).not.toHaveAttribute('data-hand', '');
     await expect(page.locator('.plot .let-go')).toHaveCount(1);
     await expect(page.locator('.plot .let-go')).toContainText('Let go');
     await waitForStill(page);
@@ -627,10 +627,10 @@ test.describe('by hand', () => {
     await expect(grabBar(page)).toHaveAttribute('aria-valuetext', 'Compact');
     for (let i = 0; i < 10; i += 1) await page.keyboard.press('ArrowDown');
     await expect(page.locator('#read-state')).toHaveText('Editing');
-    await expect(page.locator('.demo')).toHaveAttribute('data-hand', 'true');
+    await expect(page.locator('.demo')).toHaveAttribute('data-hand', '');
     expect(await drawnHeight(page)).toBeGreaterThan(closed + 100);
     // The keys have stopped, so the hand lets go, past the middle, and the spring finishes the job.
-    await expect(page.locator('.demo')).not.toHaveAttribute('data-hand', 'true');
+    await expect(page.locator('.demo')).not.toHaveAttribute('data-hand', '');
     await expect.poll(() => drawnHeight(page)).toBeGreaterThan(closed + 200);
     await waitForStill(page);
     await expect(grabBar(page)).toHaveAttribute('aria-valuetext', 'Editing');
