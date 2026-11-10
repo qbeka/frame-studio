@@ -47,7 +47,8 @@ export function drawArt(ctx: CanvasRenderingContext2D, snap: ArtSource, showcase
 
   // The plate.
   print(ctx, source, first, rest, map, { ...PLATE_INK, dwell: Math.min(0.6, PLATE_INK.dwell * 1.25), flash: PLATE_INK.flash * 1.1, line: unit * 1.25 });
-  stamp(ctx, source, domain.start, map, { color: INK, width: unit * 1.5 });
+  // The component where it began, sitting on its own exposure as it does on the stage.
+  stamp(ctx, source, domain.start, map, { color: INK, width: unit * 1.5, fill: PAPER });
 
   // The trace, on the same vertical scale.
   const left = box.x + plateWidth + gapPx;

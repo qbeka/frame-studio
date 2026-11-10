@@ -128,12 +128,17 @@ export function print(ctx: CanvasRenderingContext2D, source: PlateSource, origin
 }
 
 /** One crisp outline of the target at a moment, for the state a take starts or ends in. */
-export function stamp(ctx: CanvasRenderingContext2D, source: PlateSource, t: number, map: PlateMap, style: { color: string; width: number; dash?: number[] }): void {
+export function stamp(ctx: CanvasRenderingContext2D, source: PlateSource, t: number, map: PlateMap, style: { color: string; width: number; fill?: string }): void {
   ctx.save();
   ctx.strokeStyle = style.color;
   ctx.lineWidth = style.width;
-  ctx.setLineDash(style.dash ?? []);
-  if (outline(ctx, source, t, map)) ctx.stroke();
+  if (outline(ctx, source, t, map)) {
+    if (style.fill) {
+      ctx.fillStyle = style.fill;
+      ctx.fill();
+    }
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
