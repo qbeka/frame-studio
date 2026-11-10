@@ -214,6 +214,76 @@ describe('catching a transition in flight', () => {
   });
 });
 
+/** The panel with a `hint` that is only there while it is closed, so opening swaps one for the other. */
+function swapSpec(): MotionSpec {
+  const spec = panelSpec();
+  spec.targets.hint = { bounds: 'translate', text: true, clipRadiusPx: 0 };
+  spec.states.closed!.targets.hint = { present: true, opacity: 1, xPx: 0, yPx: 0, scale: 1 };
+  spec.states.open!.targets.hint = { present: false, opacity: 0, xPx: 0, yPx: 0, scale: 1 };
+  return spec;
+}
+const hintRect = { x: 16, y: 20, width: 288, height: 20 };
+const swapGeometry = (state: string) => (state === 'open' ? openRects : { ...closedRects, hint: hintRect });
+
+describe('one target leaving as another arrives', () => {
+  function held(progress: number) {
+    const spec = swapSpec();
+    const t = createTimeline(spec, 0, swapGeometry('closed'));
+    const hand: Hand = { times: [0], progress: [0] };
+    applyDecision(t, 0, decideCommand(t, 0, 'open', hand), swapGeometry('open'), { reduced: false });
+    moveHand(hand, 100, progress);
+    return { t, hand, hint: inspectChannel(t, 'hint', 'opacity', 100).position, body: opacity(t, 100).position };
+  }
+
+  it('fades the first out before the second comes in, so the two are never half shown together', () => {
+    expect(held(0)).toMatchObject({ hint: 1, body: 0 });
+    expect(held(0.225).hint).toBeCloseTo(0.5, 9);
+    expect(held(0.225).body).toBe(0);
+    expect(held(0.45)).toMatchObject({ hint: 0, body: 0 });
+    expect(held(0.725).body).toBeCloseTo(0.5, 9);
+    expect(held(0.725).hint).toBe(0);
+    expect(held(1)).toMatchObject({ hint: 0, body: 1 });
+    for (let p = 0; p <= 1; p += 0.05) expect(Math.min(held(p).hint, held(p).body)).toBe(0);
+  });
+
+  it('rests at the ends when the hand goes past them, while the size carries on', () => {
+    const past = held(1.15);
+    expect(past.body).toBe(1);
+    expect(height(past.t, 100).position).toBeCloseTo(60 + 200 * 1.15, 9);
+    expect(held(-0.1).hint).toBe(1);
+  });
+
+  it('reports the speed of the fade, and none where it is resting', () => {
+    const { t, hand } = held(0.5);
+    steady(hand, 100, 180, 2);
+    const at = handAt(hand, 180).progress;
+    expect(at).toBeGreaterThan(0.45);
+    expect(at).toBeLessThan(1);
+    expect(inspectChannel(t, 'body', 'opacity', 180).velocity).toBeCloseTo(2 / 0.55, 6);
+    expect(Math.abs(inspectChannel(t, 'hint', 'opacity', 180).velocity)).toBe(0);
+  });
+
+  it('follows the hand as before when nothing leaves', () => {
+    // The plain panel only has a target that arrives, so its fade is the hand's own progress.
+    const t = start();
+    const { hand } = grab(t, 0, 'open', 0);
+    moveHand(hand, 40, 0.2);
+    expect(opacity(t, 40).position).toBeCloseTo(0.2, 12);
+  });
+
+  it('replays the same way', () => {
+    const spec = swapSpec();
+    const events: TakeEvent[] = [{ atMs: 10, type: 'grab', command: 'open', progress: 0 }];
+    for (let i = 1; i <= 20; i += 1) events.push({ atMs: 10 + i * 8, type: 'drag', progress: i * 0.04 });
+    events.push({ atMs: 175, type: 'release' });
+    const { timeline } = replayTake(spec, 0, swapGeometry('closed'), events, swapGeometry);
+    expect(inspectChannel(timeline, 'hint', 'opacity', 10 + 8 * 6).position).toBeCloseTo(1 - 0.24 / 0.45, 9);
+    expect(inspectChannel(timeline, 'body', 'opacity', 10 + 8 * 6).position).toBe(0);
+    expect(inspectChannel(timeline, 'body', 'opacity', 10 + 8 * 18).position).toBeCloseTo((0.72 - 0.45) / 0.55, 9);
+    expect(inspectChannel(timeline, 'body', 'opacity', lastMark(timeline).settleMs + 1).position).toBe(1);
+  });
+});
+
 describe('letting go', () => {
   it('carries on from the hand position and speed, on the transition curve', () => {
     const t = start();

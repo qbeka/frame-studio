@@ -1,7 +1,7 @@
 {
-  "baselineTests": 160,
-  "mutants": 64,
-  "caught": 64,
+  "baselineTests": 175,
+  "mutants": 68,
+  "caught": 68,
   "restoredSuitePasses": true,
   "rows": [
     {
@@ -119,9 +119,9 @@
       "killedBy": [
         "live and replay agree when a command lands after a queued one came due but before the frame ran it",
         "queue edge cases finishes drawing when a queued command is refused",
-        "letting go carries on from the hand position and speed, on the transition curve"
+        "one target leaving as another arrives replays the same way"
       ],
-      "kills": 5
+      "kills": 6
     },
     {
       "name": "a channel moves before its first leg",
@@ -367,9 +367,10 @@
       "file": "packages/studio/runtime/channel.ts",
       "status": "caught",
       "killedBy": [
-        "reading a hand forgets movement older than its window"
+        "reading a hand forgets movement older than its window",
+        "one target leaving as another arrives reports the speed of the fade, and none where it is resting"
       ],
-      "kills": 1
+      "kills": 2
     },
     {
       "name": "hand speed in the wrong unit",
@@ -380,7 +381,7 @@
         "reading a hand reads no speed once the hand has stopped, however fast it was",
         "reading a hand is not swung by one late sample"
       ],
-      "kills": 5
+      "kills": 6
     },
     {
       "name": "a hand reports no speed",
@@ -388,10 +389,10 @@
       "status": "caught",
       "killedBy": [
         "taking hold reports the hand speed as the channel speed",
-        "letting go a harder throw from the same place overshoots further",
-        "letting go with a command, leaves the other way from the same position and speed"
+        "one target leaving as another arrives reports the speed of the fade, and none where it is resting",
+        "letting go a harder throw from the same place overshoots further"
       ],
-      "kills": 3
+      "kills": 4
     },
     {
       "name": "a caught channel jumps to the hand",
@@ -409,9 +410,10 @@
       "file": "packages/studio/runtime/channel.ts",
       "status": "caught",
       "killedBy": [
-        "taking hold changes state at once and follows the hand exactly"
+        "taking hold changes state at once and follows the hand exactly",
+        "one target leaving as another arrives rests at the ends when the hand goes past them, while the size carries on"
       ],
-      "kills": 1
+      "kills": 2
     },
     {
       "name": "a second hand takes over",
@@ -450,6 +452,48 @@
       "kills": 1
     },
     {
+      "name": "a hand shows a leaving target over an arriving one",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "one target leaving as another arrives fades the first out before the second comes in, so the two are never half shown together",
+        "one target leaving as another arrives rests at the ends when the hand goes past them, while the size carries on",
+        "one target leaving as another arrives reports the speed of the fade, and none where it is resting"
+      ],
+      "kills": 4
+    },
+    {
+      "name": "a hand fades the arriving target in first",
+      "file": "packages/studio/runtime/timeline.ts",
+      "status": "caught",
+      "killedBy": [
+        "one target leaving as another arrives fades the first out before the second comes in, so the two are never half shown together",
+        "one target leaving as another arrives reports the speed of the fade, and none where it is resting",
+        "one target leaving as another arrives replays the same way"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "a fade under a hand runs past its end",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "one target leaving as another arrives fades the first out before the second comes in, so the two are never half shown together",
+        "one target leaving as another arrives rests at the ends when the hand goes past them, while the size carries on",
+        "one target leaving as another arrives reports the speed of the fade, and none where it is resting"
+      ],
+      "kills": 3
+    },
+    {
+      "name": "a fade under a hand reports the wrong speed",
+      "file": "packages/studio/runtime/channel.ts",
+      "status": "caught",
+      "killedBy": [
+        "one target leaving as another arrives reports the speed of the fade, and none where it is resting"
+      ],
+      "kills": 1
+    },
+    {
       "name": "a hand starts from the new layout",
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
@@ -458,7 +502,7 @@
         "taking hold reports the hand speed as the channel speed",
         "taking hold refuses a second hand, and a command with nowhere to go, and keeps hold through both"
       ],
-      "kills": 9
+      "kills": 10
     },
     {
       "name": "a grab is not remembered",
@@ -466,10 +510,10 @@
       "status": "caught",
       "killedBy": [
         "taking hold refuses a second hand, and a command with nowhere to go, and keeps hold through both",
-        "letting go carries on from the hand position and speed, on the transition curve",
-        "letting go a harder throw from the same place overshoots further"
+        "one target leaving as another arrives replays the same way",
+        "letting go carries on from the hand position and speed, on the transition curve"
       ],
-      "kills": 9
+      "kills": 10
     },
     {
       "name": "hand samples can go back in time",
@@ -485,9 +529,10 @@
       "file": "packages/studio/runtime/timeline.ts",
       "status": "caught",
       "killedBy": [
+        "one target leaving as another arrives replays the same way",
         "the controller replays a throw to exactly what happened live"
       ],
-      "kills": 1
+      "kills": 2
     },
     {
       "name": "a command leaves the hand holding on",
