@@ -232,7 +232,7 @@
   animation: rail-in .485s var(--quiet) both;
 }
 @keyframes rail-in { from { opacity: 0; transform: translateX(10px); } }
-.group { min-width: 0; padding: 6px 0 9px; border-bottom: 1px solid var(--line); }
+.group { min-width: 0; padding: 4px 0 6px; border-bottom: 1px solid var(--line); }
 .group:last-child { border-bottom: 0; }
 .group header { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px; margin-bottom: 3px; }
 .group h2 { margin: 0; font: 500 13px/20px var(--sans); color: var(--ink); }
