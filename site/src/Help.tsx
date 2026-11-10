@@ -8,10 +8,11 @@ export function Help({ onClose, go, back }: { onClose: () => void; go: string; b
     panel.current!.focus({ preventScroll: true });
     return () => before?.focus?.({ preventScroll: true });
   }, []);
-  const rows: [string[], string][] = [
+  /** Keys, what they do, and the word between two keys that name a run of them. */
+  const rows: [string[], string, string?][] = [
     [['R'], 'Replay the take, or pause it'],
     [['S'], 'Slow motion'],
-    [['1', '5'], 'Play an example take'],
+    [['1', '5'], 'Play an example take', 'to'],
     [['T'], 'Tune the springs and the rule'],
     [['A'], 'Race the take against side B'],
     [['E'], 'Export'],
@@ -28,9 +29,9 @@ export function Help({ onClose, go, back }: { onClose: () => void; go: string; b
         <button type="button" className="control" onClick={onClose} aria-label="Close the list of shortcuts">Close</button>
       </header>
       <dl>
-        {rows.map(([keys, what]) => (
+        {rows.map(([keys, what, between]) => (
           <div key={what}>
-            <dt>{keys.map((key, i) => (<span key={key}>{i > 0 ? <i>to</i> : null}<kbd>{key}</kbd></span>))}</dt>
+            <dt>{keys.map((key, i) => (<span key={key}>{i > 0 && between ? <i>{between}</i> : null}<kbd>{key}</kbd></span>))}</dt>
             <dd>{what}</dd>
           </div>
         ))}
