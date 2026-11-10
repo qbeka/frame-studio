@@ -54,6 +54,23 @@ const [props, setProps] = useState(initialProps);
 return <Receipt frame={frame} props={props} setProps={(p) => setProps({ ...props, ...p })} />;
 ```
 
+## Let a hand drive it
+
+A press is not the only way in. The handle has three more calls for a pointer that takes hold of a transition, moves it, and lets go.
+
+```tsx
+frame.grab('unfold', 0);   // take hold of the transition this command starts
+frame.drag(0.4);           // 0 is the state being left, 1 the state being entered
+frame.release();           // let go, and carry on into the state entered
+frame.send('fold');        // or let go the other way, with the command that goes back
+```
+
+`grab` changes the state at once, as `send` does, and from then on every channel follows `drag` between the two measured layouts instead of following its curves. Progress may pass either end, so a pull can stretch. A hand outranks the interruption rules: it can take hold of a transition that is running, and the command it lets go with always leaves from where the hand was.
+
+Letting go is an ordinary interruption. The spring starts from the hand's position, at the hand's speed, which is the slope of its last 80 ms of samples. A hand that has sent nothing for 50 ms has stopped, and lets go at rest. Under reduced motion the hand is still followed, and letting go lands at once.
+
+You decide what a pointer means. The component, or the page around it, turns pixels into progress. The [project page](https://www.qendrimbeka.com/projects/frame/) does this for three components in [`site/src/hand.ts`](../site/src/hand.ts). A take records the hand as `grab`, `drag` and `release` events, so it replays like any other.
+
 ## Choosing a bounds mode
 
 | Mode | Use it for | Rule |
