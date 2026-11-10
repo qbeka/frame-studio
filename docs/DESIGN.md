@@ -52,6 +52,14 @@ The take ribbon. It draws one channel's real path with a dotted ghost of the pat
 
 Everything else stays quiet.
 
+## A hand is one more interruption
+
+A press that lands mid flight and a hand that lets go mid flight ask for the same thing: start a new leg from wherever the component is, at whatever speed it has. So the hand needed no physics of its own. `grab` starts the same transition a command would, with one difference, that its channels follow the hand's progress between the two measured layouts instead of their curves. The leg a hand drives reports a position and a speed like any other leg, so when the hand lets go the ordinary retarget reads them and carries on. A take records the hand as events, and the pure evaluator replays them.
+
+Two choices are not obvious. The speed is the least squares slope of the last 80 ms of samples, because one late pointer event swings a two point estimate. And where one target leaves as another arrives, the first fades out before the second fades in, because a hand can wait halfway for as long as it likes, and both half shown over each other is not a state anyone designed.
+
+On the project page the record of a take is a plate: a long exposure of the followed target, in place behind the component, where ink builds up with time spent. The studio has neither the hand nor the plate. It has no way to know which edge a pointer should follow, and it opens held at the interruption, where the component covers its own exposure.
+
 ## Layout model
 
 Three things must hold at once: text must not distort, endpoints must come from native flow, and focus and input state must survive.
