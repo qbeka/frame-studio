@@ -23,9 +23,17 @@ function useSize(ref: RefObject<HTMLElement | null>) {
     const element = ref.current!;
     const update = () => setSize((now) => (now.width === element.clientWidth && now.height === element.clientHeight ? now : { width: element.clientWidth, height: element.clientHeight }));
     update();
-    const observer = new ResizeObserver(update);
+    // Read on the next frame, so a change of size is never answered inside the observer's own pass.
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    });
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [ref]);
   return size;
 }
