@@ -161,7 +161,7 @@
   0% { opacity: .55; transform: scale(.55); }
   60%, 100% { opacity: 0; transform: scale(1.25); }
 }
-.marker span { position: absolute; top: 2px; left: 22px; font: 400 12px/14px var(--sans); color: var(--muted); white-space: nowrap; pointer-events: none; }
+.marker span { position: absolute; top: 2px; left: 22px; font: 400 12px/14px var(--sans); color: var(--muted); white-space: nowrap; pointer-events: none; text-shadow: -2px 0 var(--surface), 2px 0 var(--surface), 0 -2px var(--surface), 0 2px var(--surface), -1px -1px var(--surface), 1px 1px var(--surface), -1px 1px var(--surface), 1px -1px var(--surface); }
 .marker span b { font-weight: 500; color: var(--ink); }
 .marker span em { display: block; font-style: normal; color: var(--forest); }
 .marker[data-flip] span { right: 22px; left: auto; text-align: right; }
@@ -224,7 +224,7 @@
 .readouts dd { margin: 1px 0 0; font: 500 15px/20px var(--sans); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
 .velocity { position: relative; min-width: 0; }
 .velocity .seek { touch-action: pan-y; }
-.velocity-name { position: absolute; top: 5px; right: 0; font-size: 12px; line-height: 14px; color: var(--muted); pointer-events: none; }
+.velocity-name { position: absolute; top: 5px; right: 0; font-size: 12px; line-height: 14px; color: var(--muted); pointer-events: none; z-index: 1; text-shadow: -2px 0 var(--surface), 2px 0 var(--surface), 0 -2px var(--surface), 0 2px var(--surface), -1px -1px var(--surface), 1px 1px var(--surface), -1px 1px var(--surface), 1px -1px var(--surface); }
 
 /* The rail */
 .rail {
