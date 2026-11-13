@@ -14,7 +14,6 @@
 /* The first second: the name, the sentence and the stage arrive in that order, on the page's own spring. */
 @keyframes arrive { from { opacity: 0; transform: translateY(10px); } }
 .title h1 { animation: arrive .485s var(--quiet) backwards; }
-.title p { animation: arrive .485s var(--quiet) .06s backwards; }
 .title .control { animation: arrive .485s var(--quiet) .1s backwards; }
 #stage { animation: arrive .485s var(--quiet) .14s backwards; }
 
