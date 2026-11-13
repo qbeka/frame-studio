@@ -103,7 +103,7 @@
   display: flex; justify-content: center;
 }
 .lane .sc { margin: 0; }
-.lane-name { position: absolute; left: 16px; bottom: 100%; padding-bottom: 5px; font-size: 11px; line-height: 14px; color: var(--muted); white-space: nowrap; }
+.lane-name { position: absolute; left: 16px; bottom: 100%; padding-bottom: 5px; font-size: 12px; line-height: 14px; color: var(--muted); white-space: nowrap; }
 #rival .lane-name { color: var(--ember); }
 .demo[data-layout='wide'][data-mode='race'] .canvas::after, .demo[data-layout='wide'][data-mode='export'] .canvas::after {
   content: ''; position: absolute; top: 16px; bottom: 16px; left: calc(var(--canvas-left) - 8px); border-left: 1px solid var(--line);
@@ -116,7 +116,7 @@
 .plot svg, .velocity svg { position: absolute; inset: 0; display: block; overflow: visible; pointer-events: none; }
 .level { stroke: var(--line); stroke-width: 1; }
 .axis, .tick { stroke: var(--line-strong); stroke-width: 1; }
-.level-name, .tick-label { font: 400 11px/14px var(--sans); fill: var(--muted); }
+.level-name, .tick-label { font: 400 12px/14px var(--sans); fill: var(--muted); }
 .level-name { text-anchor: end; }
 .under { fill: #1d3a2a0b; }
 .line-hand { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
@@ -137,9 +137,9 @@
 
 .seek { position: absolute; inset: 0; border-radius: var(--radius-control); cursor: col-resize; }
 .seek:focus-visible { outline-offset: 0; }
-.first { position: absolute; top: 0; padding: 2px 6px 0 0; font-size: 11px; line-height: 14px; color: var(--muted); pointer-events: none; transform: translateX(-100%); }
+.first { position: absolute; top: 0; padding: 2px 6px 0 0; font-size: 12px; line-height: 14px; color: var(--muted); pointer-events: none; transform: translateX(-100%); }
 .first::before { content: ''; position: absolute; inset: 0 0 0 auto; border-left: 1px solid var(--line-strong); }
-.legend { position: absolute; right: 0; top: 36px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 14px; margin: 0; font-size: 11px; line-height: 16px; color: var(--muted); pointer-events: none; }
+.legend { position: absolute; right: 0; top: 36px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 14px; margin: 0; font-size: 12px; line-height: 16px; color: var(--muted); pointer-events: none; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .key { width: 16px; height: 0; border-top: 2px solid var(--forest); }
 .key.dotted { border-top: 1.5px dotted var(--muted); }
@@ -161,7 +161,7 @@
   0% { opacity: .55; transform: scale(.55); }
   60%, 100% { opacity: 0; transform: scale(1.25); }
 }
-.marker span { position: absolute; top: 2px; left: 22px; font: 400 11px/14px var(--sans); color: var(--muted); white-space: nowrap; pointer-events: none; }
+.marker span { position: absolute; top: 2px; left: 22px; font: 400 12px/14px var(--sans); color: var(--muted); white-space: nowrap; pointer-events: none; }
 .marker span b { font-weight: 500; color: var(--ink); }
 .marker span em { display: block; font-style: normal; color: var(--forest); }
 .marker[data-flip] span { right: 22px; left: auto; text-align: right; }
@@ -174,11 +174,11 @@
 /* Where a hand let go, and a press that fell in a take with a hand in it */
 .let-go { position: absolute; z-index: 1; width: 0; height: 0; pointer-events: none; }
 .let-go i { position: absolute; left: -5.5px; top: -5.5px; width: 11px; height: 11px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--surface); }
-.let-go span { position: absolute; left: 12px; top: -30px; font: 400 11px/14px var(--sans); color: var(--muted); white-space: nowrap; text-shadow: 0 0 2px var(--surface), 0 0 4px var(--surface), 0 0 6px var(--surface); }
+.let-go span { position: absolute; left: 12px; top: -30px; font: 400 12px/14px var(--sans); color: var(--muted); white-space: nowrap; text-shadow: 0 0 2px var(--surface), 0 0 4px var(--surface), 0 0 6px var(--surface); }
 .let-go span b { font-weight: 500; color: var(--ink); }
 .let-go span em { display: block; font-style: normal; color: var(--ink); }
 .let-go[data-flip] span { right: 12px; left: auto; text-align: right; }
-.pressed { position: absolute; top: 0; padding: 2px 0 0 6px; font-size: 11px; line-height: 14px; color: var(--muted); pointer-events: none; }
+.pressed { position: absolute; top: 0; padding: 2px 0 0 6px; font-size: 12px; line-height: 14px; color: var(--muted); pointer-events: none; }
 .pressed::before { content: ''; position: absolute; inset: 0 auto 0 0; border-left: 1px dashed var(--forest); opacity: .6; }
 
 .spring-handle {
@@ -220,11 +220,11 @@
 @media (pointer: coarse) { .race .seg .control { min-height: 44px; } }
 .readouts { display: grid; grid-template-columns: 0.8fr 1fr 1.15fr 1fr; align-items: center; gap: 0 8px; margin: 0; padding: 0 12px 0 20px; }
 .readouts div { min-width: 0; }
-.readouts dt { font-size: 11px; line-height: 14px; color: var(--muted); }
+.readouts dt { font-size: 12px; line-height: 14px; color: var(--muted); }
 .readouts dd { margin: 1px 0 0; font: 500 15px/20px var(--sans); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
 .velocity { position: relative; min-width: 0; }
 .velocity .seek { touch-action: pan-y; }
-.velocity-name { position: absolute; top: 5px; right: 0; font-size: 11px; line-height: 14px; color: var(--muted); pointer-events: none; }
+.velocity-name { position: absolute; top: 5px; right: 0; font-size: 12px; line-height: 14px; color: var(--muted); pointer-events: none; }
 
 /* The rail */
 .rail {
@@ -287,7 +287,7 @@
 .code-row + .code-row { margin-top: 6px; }
 .code-row code {
   overflow: hidden; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface);
-  font: 400 11px/16px var(--mono); color: var(--ink); white-space: nowrap; text-overflow: ellipsis;
+  font: 400 12px/16px var(--mono); color: var(--ink); white-space: nowrap; text-overflow: ellipsis;
 }
 .code-row .control { min-height: 30px; padding: 0 9px; font-size: 14px; }
 @media (pointer: coarse) { .code-row .control { min-height: 44px; } }
@@ -304,7 +304,7 @@
 .score .num { font-weight: 500; color: var(--ink); text-align: right; }
 .files { margin-top: 10px; max-height: 318px; overflow: auto; border-radius: var(--radius-control); }
 .files .note { margin: 0 0 6px; }
-.files pre { margin: 0 0 10px; padding: 8px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); font: 400 11px/16px var(--mono); color: var(--ink); }
+.files pre { margin: 0 0 10px; padding: 8px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); font: 400 12px/16px var(--mono); color: var(--ink); }
 .files ul { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .files li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 12px; line-height: 18px; color: var(--body); }
 .files li span:last-child { flex: none; color: var(--muted); }
@@ -374,9 +374,9 @@
 .help dl div:last-child { border-bottom: 0; }
 .help dt { display: flex; align-items: center; gap: 4px; }
 .help dt span { display: inline-flex; align-items: center; gap: 4px; }
-.help dt i { font-style: normal; font-size: 11px; color: var(--faint); }
+.help dt i { font-style: normal; font-size: 12px; color: var(--faint); }
 .help dd { margin: 0; font-size: 13px; line-height: 18px; color: var(--body); }
-.help kbd { min-width: 20px; padding: 0 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; background: var(--surface); font: 400 11px/17px var(--sans); color: var(--ink); text-align: center; }
+.help kbd { min-width: 20px; padding: 0 5px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; background: var(--surface); font: 400 12px/17px var(--sans); color: var(--ink); text-align: center; }
 
 /* Below the widest layout the tools open under the stage, and the second copy under the first. */
 .demo[data-layout='mid'], .demo[data-layout='narrow'] { grid-template-areas: 'top' 'scope' 'strip' 'transport' 'rail'; }
