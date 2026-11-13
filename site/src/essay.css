@@ -66,12 +66,12 @@
 .ruler-dot::before { content: ''; position: absolute; left: -5px; top: -5px; width: 11px; height: 11px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 2px var(--surface); }
 .ruler-dot.forest::before { background: var(--forest); }
 .ruler-mark::before { content: ''; position: absolute; left: 0; top: -7px; height: 15px; border-left: 1px solid var(--ink); }
-.ruler-dot b, .ruler-mark b { position: absolute; left: -2px; bottom: 12px; font: 500 13px/16px var(--sans); font-style: normal; color: var(--ink); white-space: nowrap; }
-.ruler-mark b { left: 6px; bottom: -22px; font-weight: 400; font-size: 12px; color: var(--muted); }
+.ruler-dot b, .ruler-mark b { position: absolute; left: -2px; bottom: 12px; font: 500 14px/18px var(--sans); font-style: normal; color: var(--ink); white-space: nowrap; }
+.ruler-mark b { left: 6px; bottom: -24px; font-weight: 400; color: var(--muted); }
 .ruler-dot[data-side='left'] b { left: auto; right: -2px; }
 .ruler-mark[data-side='left'] b { left: auto; right: 6px; }
-.ruler-axis { position: relative; height: 22px; margin: 6px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
-.ruler-axis li { position: absolute; left: calc(var(--x) * 1%); top: 0; padding-top: 7px; font-size: 12px; line-height: 14px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.ruler-axis { position: relative; height: 24px; margin: 6px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.ruler-axis li { position: absolute; left: calc(var(--x) * 1%); top: 0; padding-top: 7px; font-size: 14px; line-height: 16px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
 .ruler-axis li::before { content: ''; position: absolute; left: 50%; top: 0; height: 5px; border-left: 1px solid var(--line-strong); }
 
 /* Measurements, each beside its baseline */
