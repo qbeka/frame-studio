@@ -362,8 +362,9 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
   }, [exampleTake, inspectAt, play]);
 
   /**
-   * Opens on the example, held at the moment of its interruption, so the first thing a visitor
-   * sees is a take with both paths drawn. `seed` stores it without marking the project changed.
+   * Opens on the example, held where it has settled, so the first thing a visitor sees is a take
+   * with both paths drawn and a component at rest, not one cut off mid flight. `seed` stores it
+   * without marking the project changed.
    */
   const showExample = useCallback(
     (seed: (take: Take) => void) => {
@@ -371,10 +372,10 @@ export function useSession({ registration, spec, take, setTake, probe }: Session
       if (!take) return;
       liveTake.current = take;
       seed(take);
-      const interruption = take.events[1] ?? take.events[0];
-      inspectAt(take, latest.current.spec, interruption?.atMs ?? take.startMs);
+      const { spec: currentSpec } = latest.current;
+      inspectAt(take, currentSpec, takeRange(take, replay(take, currentSpec).timeline).end);
     },
-    [exampleTake, inspectAt],
+    [exampleTake, inspectAt, replay],
   );
 
   // The browser tests compare replay against the export at exact times.

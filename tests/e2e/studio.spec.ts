@@ -342,15 +342,15 @@ test.describe('a first visit, with no draft and no request for an empty take', (
     await expect(page.locator('.mode')).toHaveText('Inspecting');
   });
 
-  test('opens on the example take, held at its interruption, with both paths drawn', async ({ page }) => {
+  test('opens on the example take, held where it settles, with both paths drawn', async ({ page }) => {
     await expect(page.locator('.marker')).toHaveCount(2);
     await expect(page.locator('.marker').nth(1)).toContainText('cancel');
     await expect(page.locator('.ribbon-ghost')).toHaveCount(1);
     await expect(page.locator('.ribbon-tick').first()).toHaveText('0 ms');
     await expect(page.locator('.stage-live')).toHaveAttribute('inert', '');
     await expect(page.locator('.stage-label')).toContainText('frame.fixture.inspector');
-    // 150 ms after the open, which is where the example's cancel lands, and mid flight.
-    await expect(page.locator('.time')).toHaveText('210 ms');
+    // The end of the take, after the cancel has brought the card back to rest.
+    await expect(page.locator('.time')).toHaveText('625 ms');
     const reading = await readoutPosition(page);
     expect(Math.abs((await surfaceHeight(page)) - reading)).toBeLessThan(0.5);
     const rest = await page.locator('.stage-probe [data-frame-target=surface]').count();
