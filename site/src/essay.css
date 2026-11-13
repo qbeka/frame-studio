@@ -137,5 +137,9 @@
   .ruler-axis li:nth-child(even) { display: none; }
   .ending { margin-top: 80px; }
 }
+/* On a phone the 0.11 px target sits near the right edge, so its words go to the left of its mark. */
+@media (max-width: 559px) {
+  .ruler-mark:not([data-side='left']) b { left: auto; right: 6px; }
+}
 
 .notice { margin: 20px; font: 400 17px/27px var(--serif); color: var(--body); }
