@@ -2,7 +2,7 @@
 .essay { margin: 96px 0 0; scroll-margin-top: 32px; }
 .essay h2 { max-width: 880px; margin: 0 0 28px; font: 400 44px/50px var(--serif); letter-spacing: -0.032em; text-wrap: balance; }
 .essay h3 { margin: 0 0 16px; font: 400 28px/34px var(--serif); letter-spacing: -0.022em; }
-.essay h4 { margin: 0; font: 500 13px/20px var(--sans); color: var(--ink); }
+.essay h4 { margin: 0; font: 500 14px/20px var(--sans); color: var(--ink); }
 .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; max-width: 1000px; }
 .columns .prose { margin: 0 0 14px; }
 .columns .prose:only-child { grid-column: 1; }
@@ -32,7 +32,7 @@
 .rule:last-child { padding-right: 0; }
 .rule canvas { display: block; width: 100%; height: 172px; }
 .rule h4 { margin-top: 10px; }
-.rule p { margin: 2px 0 0; min-height: 38px; font-size: 13px; line-height: 19px; color: var(--body); }
+.rule p { margin: 2px 0 0; min-height: 40px; font-size: 14px; line-height: 20px; color: var(--body); }
 .figure-range { grid-template-columns: auto minmax(0, 280px) auto; justify-content: start; column-gap: 12px; margin-top: 14px; }
 .figure-range output { text-align: left; white-space: nowrap; min-width: 132px; }
 
@@ -52,13 +52,13 @@
 .css-figure .band { fill: #1d3a2a0f; }
 .css-figure .bound { stroke: var(--forest); stroke-width: 1; stroke-dasharray: 2 3; opacity: .7; vector-effect: non-scaling-stroke; }
 .css-figure .level, .css-figure .playhead, .css-figure .cut { vector-effect: non-scaling-stroke; }
-.figure-read { margin: 10px 0 0; min-height: 38px; font-size: 13px; line-height: 19px; color: var(--body); }
+.figure-read { margin: 10px 0 0; min-height: 40px; font-size: 14px; line-height: 20px; color: var(--body); }
 .figure-read b { font-weight: 500; color: var(--ink); }
 
 /* Two results on one logarithmic ruler */
 .ruler { position: relative; }
 .ruler-row { padding: 6px 0 18px; }
-.ruler-name { margin: 0 0 30px; font: 500 13px/20px var(--sans); color: var(--ink); }
+.ruler-name { margin: 0 0 30px; font: 500 14px/20px var(--sans); color: var(--ink); }
 .ruler-name span { display: block; font-weight: 400; color: var(--muted); }
 .ruler-track { position: relative; height: 1px; margin: 0 0 12px; background: var(--line-strong); }
 .ruler-span { position: absolute; top: -1px; left: calc(var(--from) * 1%); width: calc((var(--to) - var(--from)) * 1%); height: 3px; background: #1d3a2a2e; }
@@ -82,11 +82,11 @@
 .measure h4 { margin-bottom: 14px; font: 400 20px/26px var(--serif); letter-spacing: -0.015em; }
 .bars, .ranges { margin: 0; }
 .bars div, .ranges div { padding: 5px 0; }
-.bars dt, .ranges dt { font-size: 13px; line-height: 18px; color: var(--body); }
+.bars dt, .ranges dt { font-size: 14px; line-height: 20px; color: var(--body); }
 .bars dd, .ranges dd { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; margin: 2px 0 0; }
 .bars dd i { flex: none; width: calc(var(--w) * 1% - var(--w) * 0.66px); min-width: 2px; height: 8px; border-radius: 2px; background: var(--forest); }
 .bars dd i.plain, .ranges dd i.plain { background: #11151129; }
-.bars dd b, .ranges dd b { flex: none; font: 500 13px/20px var(--sans); color: var(--ink); white-space: nowrap; }
+.bars dd b, .ranges dd b { flex: none; font: 500 14px/20px var(--sans); color: var(--ink); white-space: nowrap; }
 .ranges dd { justify-content: flex-end; }
 .ranges dd::before { content: ''; position: absolute; left: 0; right: 66px; top: 9.5px; border-top: 1px solid var(--line); }
 .ranges dd i { position: absolute; top: 6px; left: calc(var(--from) * 1% - var(--from) * 0.66px); width: calc((var(--to) - var(--from)) * 1% - (var(--to) - var(--from)) * 0.66px); height: 8px; border-radius: 4px; background: #1d3a2a3d; }
