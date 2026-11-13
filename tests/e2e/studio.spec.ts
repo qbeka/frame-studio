@@ -349,8 +349,13 @@ test.describe('a first visit, with no draft and no request for an empty take', (
     await expect(page.locator('.ribbon-tick').first()).toHaveText('0 ms');
     await expect(page.locator('.stage-live')).toHaveAttribute('inert', '');
     await expect(page.locator('.stage-label')).toContainText('frame.fixture.inspector');
-    // The end of the take, after the cancel has brought the card back to rest.
-    await expect(page.locator('.time')).toHaveText('625 ms');
+    // The end of the take, after the cancel has brought the card back to rest: the playhead is
+    // at its last moment, well past the cancel at 210 ms.
+    const playhead = page.getByRole('slider', { name: 'Playhead' });
+    const end = Number(await playhead.getAttribute('aria-valuemax'));
+    expect(end).toBeGreaterThan(210);
+    await expect(playhead).toHaveAttribute('aria-valuenow', String(end));
+    await expect(page.locator('.time')).toHaveText(`${end} ms`);
     const reading = await readoutPosition(page);
     expect(Math.abs((await surfaceHeight(page)) - reading)).toBeLessThan(0.5);
     const rest = await page.locator('.stage-probe [data-frame-target=surface]').count();
