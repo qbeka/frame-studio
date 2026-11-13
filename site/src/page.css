@@ -353,6 +353,8 @@
 #go, #back { min-width: 62px; }
 #take-note { flex: 1 1 200px; min-width: 0; margin: 0 12px; font-size: 14px; line-height: 20px; color: var(--body); }
 .race-note { display: flex; flex-wrap: wrap; gap: 0 16px; }
+/* When the race note wraps, its two lines stay within the height of one control, so the stage holds still. */
+#take-note.race-note { line-height: 18px; }
 .race-note span { display: inline-flex; align-items: center; gap: 6px; }
 .race-note b { font-weight: 500; color: var(--ink); }
 .race-note i { width: 8px; height: 2px; border-radius: 1px; background: var(--forest); }
